@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <!-- Left loop -->
+  <path d="M20 40 C20 28 28 20 38 20 C44 20 49 23 52 28 C49 33 46 37 40 40 C46 43 49 47 52 52 C49 57 44 60 38 60 C28 60 20 52 20 40 Z" fill="url(#grad1)" opacity="0.9"/>
+  <!-- Right loop -->
+  <path d="M60 40 C60 52 52 60 42 60 C36 60 31 57 28 52 C31 47 34 43 40 40 C34 37 31 33 28 28 C31 23 36 20 42 20 C52 20 60 28 60 40 Z" fill="url(#grad2)" opacity="0.9"/>
+  <!-- Center blend -->
+  <ellipse cx="40" cy="40" rx="8" ry="12" fill="url(#grad3)"/>
+  <defs>
+    <linearGradient id="grad1" x1="20" y1="20" x2="52" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E40AF"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="grad2" x1="60" y1="20" x2="28" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#60A5FA"/>
+    </linearGradient>
+    <linearGradient id="grad3" x1="40" y1="28" x2="40" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+</svg>

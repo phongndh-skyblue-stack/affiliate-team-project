@@ -1,0 +1,215 @@
+"""SerpAPI service — Google Ads Transparency Center.
+
+Docs: https://serpapi.com/google-ads-transparency-center-api
+Tất cả hàm đều async và tự xoay key khi gặp 429 / quota hết.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+import httpx
+
+from app.core.config import settings
+from app.shared.services._key_pool import KeyPool
+
+logger = logging.getLogger(__name__)
+
+_SERPAPI_URL = "https://serpapi.com/search"
+
+_pool: KeyPool | None = None
+
+
+def _get_pool() -> KeyPool:
+    global _pool
+    if _pool is None:
+        _pool = KeyPool(settings.serpapi_keys, name="SerpAPI")
+    return _pool
+
+
+async def _request(params: dict[str, Any]) -> dict[str, Any]:
+    """Gửi request đến SerpAPI, tự xoay key khi bị 429."""
+    pool = _get_pool()
+    pool.reset_tried()
+
+    while not pool.all_tried:
+        pool.mark_current_tried()
+        key = pool.current
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
+                resp = await client.get(_SERPAPI_URL, params={**params, "api_key": key})
+
+            if resp.status_code == 429:
+                logger.warning("SerpAPI quota hết cho key ...%s, đang xoay...", key[-6:])
+                await pool.rotate()
+                continue
+
+            resp.raise_for_status()
+            return resp.json()
+
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 429:
+                logger.warning("SerpAPI quota hết cho key ...%s, đang xoay...", key[-6:])
+                await pool.rotate()
+                continue
+            logger.error("SerpAPI HTTP error %d: %s", exc.response.status_code, exc.response.text)
+            raise
+
+        except httpx.RequestError as exc:
+            logger.error("SerpAPI request error: %s", exc)
+            raise
+
+    raise RuntimeError(
+        "Tất cả SerpAPI keys đã hết quota. Vui lòng thêm key mới vào SERPAPI_KEYS."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
+async def search_ads_transparency(
+    text: str | None = None,
+    advertiser_id: str | None = None,
+    platform: str | None = None,
+    creative_format: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    region: str | None = None,
+    political_ads: bool = False,
+    num: int = 40,
+    next_page_token: str | None = None,
+) -> dict[str, Any]:
+    """Tìm kiếm quảng cáo trên Google Ads Transparency Center.
+
+    Args:
+        text:             Domain hoặc tên nhà quảng cáo (query).
+        advertiser_id:    Advertiser ID dạng "AR...".
+        platform:         PLAY | MAPS | SEARCH | SHOPPING | YOUTUBE.
+        creative_format:  TEXT | IMAGE | VIDEO.
+        start_date:       Ngày bắt đầu YYYYMMDD.
+        end_date:         Ngày kết thúc YYYYMMDD.
+        region:           Mã vùng, ví dụ "VN", "US".
+        political_ads:    Chỉ lấy quảng cáo chính trị.
+        num:              Số kết quả trả về (tối đa 100).
+        next_page_token:  Token phân trang từ response trước.
+    """
+    params: dict[str, Any] = {"engine": "google_ads_transparency_center"}
+
+    if text:
+        params["text"] = text
+    if advertiser_id:
+        params["advertiser_id"] = advertiser_id
+    if platform:
+        params["platform"] = platform.upper()
+    if creative_format:
+        params["creative_format"] = creative_format.lower()
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if region:
+        params["region"] = region
+    if political_ads:
+        params["political_ads"] = "true"
+
+    params["num"] = min(num, 100)
+
+    if next_page_token:
+        params["next_page_token"] = next_page_token
+
+    return await _request(params)
+
+
+async def get_ad_details(
+    advertiser_id: str,
+    creative_id: str,
+    region: str | None = None,
+) -> dict[str, Any]:
+    """Lấy chi tiết một quảng cáo cụ thể (title, headline, hình ảnh, video...).
+
+    Args:
+        advertiser_id: Advertiser ID dạng "AR...".
+        creative_id:   Creative ID dạng "CR...".
+        region:        Mã vùng, ví dụ "VN", "US".
+    """
+    params: dict[str, Any] = {
+        "engine": "google_ads_transparency_center_ad_details",
+        "advertiser_id": advertiser_id,
+        "creative_id": creative_id,
+    }
+
+    if region:
+        params["region"] = region
+
+    return await _request(params)
+
+
+async def trace_competitor_ads(
+    keyword: str,
+    location: str = "Vietnam",
+    hl: str = "vi",
+    gl: str = "vn",
+    num: int = 10,
+    no_cache: bool = False,
+) -> dict[str, Any]:
+    """Trace đối thủ: Nhập keyword → Trả về tất cả paid ads đang hiển thị trên Google.
+
+    Args:
+        keyword:   Từ khóa cần tìm.
+        location:  Vị trí địa lý, mặc định "Vietnam".
+        hl:        Ngôn ngữ giao diện (vi, en...).
+        gl:        Mã quốc gia (vn, us...).
+        num:       Số kết quả organic (ảnh hưởng số ads hiển thị).
+        no_cache:  Bỏ qua cache SerpAPI, dùng khi debug.
+
+    Returns:
+        Dict gồm:
+            - keyword, total_ads_found, top_ads_count, bottom_ads_count
+            - ads: list các quảng cáo đã được làm sạch
+            - full_raw_data: raw response (chỉ có khi no_cache=True)
+    """
+    params: dict[str, Any] = {
+        "engine": "google",
+        "q": keyword,
+        "num": num,
+        "location": location,
+        "hl": hl,
+        "gl": gl,
+        "device": "desktop",
+    }
+    if no_cache:
+        params["no_cache"] = "true"
+
+    data = await _request(params)
+
+    def _clean_ad(ad: dict[str, Any], position_prefix: str, ad_type: str) -> dict[str, Any]:
+        return {
+            "position": f"{position_prefix} {ad.get('position', 'N/A')}",
+            "advertiser": ad.get("displayed_link", "N/A"),
+            "title": ad.get("title", ""),
+            "snippet": ad.get("snippet", ""),
+            "link": ad.get("link", ""),
+            "sitelinks": [link.get("title") for link in ad.get("sitelinks", [])],
+            "type": ad_type,
+        }
+
+    top_ads: list[dict[str, Any]] = data.get("ads", [])
+    bottom_ads: list[dict[str, Any]] = data.get("bottom_ads", [])
+
+    all_ads = [_clean_ad(ad, "Top", "top_ad") for ad in top_ads] + [
+        _clean_ad(ad, "Bottom", "bottom_ad") for ad in bottom_ads
+    ]
+
+    return {
+        "keyword": keyword,
+        "google_url": data.get("search_metadata", {}).get("google_url", ""),
+        "total_ads_found": len(all_ads),
+        "top_ads_count": len(top_ads),
+        "bottom_ads_count": len(bottom_ads),
+        "ads": all_ads,
+        "full_raw_data": data if no_cache else None,
+    }

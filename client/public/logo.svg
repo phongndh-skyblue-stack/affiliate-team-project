@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <!-- Icon mark (scaled to fit height 60) -->
+  <g transform="translate(0,0) scale(0.75)">
+    <!-- Left loop -->
+    <path d="M20 40 C20 28 28 20 38 20 C44 20 49 23 52 28 C49 33 46 37 40 40 C46 43 49 47 52 52 C49 57 44 60 38 60 C28 60 20 52 20 40 Z" fill="url(#grad1l)" opacity="0.9"/>
+    <!-- Right loop -->
+    <path d="M60 40 C60 52 52 60 42 60 C36 60 31 57 28 52 C31 47 34 43 40 40 C34 37 31 33 28 28 C31 23 36 20 42 20 C52 20 60 28 60 40 Z" fill="url(#grad2l)" opacity="0.9"/>
+    <!-- Center blend -->
+    <ellipse cx="40" cy="40" rx="8" ry="12" fill="url(#grad3l)"/>
+  </g>
+  <!-- Text "MIC ACE" -->
+  <text x="60" y="38" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1D4ED8" letter-spacing="1">MIC ACE</text>
+  <defs>
+    <linearGradient id="grad1l" x1="20" y1="20" x2="52" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E40AF"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="grad2l" x1="60" y1="20" x2="28" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#60A5FA"/>
+    </linearGradient>
+    <linearGradient id="grad3l" x1="40" y1="28" x2="40" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+</svg>
