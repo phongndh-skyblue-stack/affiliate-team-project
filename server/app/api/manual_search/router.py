@@ -17,7 +17,7 @@ from app.shared.deps import get_current_user
 router = APIRouter(
     prefix="/manual-search",
     tags=["Manual Search"],
-    dependencies=[Depends(get_current_user)],
+    # dependencies=[Depends(get_current_user)],
 )
 
 
