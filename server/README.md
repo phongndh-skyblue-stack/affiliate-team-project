@@ -72,7 +72,7 @@ JWT_REFRESH_SECRET_KEY=change-me-refresh-secret
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
 
-CORS_ORIGINS=http://localhost:3030,http://127.0.0.1:3030
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 ## Chạy local

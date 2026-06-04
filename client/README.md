@@ -61,7 +61,7 @@ Tạo file `.env.local` trong thư mục `client/`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:9030/api
-PORT=3030
+PORT=3000
 ```
 
 `NEXT_PUBLIC_API_URL` mặc định là `http://localhost:9030/api` nếu không khai báo.
@@ -72,7 +72,7 @@ PORT=3030
 # Cài dependencies
 npm install
 
-# Chạy dev (port 3030)
+# Chạy dev (port 3000)
 npm run dev
 
 # Build production
@@ -80,7 +80,7 @@ npm run build
 npm run start
 ```
 
-Ứng dụng chạy tại **http://localhost:3030**.
+Ứng dụng chạy tại **http://localhost:3000**.
 
 ## Routes
 

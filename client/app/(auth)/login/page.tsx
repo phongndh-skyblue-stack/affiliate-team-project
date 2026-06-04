@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, BarChart3, Shield, TrendingUp } from "lucide-react";
 import { LoginForm } from "@/components/features/auth/LoginForm";
+import { RedirectIfAuthenticated } from "@/components/common/RedirectIfAuthenticated";
 
 const HIGHLIGHTS = [
   { icon: TrendingUp, text: "Hoa hồng lên đến 30%" },
@@ -12,6 +13,7 @@ const HIGHLIGHTS = [
 export default function LoginPage() {
   return (
     <main className="min-h-screen flex bg-[#F8FAFC]">
+      <RedirectIfAuthenticated />
       {/* Left panel — Navy branding */}
       <div className="hidden lg:flex lg:w-[45%] bg-brand-panel flex-col items-center justify-center p-14 text-white relative overflow-hidden">
         {/* Decorative elements */}

@@ -1,0 +1,1 @@
+arq app.api.search_ads.tasks.WorkerSettings

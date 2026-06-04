@@ -127,11 +127,13 @@ type DetailAction = "scan" | "view";
 function CreativeCard({
   creative,
   onScanDetail,
+  extraDetailCount = 0,
 }: {
   creative: AdCreativeHistoryItem;
   onScanDetail: (c: AdCreativeHistoryItem, action: DetailAction) => void;
+  extraDetailCount?: number;
 }) {
-  const hasDetail = creative.details.length > 0;
+  const hasDetail = creative.details.length > 0 || extraDetailCount > 0;
   const [imageError, setImageError] = useState(false);
   const imageSrc = creative.image?.trim();
   const showImage = Boolean(imageSrc) && !imageError;
@@ -198,7 +200,7 @@ function CreativeCard({
             onClick={() => onScanDetail(creative, "view")}
             className="flex-1 rounded-lg bg-[#059669]/10 px-3 py-1.5 text-xs font-medium text-[#059669] hover:bg-[#059669]/20 transition-colors"
           >
-            Xem chi tiết ({creative.details.length})
+            {`Xem chi tiết (${creative.details.length + extraDetailCount})`}
           </button>
         ) : (
           <span className="flex-1 rounded-lg border border-border px-3 py-1.5 text-center text-xs text-muted-foreground">
@@ -225,9 +227,11 @@ function CreativeCard({
 function HistoryRow({
   item,
   onScanDetail,
+  scannedCounts,
 }: {
   item: AdSearchHistoryItem;
   onScanDetail: (c: AdCreativeHistoryItem, action: DetailAction) => void;
+  scannedCounts: Map<string, number>;
 }) {
   const [open, setOpen] = useState(false);
   const totalCreatives = item.creatives.length;
@@ -269,7 +273,7 @@ function HistoryRow({
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {item.creatives.map((c) => (
-                <CreativeCard key={c.id} creative={c} onScanDetail={onScanDetail} />
+                <CreativeCard key={c.id} creative={c} onScanDetail={onScanDetail} extraDetailCount={scannedCounts.get(c.id) ?? 0} />
               ))}
             </div>
           )}
@@ -284,9 +288,11 @@ function HistoryRow({
 function CompetitorGroupCard({
   group,
   onScanDetail,
+  scannedCounts,
 }: {
   group: CompetitorGroup;
   onScanDetail: (c: AdCreativeHistoryItem, action: DetailAction) => void;
+  scannedCounts: Map<string, number>;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -315,7 +321,7 @@ function CompetitorGroupCard({
         <div className="border-t border-border px-4 py-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {group.creatives.map((c) => (
-              <CreativeCard key={c.id} creative={c} onScanDetail={onScanDetail} />
+              <CreativeCard key={c.id} creative={c} onScanDetail={onScanDetail} extraDetailCount={scannedCounts.get(c.id) ?? 0} />
             ))}
           </div>
         </div>
@@ -330,10 +336,12 @@ function DetailDrawer({
   creative,
   mode,
   onClose,
+  onScanned,
 }: {
   creative: AdCreativeHistoryItem | null;
   mode: DetailAction;
   onClose: () => void;
+  onScanned?: (creativeId: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
@@ -358,7 +366,10 @@ function DetailDrawer({
         creativeId: creative.adCreativeId,
         adCreativeId: creative.id,
       })
-      .then((r) => setDetail(r.data))
+      .then((r) => {
+        setDetail(r.data);
+        onScanned?.(creative.id);
+      })
       .catch(() => toast.error("Không lấy được chi tiết quảng cáo"))
       .finally(() => setLoading(false));
   }, [creative, mode]);
@@ -857,6 +868,7 @@ export function AdsTransparencyTab() {
     creative: AdCreativeHistoryItem;
     mode: DetailAction;
   } | null>(null);
+  const [scannedCounts, setScannedCounts] = useState<Map<string, number>>(new Map());
   const hasFetched = useRef(false);
 
   // Competitor pagination state
@@ -1000,6 +1012,7 @@ export function AdsTransparencyTab() {
                     key={item.id}
                     item={item}
                     onScanDetail={(creative, mode) => setSelectedCreative({ creative, mode })}
+                    scannedCounts={scannedCounts}
                   />
                 ))
               )}
@@ -1022,6 +1035,7 @@ export function AdsTransparencyTab() {
                       key={group.advertiserId}
                       group={group}
                       onScanDetail={(creative, mode) => setSelectedCreative({ creative, mode })}
+                      scannedCounts={scannedCounts}
                     />
                   ))}
 
@@ -1108,6 +1122,13 @@ export function AdsTransparencyTab() {
         creative={selectedCreative?.creative ?? null}
         mode={selectedCreative?.mode ?? "view"}
         onClose={() => setSelectedCreative(null)}
+        onScanned={(id) =>
+          setScannedCounts((prev) => {
+            const next = new Map(prev);
+            next.set(id, (next.get(id) ?? 0) + 1);
+            return next;
+          })
+        }
       />
     </>
   );

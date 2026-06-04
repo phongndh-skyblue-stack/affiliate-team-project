@@ -1,4 +1,8 @@
 fastapi==0.115.12
+langgraph>=0.2.0
+patchright>=1.44.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
 uvicorn[standard]==0.34.2
 sqlalchemy==2.0.41
 alembic==1.15.2
@@ -9,3 +13,6 @@ email-validator==2.2.0
 httpx==0.28.1
 selenium>=4.20
 redis[asyncio]>=5.0
+arq>=0.26.0
+aiogram>=3.0.0
+google-ads>=24.0.0

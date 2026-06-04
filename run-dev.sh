@@ -43,7 +43,7 @@ cleanup() {
 }
 
 export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:9030/api}"
-export PORT="${PORT:-3030}"
+export PORT="${PORT:-3000}"
 
 trap cleanup INT TERM EXIT
 

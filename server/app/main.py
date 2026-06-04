@@ -5,11 +5,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-from app.core.config import settings
+from app.core.config import SERVER_DIR, settings
 from app.core.database import Base, engine
 from app.router import api_router
+from app.shared.ws_manager import sio_app
 
 logging.basicConfig(
     level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -39,6 +41,13 @@ app.add_middleware(
 
 app.include_router(api_router)
 
+uploads_dir = SERVER_DIR / "uploads"
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+# Mount Socket.IO at /socket.io
+app.mount("/socket.io", sio_app)
+
 
 if __name__ == "__main__":
     uvicorn.run(
@@ -46,3 +55,4 @@ if __name__ == "__main__":
         port=settings.APP_PORT,
         reload=settings.DEBUG,
     )
+

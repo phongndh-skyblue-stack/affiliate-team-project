@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { RegisterForm } from "@/components/features/auth/RegisterForm";
+import { RedirectIfAuthenticated } from "@/components/common/RedirectIfAuthenticated";
 
 const BENEFITS = [
   "Đăng ký miễn phí, không ràng buộc",
@@ -13,6 +14,7 @@ const BENEFITS = [
 export default function RegisterPage() {
   return (
     <main className="min-h-screen flex bg-[#F8FAFC]">
+      <RedirectIfAuthenticated />
       {/* Left panel — Navy branding */}
       <div className="hidden lg:flex lg:w-[45%] bg-brand-panel flex-col items-center justify-center p-14 text-white relative overflow-hidden">
         {/* Decorative */}
