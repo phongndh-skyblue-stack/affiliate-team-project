@@ -19,6 +19,7 @@ export interface LandingPageInfo {
 }
 
 export interface SearchAdItem {
+  id?: string | null;
   position: number;
   title?: string | null;
   snippet?: string | null;
@@ -67,6 +68,7 @@ export interface SearchAdsHistoryItem {
   finalSummary?: string | null;
   proxyName?: string | null;
   isScheduled?: boolean;
+  source?: "manual" | "scheduled";
   videoUrl?: string | null;
   videoStatus?: string;
   createdAt: string;
@@ -85,7 +87,10 @@ export interface SearchAdsScheduleCreate {
   noProxy?: boolean;
   headful?: boolean;
   proxyId?: string | null;
-  runAt: string[];
+  scheduleMode?: "once" | "daily";
+  runAt?: string[];
+  dailyTimes?: string[];
+  notifyTelegramOnChange?: boolean;
 }
 
 export interface SearchAdsScheduleItem {
@@ -100,6 +105,9 @@ export interface SearchAdsScheduleItem {
   proxyId?: string | null;
   proxyName?: string | null;
   batchId?: string | null;
+  scheduleMode: "once" | "daily";
+  dailyTime?: string | null;
+  notifyTelegramOnChange: boolean;
   runAt: string;
   status: string;
   arqJobId?: string | null;
@@ -112,4 +120,45 @@ export interface SearchAdsScheduleItem {
 export interface SearchAdsScheduleResponse {
   total: number;
   items: SearchAdsScheduleItem[];
+}
+
+export interface SearchAdsCompetitorCreate {
+  keyword: string;
+  sourceSearchId?: string | null;
+  sourceAdId?: string | null;
+  position?: number | null;
+  title?: string | null;
+  snippet?: string | null;
+  displayUrl?: string | null;
+  targetUrl?: string | null;
+  advertiserName?: string | null;
+  advertiserDomain?: string | null;
+  advertiserLocation?: string | null;
+  confidence?: number;
+  landingPage?: LandingPageInfo | null;
+}
+
+export interface SearchAdsCompetitorItem {
+  id: string;
+  userId: string;
+  keyword: string;
+  advertiserName: string;
+  advertiserDomain?: string | null;
+  advertiserLocation?: string | null;
+  title?: string | null;
+  snippet?: string | null;
+  displayUrl?: string | null;
+  targetUrl?: string | null;
+  position?: number | null;
+  confidence: number;
+  landingPage?: LandingPageInfo | null;
+  sourceSearchId?: string | null;
+  sourceAdId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SearchAdsCompetitorResponse {
+  total: number;
+  items: SearchAdsCompetitorItem[];
 }

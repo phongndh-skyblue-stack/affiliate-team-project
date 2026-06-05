@@ -16,6 +16,7 @@ import {
   Server,
   Settings,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -45,7 +46,7 @@ export const DASHBOARD_TABS = [
   },
   {
     id: "search-ads",
-    label: "Đối thủ (Google Ads)",
+    label: "Quét quảng cáo",
     shortLabel: "Google Ads",
     icon: MonitorPlay,
     description: "Tìm nhà quảng cáo Google Ads theo từ khóa",
@@ -56,6 +57,13 @@ export const DASHBOARD_TABS = [
     shortLabel: "Lịch quét",
     icon: CalendarClock,
     description: "Đặt lịch quét quảng cáo Google Ads theo từ khóa và proxy",
+  },
+  {
+    id: "my-search-ads-competitors",
+    label: "Đối thủ của tôi",
+    shortLabel: "Đối thủ",
+    icon: Users,
+    description: "Danh sách đối thủ Google Ads đã lưu theo từ khóa",
   },
   {
     id: "proxy",

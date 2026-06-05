@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from datetime import UTC
+from datetime import UTC, timedelta
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
-from app.api.search_ads.model import GoogleAdsSearch, GoogleAdsSearchSchedule
-from app.api.search_ads.repository import SearchAdsRepository
 from app.api.search_ads.arq_client import get_arq_redis_settings
+from app.api.search_ads.model import GoogleAdsSearch, GoogleAdsSearchAd, GoogleAdsSearchSchedule
+from app.api.search_ads.repository import SearchAdsRepository
 from app.api.search_ads.schema import SearchAdsRequest
 from app.api.search_ads.service import SearchAdsService
-from app.api.telegram.notifications import send_scheduled_search_done_notification
+from app.api.telegram.model import TelegramSubscription
+from app.api.telegram.notifications import send_telegram_message
 from app.core.config import settings
 from app.core.database import SessionLocal
-
-TERMINAL_SCHEDULE_STATUSES = {"done", "failed", "cancelled"}
 
 
 def _load_model_metadata() -> None:
@@ -55,7 +55,9 @@ async def run_scheduled_search_ads(ctx, schedule_id: str) -> dict:
         schedule.status = "done"
         schedule.search_id = service.last_search_id
         db.commit()
-        await _notify_if_batch_finished(db, schedule.id)
+
+        await _notify_if_top1_changed(db, schedule.id)
+        await _enqueue_next_daily_run(db, schedule.id)
         return {
             "status": "done",
             "schedule_id": schedule_id,
@@ -69,7 +71,7 @@ async def run_scheduled_search_ads(ctx, schedule_id: str) -> dict:
             schedule.status = "failed"
             schedule.error = str(exc)
             db.commit()
-            await _notify_if_batch_finished(db, schedule.id)
+            await _enqueue_next_daily_run(db, schedule.id)
         raise
     finally:
         db.close()
@@ -83,75 +85,178 @@ class WorkerSettings:
     job_timeout = 60 * 30
 
 
-async def _notify_if_batch_finished(db, schedule_id: str) -> None:
+async def _notify_if_top1_changed(db, schedule_id: str) -> None:
     try:
         schedule = SearchAdsRepository(db).get_schedule(schedule_id)
-        if not schedule or not schedule.user_id or not schedule.batch_id or schedule.notification_sent:
+        if (
+            not schedule
+            or not schedule.user_id
+            or not schedule.search_id
+            or not schedule.batch_id
+            or schedule.notification_sent
+            or not schedule.notify_telegram_on_change
+        ):
             return
 
-        batch_schedules = list(
-            db.scalars(
-                select(GoogleAdsSearchSchedule)
-                .where(
-                    GoogleAdsSearchSchedule.user_id == schedule.user_id,
-                    GoogleAdsSearchSchedule.batch_id == schedule.batch_id,
-                )
-                .order_by(GoogleAdsSearchSchedule.run_at.asc(), GoogleAdsSearchSchedule.id.asc())
+        current_search = db.scalar(
+            select(GoogleAdsSearch)
+            .options(selectinload(GoogleAdsSearch.ads))
+            .where(GoogleAdsSearch.id == schedule.search_id)
+        )
+        current_ad = _top_ad(current_search)
+        if not current_ad:
+            return
+
+        previous_schedule = _previous_done_schedule(db, schedule)
+        if not previous_schedule or not previous_schedule.search_id:
+            return
+
+        previous_search = db.scalar(
+            select(GoogleAdsSearch)
+            .options(selectinload(GoogleAdsSearch.ads))
+            .where(GoogleAdsSearch.id == previous_schedule.search_id)
+        )
+        previous_ad = _top_ad(previous_search)
+        if not previous_ad:
+            return
+        if _advertiser_key(previous_ad) == _advertiser_key(current_ad):
+            return
+
+        subscription = db.scalar(
+            select(TelegramSubscription).where(
+                TelegramSubscription.user_id == schedule.user_id,
+                TelegramSubscription.enabled.is_(True),
             )
         )
-        if not batch_schedules:
+        if not subscription:
             return
 
-        final_schedule = batch_schedules[-1]
-        if final_schedule.id != schedule.id or final_schedule.notification_sent:
-            return
-        if any(item.status not in TERMINAL_SCHEDULE_STATUSES for item in batch_schedules):
-            return
-
-        search_ids = [item.search_id for item in batch_schedules if item.search_id]
-        total_ads = 0
-        if search_ids:
-            searches = list(db.scalars(select(GoogleAdsSearch).where(GoogleAdsSearch.id.in_(search_ids))))
-            total_ads = sum(search.total_ads_found for search in searches)
-
-        done = sum(1 for item in batch_schedules if item.status == "done")
-        failed = sum(1 for item in batch_schedules if item.status == "failed")
-        cancelled = sum(1 for item in batch_schedules if item.status == "cancelled")
-        message = _build_batch_done_message(
-            final_schedule=final_schedule,
-            total=len(batch_schedules),
-            done=done,
-            failed=failed,
-            cancelled=cancelled,
-            total_ads=total_ads,
+        sent = await send_telegram_message(
+            subscription.chat_id,
+            _build_top1_changed_message(schedule, previous_ad, current_ad),
         )
-        sent = await send_scheduled_search_done_notification(db, schedule.user_id, message)
         if sent:
-            final_schedule.notification_sent = True
+            schedule.notification_sent = True
             db.commit()
     except Exception:
         db.rollback()
 
 
-def _build_batch_done_message(
-    *,
-    final_schedule: GoogleAdsSearchSchedule,
-    total: int,
-    done: int,
-    failed: int,
-    cancelled: int,
-    total_ads: int,
+async def _enqueue_next_daily_run(db, schedule_id: str) -> None:
+    try:
+        schedule = SearchAdsRepository(db).get_schedule(schedule_id)
+        if not schedule or schedule.schedule_mode != "daily" or not schedule.daily_time:
+            return
+        if schedule.status == "cancelled" or _has_future_daily_run(db, schedule):
+            return
+
+        from app.api.search_ads.arq_client import enqueue_search_ads_schedule
+
+        next_run_at = _next_daily_run_after(schedule.run_at, schedule.daily_time)
+        next_schedule = SearchAdsRepository(db).create_schedule(
+            user_id=schedule.user_id,
+            keyword=schedule.keyword,
+            location=schedule.location,
+            language=schedule.language,
+            device=schedule.device,
+            no_proxy=schedule.no_proxy,
+            headful=schedule.headful,
+            proxy_id=schedule.proxy_id,
+            proxy_name=schedule.proxy_name,
+            batch_id=schedule.batch_id,
+            run_at=next_run_at,
+            schedule_mode=schedule.schedule_mode,
+            daily_time=schedule.daily_time,
+            notify_telegram_on_change=schedule.notify_telegram_on_change,
+        )
+        try:
+            job = await enqueue_search_ads_schedule(next_schedule.id, next_run_at)
+        except Exception:
+            db.delete(next_schedule)
+            db.commit()
+            raise
+        next_schedule.arq_job_id = job.job_id if job else None
+        next_schedule.status = "enqueued"
+        db.commit()
+    except Exception:
+        db.rollback()
+
+
+def _previous_done_schedule(db, schedule: GoogleAdsSearchSchedule) -> GoogleAdsSearchSchedule | None:
+    conditions = [
+        GoogleAdsSearchSchedule.user_id == schedule.user_id,
+        GoogleAdsSearchSchedule.batch_id == schedule.batch_id,
+        GoogleAdsSearchSchedule.status == "done",
+        GoogleAdsSearchSchedule.search_id.is_not(None),
+        GoogleAdsSearchSchedule.run_at < schedule.run_at,
+    ]
+    if schedule.daily_time:
+        conditions.append(GoogleAdsSearchSchedule.daily_time == schedule.daily_time)
+
+    return db.scalar(
+        select(GoogleAdsSearchSchedule)
+        .where(*conditions)
+        .order_by(GoogleAdsSearchSchedule.run_at.desc(), GoogleAdsSearchSchedule.id.desc())
+    )
+
+
+def _top_ad(search: GoogleAdsSearch | None) -> GoogleAdsSearchAd | None:
+    if not search or not search.ads:
+        return None
+    return sorted(search.ads, key=lambda ad: (ad.position or 9999, ad.created_at))[0]
+
+
+def _advertiser_key(ad: GoogleAdsSearchAd) -> str:
+    value = ad.advertiser_name or ad.advertiser_domain or ad.display_url or ad.title or ""
+    return " ".join(value.lower().strip().split())
+
+
+def _advertiser_label(ad: GoogleAdsSearchAd) -> str:
+    return ad.advertiser_name or ad.advertiser_domain or ad.display_url or ad.title or "Khong ro"
+
+
+def _build_top1_changed_message(
+    schedule: GoogleAdsSearchSchedule,
+    previous_ad: GoogleAdsSearchAd,
+    current_ad: GoogleAdsSearchAd,
 ) -> str:
-    run_at = final_schedule.run_at
+    run_at = schedule.run_at
     if run_at.tzinfo is None:
         run_at = run_at.replace(tzinfo=UTC)
     local_run_at = run_at.astimezone(ZoneInfo("Asia/Ho_Chi_Minh")).strftime("%d/%m/%Y %H:%M")
 
     lines = [
-        "Lịch quét quảng cáo đã hoàn tất",
-        f"Từ khóa: {final_schedule.keyword}",
-        f"Lần đặt lịch: {total} mốc, mốc cuối lúc {local_run_at}",
-        f"Kết quả: {done} xong, {failed} lỗi, {cancelled} hủy",
-        f"Tổng quảng cáo tìm thấy: {total_ads}",
+        "Top 1 Google Ads da thay doi",
+        f"Tu khoa: {schedule.keyword}",
+        f"Thoi gian quet: {local_run_at}",
+        f"Truoc: {_advertiser_label(previous_ad)}",
+        f"Hien tai: {_advertiser_label(current_ad)}",
     ]
     return "\n".join(lines)
+
+
+def _has_future_daily_run(db, schedule: GoogleAdsSearchSchedule) -> bool:
+    return bool(
+        db.scalar(
+            select(GoogleAdsSearchSchedule.id)
+            .where(
+                GoogleAdsSearchSchedule.user_id == schedule.user_id,
+                GoogleAdsSearchSchedule.batch_id == schedule.batch_id,
+                GoogleAdsSearchSchedule.schedule_mode == "daily",
+                GoogleAdsSearchSchedule.daily_time == schedule.daily_time,
+                GoogleAdsSearchSchedule.run_at > schedule.run_at,
+                GoogleAdsSearchSchedule.status.in_(["pending", "enqueued", "running"]),
+            )
+            .limit(1)
+        )
+    )
+
+
+def _next_daily_run_after(value, daily_time: str):
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    tz = ZoneInfo("Asia/Ho_Chi_Minh")
+    hour, minute = (int(part) for part in daily_time.split(":", 1))
+    local_value = value.astimezone(tz)
+    next_value = local_value.replace(hour=hour, minute=minute, second=0, microsecond=0) + timedelta(days=1)
+    return next_value.astimezone(UTC)

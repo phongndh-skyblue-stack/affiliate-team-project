@@ -71,12 +71,25 @@ class TelegramService:
         self.db.refresh(subscription)
         return subscription
 
-    def unlink(self, user_id: str) -> None:
+    def unlink(self, user_id: str) -> int | None:
         subscription = self.get_subscription(user_id)
         if subscription is None:
-            return
+            return None
+        chat_id = subscription.chat_id
         self.db.delete(subscription)
         self.db.commit()
+        return chat_id
+
+    def unlink_by_chat_id(self, chat_id: int) -> str | None:
+        stmt = select(TelegramSubscription).where(TelegramSubscription.chat_id == chat_id)
+        subscription = self.db.scalar(stmt)
+        if subscription is None:
+            return None
+
+        user_id = subscription.user_id
+        self.db.delete(subscription)
+        self.db.commit()
+        return user_id
 
 
 def to_subscription_response(subscription: TelegramSubscription) -> TelegramSubscriptionResponse:

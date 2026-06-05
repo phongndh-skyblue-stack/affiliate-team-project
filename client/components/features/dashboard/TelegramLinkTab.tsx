@@ -16,6 +16,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { telegramService } from "@/services/telegram.service";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type {
   TelegramConfigResponse,
   TelegramSubscription,
@@ -105,6 +116,46 @@ export function TelegramLinkTab() {
       window.clearInterval(timer);
     };
   }, [verification, subscription]);
+
+  useEffect(() => {
+    const handleTelegramLinked = async () => {
+      try {
+        const nextSubscription = await telegramService.getSubscription();
+        if (nextSubscription) {
+          setSubscription(nextSubscription);
+          setVerification(null);
+          toast.success("Liên kết Telegram thành công");
+        }
+      } catch {
+        // Manual refresh remains available.
+      }
+    };
+
+    window.addEventListener("telegram:linked", handleTelegramLinked);
+    return () => {
+      window.removeEventListener("telegram:linked", handleTelegramLinked);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleTelegramUnlinked = async () => {
+      try {
+        const nextSubscription = await telegramService.getSubscription();
+        setSubscription(nextSubscription);
+        if (!nextSubscription) {
+          setVerification(null);
+        }
+      } catch {
+        setSubscription(null);
+        setVerification(null);
+      }
+    };
+
+    window.addEventListener("telegram:unlinked", handleTelegramUnlinked);
+    return () => {
+      window.removeEventListener("telegram:unlinked", handleTelegramUnlinked);
+    };
+  }, []);
 
   async function handleGenerateCode() {
     setGenerating(true);
@@ -323,15 +374,46 @@ export function TelegramLinkTab() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleUnlink}
-                  disabled={unlinking}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                >
-                  {unlinking ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                  Hủy liên kết Telegram
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={unlinking}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                    >
+                      {unlinking ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      Hủy liên kết Telegram
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Hủy liên kết Telegram?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Liên kết Telegram sẽ bị xóa khỏi database. Bot cũng sẽ gửi một tin nhắn xác nhận hủy liên kết tới chat hiện tại.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel asChild>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                          Giữ liên kết
+                        </button>
+                      </AlertDialogCancel>
+                      <AlertDialogAction asChild>
+                        <button
+                          type="button"
+                          onClick={handleUnlink}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {unlinking ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                          Xác nhận hủy
+                        </button>
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ) : (
               <div className="space-y-4">

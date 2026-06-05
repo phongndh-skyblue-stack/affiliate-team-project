@@ -11,6 +11,13 @@ class ScanTrafficRequest(BaseModel):
     months: int = Field(default=4, ge=1, le=12, description="Số tháng lịch sử cần lấy")
 
 
+    start_period: str | None = Field(
+        default=None,
+        pattern=r"^\d{4}-\d{2}$",
+        description="Tháng bắt đầu quét, định dạng YYYY-MM",
+    )
+
+
 class TrafficDetails(BaseModel):
     global_: list[dict[str, Any]] = Field(default_factory=list, alias="global")
     country: list[dict[str, Any]] | None = None

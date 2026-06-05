@@ -27,6 +27,13 @@ async def validate_input_node(state: AdsSearchState):
 
 # Node này chuẩn bị browser context, proxy, stealth.
 async def prepare_browser_node(state: AdsSearchState):
+    configured_proxy = state.get("proxy")
+    if configured_proxy is not None:
+        return {
+            "proxy": configured_proxy,
+            "status": "searching",
+        }
+
     proxy_service = ProxyService()
 
     proxy = await proxy_service.get_proxy_for_location(

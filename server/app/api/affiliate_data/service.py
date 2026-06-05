@@ -320,6 +320,7 @@ class AffiliateDataService:
         user_id: str,
         affiliate_link_id: str,
         months: int,
+        start_period: str | None = None,
     ) -> dict:
         link = self.repository.get_affiliate_link_by_id_for_user(
             user_id=user_id,
@@ -328,7 +329,11 @@ class AffiliateDataService:
         if not link:
             raise ValueError("Affiliate link không tồn tại hoặc không thuộc user hiện tại")
 
-        traffic_result = await scan_traffic(link.affiliate_url, months=months)
+        traffic_result = await scan_traffic(
+            link.affiliate_url,
+            months=months,
+            start_period=start_period,
+        )
         traffic_result["url"] = link.affiliate_url
         traffic_result["domain"] = link.domain
 

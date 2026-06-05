@@ -18,6 +18,20 @@ function formatDate(iso: string) {
   });
 }
 
+type NotificationItem = ReturnType<typeof useNotificationStore.getState>["notifications"][number];
+
+function notificationDescription(n: NotificationItem) {
+  if (n.type === "telegram_linked" || n.type === "telegram_unlinked") {
+    return n.description;
+  }
+
+  const accountCount = n.accounts?.length ?? 0;
+  const inaccessibleCount = n.unaccessibleIds?.length ?? 0;
+  return `${accountCount > 0 ? `${accountCount} tài khoản Google Ads` : "Không tìm thấy tài khoản"}${
+    inaccessibleCount > 0 ? ` · ${inaccessibleCount} không thể truy cập` : ""
+  }`;
+}
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -133,13 +147,11 @@ export function NotificationBell() {
                       {n.mailEmail && (
                         <p className="text-[11px] text-muted-foreground truncate">{n.mailEmail}</p>
                       )}
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {n.accounts.length > 0
-                          ? `${n.accounts.length} tài khoản Google Ads`
-                          : "Không tìm thấy tài khoản"}
-                        {n.unaccessibleIds.length > 0 &&
-                          ` · ${n.unaccessibleIds.length} không thể truy cập`}
-                      </p>
+                      {notificationDescription(n) && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {notificationDescription(n)}
+                        </p>
+                      )}
                       <p className="mt-1 text-xs text-muted-foreground/70">
                         {formatDate(n.receivedAt)}
                       </p>

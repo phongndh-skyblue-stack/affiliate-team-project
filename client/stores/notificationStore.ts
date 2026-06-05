@@ -2,39 +2,44 @@ import { create } from "zustand";
 import type { AccountNode } from "@/types/mailDelegation.types";
 import type { ApiNotification } from "@/services/notification.service";
 
-export interface DelegationNotification {
+export interface AppNotification {
   id: string;
-  type: "delegation_result";
-  mailId: string;
-  mailEmail: string;
+  type: string;
   message: string;
-  accounts: AccountNode[];
-  unaccessibleIds: string[];
-  receivedAt: string;     // ISO
+  description?: string;
+  mailId?: string;
+  mailEmail?: string;
+  accounts?: AccountNode[];
+  unaccessibleIds?: string[];
+  chatId?: number;
+  receivedAt: string;
   read: boolean;
 }
 
-function fromApi(n: ApiNotification): DelegationNotification {
+function fromApi(n: ApiNotification): AppNotification {
   const p = n.payload;
   return {
     id: n.id,
-    type: "delegation_result",
+    type: n.type,
     mailId: p.mailId ?? "",
     mailEmail: p.mailEmail ?? "",
     message: p.message ?? "",
+    description: typeof p.description === "string" ? p.description : undefined,
     accounts: (p.accounts ?? []) as AccountNode[],
     unaccessibleIds: (p.unaccessibleIds ?? []) as string[],
+    chatId: typeof p.chatId === "number" ? p.chatId : undefined,
     receivedAt: n.createdAt,
     read: n.isRead,
   };
 }
 
 interface NotificationState {
-  notifications: DelegationNotification[];
+  notifications: AppNotification[];
   unreadCount: number;
   hydrated: boolean;
   setFromApi: (items: ApiNotification[], unreadCount: number) => void;
-  addDelegationResult: (payload: Omit<DelegationNotification, "id" | "receivedAt" | "read">) => void;
+  addNotification: (payload: Omit<AppNotification, "id" | "receivedAt" | "read"> & { id?: string; receivedAt?: string }) => void;
+  addDelegationResult: (payload: Omit<AppNotification, "id" | "receivedAt" | "read">) => void;
   markAllRead: () => void;
   deleteOne: (id: string) => void;
   deleteAll: () => void;
@@ -53,12 +58,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       hydrated: true,
     }),
 
-  addDelegationResult: (payload) => {
+  addNotification: (payload) => {
     // Avoid duplicate if the same notification already came from API hydration
-    const item: DelegationNotification = {
+    const id = payload.id ?? `socket-${Date.now()}-${Math.random()}`;
+    if (get().notifications.some((n) => n.id === id)) return;
+
+    const item: AppNotification = {
       ...payload,
-      id: `socket-${Date.now()}-${Math.random()}`,
-      receivedAt: new Date().toISOString(),
+      id,
+      receivedAt: payload.receivedAt ?? new Date().toISOString(),
       read: false,
     };
     set((state) => ({
@@ -66,6 +74,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       unreadCount: state.unreadCount + 1,
     }));
   },
+
+  addDelegationResult: (payload) => get().addNotification(payload),
 
   markAllRead: () =>
     set((state) => ({

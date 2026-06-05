@@ -10,6 +10,7 @@ import {
   Send,
   Server,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { AdsTransparencyTab } from "@/components/features/dashboard/AdsTransparencyTab";
@@ -21,6 +22,7 @@ import {
 import { EditProfileModal } from "@/components/features/dashboard/EditProfileModal";
 import { GoogleAdsTab } from "@/components/features/dashboard/GoogleAdsTab";
 import { ManualSearchTab } from "@/components/features/dashboard/ManualSearchTab";
+import { MySearchAdsCompetitorsTab } from "@/components/features/dashboard/MySearchAdsCompetitorsTab";
 import { NotificationBell } from "@/components/features/dashboard/NotificationBell";
 import { ProjectsTab } from "@/components/features/dashboard/ProjectsTab";
 import { ProxyTab } from "@/components/features/dashboard/ProxyTab";
@@ -56,6 +58,11 @@ const EMPTY_STATES: Record<
     icon: CalendarClock,
     heading: "Chưa có lịch quét quảng cáo",
     description: "Đặt lịch để hệ thống tự quét quảng cáo Google Ads theo thời điểm bạn chọn.",
+  },
+  "my-search-ads-competitors": {
+    icon: Users,
+    heading: "Chưa có đối thủ nào",
+    description: "Các đối thủ Google Ads đã lưu sẽ hiển thị ở đây.",
   },
   proxy: {
     icon: Server,
@@ -126,6 +133,8 @@ export default function DashboardPage() {
               <SearchAdsTab />
             ) : activeTab === "search-ads-schedule" ? (
               <SearchAdsScheduleTab />
+            ) : activeTab === "my-search-ads-competitors" ? (
+              <MySearchAdsCompetitorsTab />
             ) : activeTab === "proxy" ? (
               <ProxyTab />
             ) : activeTab === "telegram-link" ? (

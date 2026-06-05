@@ -7,10 +7,11 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.search_ads.model import GoogleAdsSearch
@@ -20,6 +21,7 @@ from app.api.search_ads.schema import (
     OrganicLinkItem,
     SearchAdItem,
     SearchAdsRequest,
+    SearchAdsCompetitorCreate,
     SearchAdsResponse,
     SearchAdsScheduleCreate,
 )
@@ -32,6 +34,7 @@ from app.shared.agents.search_ads.graph import build_ads_search_graph
 _playwright_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="playwright")
 UPLOADS_DIR = SERVER_DIR / "uploads"
 SEARCH_ADS_VIDEO_DIR = UPLOADS_DIR / "search-ads"
+MIN_VIDEO_BYTES = 64 * 1024
 
 
 def _run_in_proactor(coro):
@@ -58,7 +61,7 @@ class SearchAdsService:
         is_scheduled: bool = False,
     ) -> SearchAdsResponse:
         video_run_id = str(uuid.uuid4())
-        video_run_dir = SEARCH_ADS_VIDEO_DIR / video_run_id if not is_scheduled else None
+        video_run_dir = SEARCH_ADS_VIDEO_DIR / video_run_id
         if video_run_dir is not None:
             video_run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -171,10 +174,10 @@ class SearchAdsService:
 
         return response
 
-    def list_by_user_id(self, user_id: str, *, is_scheduled: bool = False) -> list[GoogleAdsSearch]:
+    def list_by_user_id(self, user_id: str, *, source: str = "manual") -> list[GoogleAdsSearch]:
         if self.db is None:
             return []
-        return SearchAdsRepository(self.db).list_by_user_id(user_id, is_scheduled=is_scheduled)
+        return SearchAdsRepository(self.db).list_by_user_id(user_id, source=source)
 
     async def create_schedules(self, user_id: str, payload: SearchAdsScheduleCreate):
         if self.db is None:
@@ -195,8 +198,12 @@ class SearchAdsService:
         repo = SearchAdsRepository(self.db)
         batch_id = str(uuid.uuid4())
         schedules = []
-        for run_at in payload.run_at:
-            normalized_run_at = _normalize_run_at(run_at)
+        if payload.schedule_mode == "daily":
+            run_times = [_next_daily_run_at(value) for value in sorted(set(payload.daily_times))]
+        else:
+            run_times = [(_normalize_run_at(run_at), None) for run_at in payload.run_at]
+
+        for normalized_run_at, daily_time in run_times:
             if normalized_run_at <= datetime.now(UTC):
                 raise HTTPException(status_code=400, detail="run_at must be in the future")
             schedule = repo.create_schedule(
@@ -211,6 +218,9 @@ class SearchAdsService:
                 proxy_name=proxy_name,
                 batch_id=batch_id,
                 run_at=normalized_run_at,
+                schedule_mode=payload.schedule_mode,
+                daily_time=daily_time,
+                notify_telegram_on_change=payload.notify_telegram_on_change,
             )
             try:
                 job = await enqueue_search_ads_schedule(schedule.id, normalized_run_at)
@@ -257,6 +267,60 @@ class SearchAdsService:
             _cleanup_empty_parents(path.parent, stop_at=SEARCH_ADS_VIDEO_DIR)
         repo.mark_video_deleted(search)
 
+    def delete_search(self, search_id: str, user_id: str) -> None:
+        if self.db is None:
+            return
+        repo = SearchAdsRepository(self.db)
+        search = repo.get_search(search_id, user_id)
+        if not search:
+            raise HTTPException(status_code=404, detail="Search not found")
+        if search.video_path:
+            path = _resolve_upload_path(search.video_path)
+            if path.exists() and path.is_file():
+                path.unlink()
+            _cleanup_empty_parents(path.parent, stop_at=SEARCH_ADS_VIDEO_DIR)
+        repo.delete_search(search)
+
+    def add_competitor(self, user_id: str, payload: SearchAdsCompetitorCreate):
+        if self.db is None:
+            return None
+        keyword_key = _normalize_key(payload.keyword)
+        if not keyword_key:
+            raise HTTPException(status_code=400, detail="keyword is required")
+
+        advertiser_name = (payload.advertiser_name or payload.advertiser_domain or "").strip()
+        advertiser_key = _normalize_key(advertiser_name)
+        if not advertiser_key:
+            raise HTTPException(status_code=400, detail="advertiser_name is required")
+
+        try:
+            return SearchAdsRepository(self.db).save_competitor(
+                user_id=user_id,
+                payload=payload,
+                keyword_key=keyword_key,
+                advertiser_name=advertiser_name,
+                advertiser_key=advertiser_key,
+            )
+        except IntegrityError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail="Advertiser already exists for this keyword",
+            ) from exc
+
+    def list_competitors(self, user_id: str):
+        if self.db is None:
+            return []
+        return SearchAdsRepository(self.db).list_competitors_by_user_id(user_id)
+
+    def delete_competitor(self, competitor_id: str, user_id: str) -> None:
+        if self.db is None:
+            return
+        repo = SearchAdsRepository(self.db)
+        competitor = repo.get_competitor(competitor_id, user_id)
+        if not competitor:
+            raise HTTPException(status_code=404, detail="Competitor not found")
+        repo.delete_competitor(competitor)
+
 
 def _parse_landing(lp: dict | None) -> LandingPageInfo | None:
     if not lp:
@@ -272,19 +336,53 @@ def _parse_landing(lp: dict | None) -> LandingPageInfo | None:
     )
 
 
+def _normalize_key(value: str | None) -> str:
+    return " ".join((value or "").strip().lower().split())
+
+
 def _normalize_run_at(value: datetime) -> datetime:
     if value.tzinfo is None:
         value = value.replace(tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))
     return value.astimezone(UTC)
 
 
+def _next_daily_run_at(value: str, *, now: datetime | None = None) -> tuple[datetime, str]:
+    hour_text, minute_text = value.split(":", 1)
+    hour = int(hour_text)
+    minute = int(minute_text)
+    tz = ZoneInfo("Asia/Ho_Chi_Minh")
+    current = now.astimezone(tz) if now else datetime.now(tz)
+    candidate = current.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if candidate <= current:
+        candidate += timedelta(days=1)
+    return candidate.astimezone(UTC), f"{hour:02d}:{minute:02d}"
+
+
 def _find_recorded_video_path(run_dir: Path | None) -> str | None:
     if run_dir is None or not run_dir.exists():
         return None
     videos = sorted(run_dir.rglob("*.webm"), key=lambda item: item.stat().st_mtime, reverse=True)
-    if not videos:
-        return None
-    return videos[0].relative_to(SERVER_DIR).as_posix()
+    for video in videos:
+        if _is_valid_video_file(video):
+            return video.relative_to(SERVER_DIR).as_posix()
+    return None
+
+
+def _is_valid_video_file(path: Path) -> bool:
+    try:
+        return path.is_file() and path.stat().st_size >= MIN_VIDEO_BYTES
+    except OSError:
+        return False
+
+
+def is_available_video_path(video_path: str | None) -> bool:
+    if not video_path:
+        return False
+    try:
+        path = _resolve_upload_path(video_path)
+    except HTTPException:
+        return False
+    return _is_valid_video_file(path)
 
 
 def _video_url(video_path: str | None) -> str | None:

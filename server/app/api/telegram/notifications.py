@@ -33,3 +33,21 @@ async def send_scheduled_search_done_notification(db: Session, user_id: str, mes
         )
         response.raise_for_status()
     return True
+
+
+async def send_telegram_message(chat_id: int, message: str) -> bool:
+    if not settings.TELEGRAM_BOT_TOKEN:
+        return False
+
+    url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "text": message,
+                "disable_web_page_preview": True,
+            },
+        )
+        response.raise_for_status()
+    return True

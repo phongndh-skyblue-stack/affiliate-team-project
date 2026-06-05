@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  CalendarClock,
   ChevronDown,
   ChevronUp,
   ExternalLink,
@@ -18,6 +19,7 @@ import {
   ShieldCheck,
   Smartphone,
   Trash2,
+  UserPlus,
   Video,
   VideoOff,
 } from "lucide-react";
@@ -27,6 +29,17 @@ import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/constants/config";
 import { searchAdsService } from "@/services/searchAds.service";
 import { proxyService } from "@/services/proxy.service";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type {
   SearchAdItem,
   SearchAdsHistoryItem,
@@ -56,6 +69,14 @@ const DEVICE_OPTIONS = [
   { value: "mobile", label: "Mobile" },
 ];
 
+type HistorySourceFilter = "all" | "scheduled" | "manual";
+
+const HISTORY_SOURCE_FILTERS: { value: HistorySourceFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "scheduled", label: "Theo lịch" },
+  { value: "manual", label: "Tự quét" },
+];
+
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("vi-VN", {
     day: "2-digit",
@@ -71,6 +92,19 @@ function mediaUrl(path?: string | null) {
   if (path.startsWith("http")) return path;
   const apiOrigin = new URL(API_BASE_URL).origin;
   return `${apiOrigin}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function errorMessage(err: unknown, fallback: string) {
+  if (typeof err === "object" && err !== null && "response" in err) {
+    const response = (err as { response?: { status?: number; data?: { detail?: string } } }).response;
+    if (response?.status === 409) return "Đối thủ này đã tồn tại trong cùng từ khóa";
+    if (response?.data?.detail) return response.data.detail;
+  }
+  return err instanceof Error ? err.message : fallback;
+}
+
+function competitorAddKey(searchId: string, ad: SearchAdItem) {
+  return [searchId, ad.id ?? ad.position, ad.advertiserName ?? ad.advertiserDomain ?? ""].join("|");
 }
 
 // Sub-components
@@ -116,7 +150,19 @@ function OrganicLinks({ links }: { links: OrganicLinkItem[] }) {
   );
 }
 
-function AdCard({ ad }: { ad: SearchAdItem }) {
+function AdCard({
+  ad,
+  keyword,
+  searchId,
+  adding,
+  onAddCompetitor,
+}: {
+  ad: SearchAdItem;
+  keyword: string;
+  searchId: string;
+  adding: boolean;
+  onAddCompetitor: (keyword: string, searchId: string, ad: SearchAdItem) => void;
+}) {
   return (
     <div className="rounded-xl border border-border bg-background overflow-hidden">
       <div className="flex items-start gap-3 p-3">
@@ -134,7 +180,21 @@ function AdCard({ ad }: { ad: SearchAdItem }) {
             <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{ad.displayUrl}</p>
           )}
         </div>
-        <ConfidenceBadge value={ad.confidence} />
+        <div className="flex shrink-0 items-center gap-2">
+          <ConfidenceBadge value={ad.confidence} />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddCompetitor(keyword, searchId, ad)}
+            disabled={adding || !(ad.advertiserName || ad.advertiserDomain)}
+            className="border border-[#059669]/30 bg-[#059669]/10 px-2.5 text-xs text-[#047857] hover:bg-[#059669]/15"
+            title="Thêm vào Đối thủ của tôi"
+          >
+            {adding ? <Loader2 size={12} className="animate-spin" /> : <UserPlus size={12} />}
+            Thêm
+          </Button>
+        </div>
       </div>
 
       {/* Advertiser info row */}
@@ -276,6 +336,7 @@ function SearchVideoPanel({
   onDeleteVideo: (id: string) => Promise<void>;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const url = mediaUrl(item.videoUrl);
 
   const handleDelete = async () => {
@@ -300,12 +361,25 @@ function SearchVideoPanel({
     );
   }
 
-  if (!url || item.videoStatus !== "available") {
+  if (!url || item.videoStatus !== "available" || videoError) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <VideoOff size={13} />Không có video ghi lại cho lần search này.
-        </span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5">
+            <VideoOff size={13} />
+            {videoError ? "Video ghi lại bị lỗi hoặc không đọc được." : "Không có video ghi lại cho lần search này."}
+          </span>
+          {url && (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-medium text-[#059669] hover:underline"
+            >
+              Mở trực tiếp <ExternalLink size={11} />
+            </a>
+          )}
+        </div>
       </div>
     );
   }
@@ -316,65 +390,125 @@ function SearchVideoPanel({
         <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
           <Video size={13} />Video quá trình search
         </p>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleDelete}
           disabled={deleting}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+          className="border border-border text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         >
           {deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
           Xoá video
-        </button>
+        </Button>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ExternalLink size={12} />
+          Mở
+        </a>
       </div>
       <video
         src={url}
         controls
         preload="metadata"
+        onError={() => setVideoError(true)}
         className="aspect-video w-full rounded-lg border border-border bg-black"
       />
     </div>
   );
 }
 
+function DeleteButton({
+  item,
+  onDeleteSearch,
+}: {
+  item: SearchAdsHistoryItem;
+  onDeleteSearch: (id: string) => void;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onDeleteSearch(item.id);
+      }}
+      className="border border-border text-destructive hover:bg-destructive/10 hover:text-destructive"
+      title="Xoá lần search này"
+    >
+      <Trash2 size={14} />
+      Xoá
+    </Button>
+  );
+}
+
 function HistoryCard({
   item,
   onDeleteVideo,
+  onDeleteSearch,
+  addingCompetitorKey,
+  onAddCompetitor,
 }: {
   item: SearchAdsHistoryItem;
   onDeleteVideo: (id: string) => Promise<void>;
+  onDeleteSearch: (id: string) => void;
+  addingCompetitorKey: string | null;
+  onAddCompetitor: (keyword: string, searchId: string, ad: SearchAdItem) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const isScheduled = item.source === "scheduled" || item.isScheduled;
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50"
-      >
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#059669]/10">
-          <MonitorPlay size={15} className="text-[#059669]" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{item.keyword}</p>
-          <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><MapPin size={10} />{item.location}</span>
-            <span className="inline-flex items-center gap-1">
-              {item.device === "mobile" ? <Smartphone size={10} /> : <Monitor size={10} />}{item.device}
-            </span>
-            <span className="inline-flex items-center gap-1"><Globe size={10} />{item.language}</span>
-            {item.proxyName && (
-              <span className="inline-flex items-center gap-1"><Server size={10} />{item.proxyName}</span>
-            )}
-            <span>{formatDateTime(item.createdAt)}</span>
+      <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex flex-1 items-center gap-3 text-left transition-colors hover:bg-muted/50"
+        >
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#059669]/10">
+            <MonitorPlay size={15} className="text-[#059669]" />
           </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-sm font-semibold">{item.totalAdsFound} ads</p>
-          <span className={cn("text-[11px]", item.status === "done" ? "text-[#059669]" : "text-destructive")}>
-            {item.status}
-          </span>
-        </div>
-        {open ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-      </button>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate text-sm font-semibold">{item.keyword}</p>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  isScheduled
+                    ? "bg-[#0f766e]/10 text-[#0f766e]"
+                    : "bg-slate-500/10 text-slate-600"
+                )}
+              >
+                {isScheduled ? <CalendarClock size={11} /> : <Search size={11} />}
+                {isScheduled ? "Theo lịch" : "Tự quét"}
+              </span>
+            </div>
+            <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><MapPin size={10} />{item.location}</span>
+              <span className="inline-flex items-center gap-1">
+                {item.device === "mobile" ? <Smartphone size={10} /> : <Monitor size={10} />}{item.device}
+              </span>
+              <span className="inline-flex items-center gap-1"><Globe size={10} />{item.language}</span>
+              {item.proxyName && (
+                <span className="inline-flex items-center gap-1"><Server size={10} />{item.proxyName}</span>
+              )}
+              <span>{formatDateTime(item.createdAt)}</span>
+            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-sm font-semibold">{item.totalAdsFound} ads</p>
+            <span className={cn("text-[11px]", item.status === "done" ? "text-[#059669]" : "text-destructive")}>
+              {item.status}
+            </span>
+          </div>
+          {open ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+        </button>
+        <DeleteButton item={item} onDeleteSearch={onDeleteSearch} />
+      </div>
 
       {open && (
         <div className="border-t border-border px-4 py-4 space-y-4">
@@ -397,7 +531,14 @@ function HistoryCard({
           ) : (
             <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
               {item.ads.map((ad, i) => (
-                <AdCard key={`${item.id}-${i}`} ad={ad} />
+                <AdCard
+                  key={`${item.id}-${i}`}
+                  ad={ad}
+                  keyword={item.keyword}
+                  searchId={item.id}
+                  adding={addingCompetitorKey === competitorAddKey(item.id, ad)}
+                  onAddCompetitor={onAddCompetitor}
+                />
               ))}
             </div>
           )}
@@ -430,9 +571,15 @@ interface KeywordGroup {
 function KeywordGroupCard({
   group,
   onDeleteVideo,
+  onDeleteSearch,
+  addingCompetitorKey,
+  onAddCompetitor,
 }: {
   group: KeywordGroup;
   onDeleteVideo: (id: string) => Promise<void>;
+  onDeleteSearch: (id: string) => void;
+  addingCompetitorKey: string | null;
+  onAddCompetitor: (keyword: string, searchId: string, ad: SearchAdItem) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -459,7 +606,14 @@ function KeywordGroupCard({
       {open && (
         <div className="border-t border-border px-4 py-4 space-y-3">
           {group.searches.map((s) => (
-            <HistoryCard key={s.id} item={s} onDeleteVideo={onDeleteVideo} />
+            <HistoryCard
+              key={s.id}
+              item={s}
+              onDeleteVideo={onDeleteVideo}
+              onDeleteSearch={onDeleteSearch}
+              addingCompetitorKey={addingCompetitorKey}
+              onAddCompetitor={onAddCompetitor}
+            />
           ))}
         </div>
       )}
@@ -493,9 +647,12 @@ export function SearchAdsTab() {
   const [submitting, setSubmitting] = useState(false);
 
   const [history, setHistory] = useState<SearchAdsHistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [view, setView] = useState<"history" | "keyword">("history");
-  const hasFetched = useRef(false);
+  const [historySource, setHistorySource] = useState<HistorySourceFilter>("all");
+  const [addingCompetitorKey, setAddingCompetitorKey] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const hasFetchedProxies = useRef(false);
 
   const keywordGroups = history.reduce<KeywordGroup[]>((acc, item) => {
@@ -510,10 +667,10 @@ export function SearchAdsTab() {
     return acc;
   }, []);
 
-  async function fetchHistory() {
+  async function fetchHistory(source = historySource) {
     setHistoryLoading(true);
     try {
-      const res = await searchAdsService.getHistory();
+      const res = await searchAdsService.getHistory(source);
       setHistory(res.items);
     } catch {
       toast.error("Không tải được lịch sử");
@@ -533,12 +690,78 @@ export function SearchAdsTab() {
     );
   }
 
-  useEffect(() => {
-    if (!hasFetched.current) {
-      hasFetched.current = true;
-      fetchHistory();
+  const openDeleteDialog = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDeleteTargetId(null);
+  };
+
+  async function deleteSearch(id: string) {
+    try {
+      await searchAdsService.deleteHistory(id);
+      setHistory((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Đã xoá lịch sử tìm kiếm");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Không thể xoá lịch sử tìm kiếm");
     }
-  }, []);
+  }
+
+  const confirmDeleteSearch = async () => {
+    if (!deleteTargetId) {
+      return;
+    }
+    await deleteSearch(deleteTargetId);
+    closeDeleteDialog();
+  };
+
+  async function handleAddCompetitor(keyword: string, searchId: string, ad: SearchAdItem) {
+    const key = competitorAddKey(searchId, ad);
+    setAddingCompetitorKey(key);
+    try {
+      await searchAdsService.addCompetitor({
+        keyword,
+        sourceSearchId: searchId,
+        sourceAdId: ad.id ?? null,
+        position: ad.position,
+        title: ad.title,
+        snippet: ad.snippet,
+        displayUrl: ad.displayUrl,
+        targetUrl: ad.targetUrl,
+        advertiserName: ad.advertiserName,
+        advertiserDomain: ad.advertiserDomain,
+        advertiserLocation: ad.advertiserLocation,
+        confidence: ad.confidence,
+        landingPage: ad.landingPage ?? null,
+      });
+      toast.success("Đã thêm vào Đối thủ của tôi");
+    } catch (err: unknown) {
+      toast.error(errorMessage(err, "Không thể thêm đối thủ"));
+    } finally {
+      setAddingCompetitorKey(null);
+    }
+  }
+
+  useEffect(() => {
+    let ignore = false;
+    Promise.resolve()
+      .then(() => searchAdsService.getHistory(historySource))
+      .then((res) => {
+        if (!ignore) setHistory(res.items);
+      })
+      .catch(() => {
+        if (!ignore) toast.error("Không tải được lịch sử");
+      })
+      .finally(() => {
+        if (!ignore) setHistoryLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [historySource]);
 
   // Load proxies lazily when user toggles proxy on for the first time
   useEffect(() => {
@@ -599,9 +822,13 @@ export function SearchAdsTab() {
         proxyName: proxyNameUsed,
         videoUrl: data.videoUrl ?? null,
         videoStatus: data.videoStatus ?? "none",
+        isScheduled: false,
+        source: "manual",
         createdAt: new Date().toISOString(),
       };
-      setHistory((prev) => [newItem, ...prev]);
+      if (historySource !== "scheduled") {
+        setHistory((prev) => [newItem, ...prev]);
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Lỗi không xác định");
     } finally {
@@ -712,17 +939,19 @@ export function SearchAdsTab() {
           )}
         </div>
 
-        <button
+        <Button
+          variant="sage"
+          size="lg"
           onClick={handleSearch}
           disabled={submitting || !keyword.trim()}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#059669] py-2.5 text-sm font-semibold text-white shadow-sm shadow-[#059669]/30 transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full"
         >
           {submitting ? (
             <><Loader2 size={14} className="animate-spin" />Đang tìm kiếm... (có thể mất 30-60 giây)</>
           ) : (
             <><Search size={14} />Tìm quảng cáo</>
           )}
-        </button>
+        </Button>
         {submitting && (
           <p className="text-center text-xs text-muted-foreground">
             Đang mở Google Chrome, click từng quảng cáo để lấy thông tin nhà quảng cáo...
@@ -731,30 +960,81 @@ export function SearchAdsTab() {
       </div>
 
       {/* History section */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
-          {(["history", "keyword"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                view === v ? "bg-[#059669] text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {v === "history" ? "Theo lịch sử" : "Gom theo keyword"}
-            </button>
-          ))}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
+            {(["history", "keyword"] as const).map((v) => (
+              <Button
+                key={v}
+                type="button"
+                size="sm"
+                variant={view === v ? "sage" : "ghost"}
+                onClick={() => setView(v)}
+                className={cn(
+                  "rounded-lg text-xs font-medium transition-all",
+                  view === v ? "shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {v === "history" ? "Theo lịch sử" : "Gom theo keyword"}
+              </Button>
+            ))}
+          </div>
+          <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
+            {HISTORY_SOURCE_FILTERS.map((option) => (
+              <Button
+                key={option.value}
+                type="button"
+                size="sm"
+                variant={historySource === option.value ? "sage" : "ghost"}
+                onClick={() => {
+                  if (historySource === option.value) return;
+                  setHistoryLoading(true);
+                  setHistorySource(option.value);
+                }}
+                className={cn(
+                  "rounded-lg text-xs font-medium transition-all",
+                  historySource === option.value ? "shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
         </div>
-        <button
-          onClick={fetchHistory}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => fetchHistory()}
           disabled={historyLoading}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+          className="border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <RefreshCw size={12} className={historyLoading ? "animate-spin" : ""} />
           Làm mới
-        </button>
+        </Button>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => { if (!open) closeDeleteDialog(); setIsDeleteDialogOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xoá</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này sẽ xoá lần tìm kiếm và không thể khôi phục.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant="secondary">Huỷ</Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button variant="destructive" onClick={confirmDeleteSearch}>
+                Xoá
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {historyLoading ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16">
           <Loader2 size={28} className="animate-spin text-[#059669]" />
@@ -765,7 +1045,14 @@ export function SearchAdsTab() {
       ) : view === "history" ? (
         <div className="space-y-2">
           {history.map((item) => (
-            <HistoryCard key={item.id} item={item} onDeleteVideo={handleDeleteVideo} />
+            <HistoryCard
+              key={item.id}
+              item={item}
+              onDeleteVideo={handleDeleteVideo}
+              onDeleteSearch={openDeleteDialog}
+              addingCompetitorKey={addingCompetitorKey}
+              onAddCompetitor={handleAddCompetitor}
+            />
           ))}
         </div>
       ) : (
@@ -775,6 +1062,9 @@ export function SearchAdsTab() {
               key={group.keyword.toLowerCase()}
               group={group}
               onDeleteVideo={handleDeleteVideo}
+              onDeleteSearch={openDeleteDialog}
+              addingCompetitorKey={addingCompetitorKey}
+              onAddCompetitor={handleAddCompetitor}
             />
           ))}
         </div>

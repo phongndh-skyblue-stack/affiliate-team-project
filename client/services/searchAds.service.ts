@@ -1,6 +1,9 @@
 import axiosInstance from "@/lib/axios";
 import type {
   SearchAdsHistoryResponse,
+  SearchAdsCompetitorCreate,
+  SearchAdsCompetitorItem,
+  SearchAdsCompetitorResponse,
   SearchAdsRequest,
   SearchAdsResponse,
   SearchAdsScheduleCreate,
@@ -16,9 +19,12 @@ export const searchAdsService = {
     return response.data;
   },
 
-  getHistory: async (): Promise<SearchAdsHistoryResponse> => {
+  getHistory: async (
+    source: "all" | "scheduled" | "manual" = "all"
+  ): Promise<SearchAdsHistoryResponse> => {
     const response = await axiosInstance.get<SearchAdsHistoryResponse>(
-      "/search-ads/history"
+      "/search-ads/history",
+      { params: { source } }
     );
     return response.data;
   },
@@ -53,5 +59,30 @@ export const searchAdsService = {
 
   deleteVideo: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/search-ads/history/${id}/video`);
+  },
+
+  deleteHistory: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/search-ads/history/${id}`);
+  },
+
+  addCompetitor: async (
+    data: SearchAdsCompetitorCreate
+  ): Promise<SearchAdsCompetitorItem> => {
+    const response = await axiosInstance.post<SearchAdsCompetitorItem>(
+      "/search-ads/competitors",
+      data
+    );
+    return response.data;
+  },
+
+  getCompetitors: async (): Promise<SearchAdsCompetitorResponse> => {
+    const response = await axiosInstance.get<SearchAdsCompetitorResponse>(
+      "/search-ads/competitors"
+    );
+    return response.data;
+  },
+
+  deleteCompetitor: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/search-ads/competitors/${id}`);
   },
 };

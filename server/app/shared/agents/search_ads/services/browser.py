@@ -4,6 +4,20 @@
 from patchright.async_api import async_playwright
 
 
+def _proxy_server(proxy: dict) -> str | None:
+    server = (proxy.get("server") or "").strip()
+    if server:
+        return server
+
+    host = (proxy.get("host") or "").strip()
+    port = str(proxy.get("port") or "").strip()
+    if not host or not port:
+        return None
+
+    protocol = (proxy.get("protocol") or "http").strip().lower()
+    return f"{protocol}://{host}:{port}"
+
+
 class BrowserService:
     async def create_context(
         self,
@@ -38,9 +52,10 @@ class BrowserService:
             context_options["record_video_dir"] = record_video_dir
             context_options["record_video_size"] = {"width": 1366, "height": 768}
 
-        if proxy and proxy.get("enabled") and proxy.get("server"):
+        proxy_server = _proxy_server(proxy) if proxy and proxy.get("enabled") else None
+        if proxy_server:
             context_options["proxy"] = {
-                "server": proxy["server"],
+                "server": proxy_server,
                 "username": proxy.get("username"),
                 "password": proxy.get("password"),
             }

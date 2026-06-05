@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Bell,
   CalendarClock,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -21,13 +23,17 @@ import {
   ShieldCheck,
   Smartphone,
   Trash2,
+  Video,
+  VideoOff,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/constants/config";
 import { cn } from "@/lib/utils";
 import { proxyService } from "@/services/proxy.service";
 import { searchAdsService } from "@/services/searchAds.service";
+import { telegramService } from "@/services/telegram.service";
 import type { ProxyResponse } from "@/types/proxy.types";
 import type {
   OrganicLinkItem,
@@ -86,6 +92,13 @@ function formatResultTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function mediaUrl(path?: string | null) {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  const apiOrigin = new URL(API_BASE_URL).origin;
+  return `${apiOrigin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function optionLabel(options: { value: string; label: string }[], value: string) {
@@ -151,6 +164,9 @@ interface ScheduleGroup {
   language: string;
   device: string;
   proxyName?: string | null;
+  scheduleMode: "once" | "daily";
+  dailyTime?: string | null;
+  notifyTelegramOnChange: boolean;
   createdAt: string;
   nextRunAt: string;
   total: number;
@@ -197,6 +213,9 @@ function buildScheduleGroups(items: SearchAdsScheduleItem[], view: ScheduleView)
         language: first.language,
         device: first.device,
         proxyName: first.proxyName,
+        scheduleMode: first.scheduleMode ?? "once",
+        dailyTime: first.dailyTime,
+        notifyTelegramOnChange: first.notifyTelegramOnChange ?? false,
         createdAt: view === "keyword" ? sorted[sorted.length - 1].createdAt : first.createdAt,
         nextRunAt: sorted[0].runAt,
         total: sorted.length,
@@ -237,8 +256,8 @@ function ConfidenceBadge({ value }: { value: number }) {
 function OrganicLinks({ links }: { links: OrganicLinkItem[] }) {
   if (!links.length) return null;
   return (
-    <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
-      <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+    <div className="space-y-2 rounded-xl border border-border bg-muted/30 px-4 py-3">
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
         <Link2 size={12} />
         Kết quả tự nhiên ({links.length})
       </p>
@@ -249,9 +268,9 @@ function OrganicLinks({ links }: { links: OrganicLinkItem[] }) {
             href={link.url ?? "#"}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between gap-2 text-xs hover:text-[#059669]"
+            className="group flex items-center justify-between gap-2 text-xs hover:text-[#059669]"
           >
-            <span className="truncate">{link.title || link.url}</span>
+            <span className="truncate text-foreground group-hover:underline">{link.title || link.url}</span>
             <ExternalLink size={10} className="shrink-0 text-muted-foreground" />
           </a>
         ))}
@@ -262,66 +281,122 @@ function OrganicLinks({ links }: { links: OrganicLinkItem[] }) {
 
 function AdResultCard({ ad }: { ad: SearchAdItem }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
+    <div className="overflow-hidden rounded-xl border border-border bg-background">
       <div className="flex items-start gap-3 p-3">
         <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#059669]/10 text-xs font-bold text-[#059669]">
           {ad.position}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold leading-tight">{ad.title || "Không có tiêu đề"}</p>
-          {ad.snippet && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{ad.snippet}</p>}
-          {ad.displayUrl && <p className="mt-1 truncate text-[11px] text-muted-foreground">{ad.displayUrl}</p>}
+          <p className="text-sm font-semibold leading-tight">
+            {ad.title || "Không có tiêu đề"}
+          </p>
+          {ad.snippet && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{ad.snippet}</p>}
+          {ad.displayUrl && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{ad.displayUrl}</p>}
         </div>
         <ConfidenceBadge value={ad.confidence} />
       </div>
 
       {(ad.advertiserName || ad.advertiserDomain || ad.advertiserLocation) && (
         <div className="space-y-1 border-t border-border bg-muted/30 px-3 py-2 text-xs">
-          {ad.advertiserName && (
-            <p className="inline-flex items-center gap-1.5 font-medium">
-              <ShieldCheck size={11} className="text-[#059669]" />
-              Nhà quảng cáo: {ad.advertiserName}
-            </p>
+          {(ad.advertiserName || ad.advertiserLocation) && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              {ad.advertiserName && (
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <ShieldCheck size={11} className="text-[#059669]" />
+                  <span className="text-muted-foreground">Advertiser:</span>
+                  <span>{ad.advertiserName}</span>
+                </span>
+              )}
+              {ad.advertiserLocation && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin size={11} className="text-muted-foreground" />
+                  <span className="text-muted-foreground">Location:</span>
+                  <span className="font-medium">{ad.advertiserLocation}</span>
+                </span>
+              )}
+            </div>
           )}
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
-            {ad.advertiserDomain && (
-              <span className="inline-flex items-center gap-1">
-                <Globe size={11} />
-                {ad.advertiserDomain}
-              </span>
-            )}
-            {ad.advertiserLocation && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin size={11} />
-                {ad.advertiserLocation}
-              </span>
-            )}
-          </div>
+          {ad.advertiserDomain && (
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <Globe size={11} />
+              <span>Domain:</span>
+              <span>{ad.advertiserDomain}</span>
+            </span>
+          )}
         </div>
       )}
 
       {ad.landingPage && (
-        <div className="space-y-1.5 border-t border-border px-3 py-2 text-xs">
+        <div className="space-y-1.5 border-t border-border bg-muted/10 px-3 py-2 text-xs">
           <p className="flex items-center gap-1.5 font-semibold text-muted-foreground">
             <Link2 size={11} />
-            Landing page
+            Landing Page
           </p>
-          {ad.landingPage.finalUrl && (
-            <a
-              href={ad.landingPage.finalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block break-all text-[#059669] hover:underline"
-            >
-              {ad.landingPage.finalUrl}
-            </a>
+          {ad.landingPage.originalUrl && (
+            <div className="flex items-start gap-1.5">
+              <span className="w-20 shrink-0 text-muted-foreground">Original URL:</span>
+              <a
+                href={ad.landingPage.originalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-[#059669] hover:underline"
+              >
+                {ad.landingPage.originalUrl}
+              </a>
+            </div>
           )}
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
-            {ad.landingPage.domain && <span>Domain: {ad.landingPage.domain}</span>}
-            {ad.landingPage.status && <span>Trạng thái: {ad.landingPage.status}</span>}
-            {ad.landingPage.finalStatusCode && <span>HTTP {ad.landingPage.finalStatusCode}</span>}
+          {ad.landingPage.finalUrl && (
+            <div className="flex items-start gap-1.5">
+              <span className="w-20 shrink-0 text-muted-foreground">Final URL:</span>
+              <a
+                href={ad.landingPage.finalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-[#059669] hover:underline"
+              >
+                {ad.landingPage.finalUrl}
+              </a>
+            </div>
+          )}
+          {ad.landingPage.domain && (
+            <div className="flex items-center gap-1.5">
+              <span className="w-20 shrink-0 text-muted-foreground">Domain:</span>
+              <span className="font-medium">{ad.landingPage.domain}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className="w-20 shrink-0 text-muted-foreground">Status:</span>
+            <span className={cn("font-medium", ad.landingPage.status === "success" ? "text-[#059669]" : "text-destructive")}>
+              {ad.landingPage.status}
+            </span>
+            {ad.landingPage.finalStatusCode && (
+              <span className="text-muted-foreground">({ad.landingPage.finalStatusCode})</span>
+            )}
           </div>
-          {ad.landingPage.error && <p className="break-all text-destructive">{ad.landingPage.error}</p>}
+          {(ad.landingPage.redirectChain?.length ?? 0) > 0 && (
+            <div className="flex items-start gap-1.5">
+              <span className="w-20 shrink-0 text-muted-foreground">Redirects:</span>
+              <div className="space-y-0.5">
+                {ad.landingPage.redirectChain.map((url, index) => (
+                  <a
+                    key={`${url}-${index}`}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block break-all text-muted-foreground hover:text-[#059669] hover:underline"
+                  >
+                    {index + 1}. {url}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          {ad.landingPage.error && (
+            <div className="flex items-start gap-1.5">
+              <span className="w-20 shrink-0 text-muted-foreground">Error:</span>
+              <p className="break-all text-destructive">{ad.landingPage.error}</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -341,9 +416,9 @@ function AdResultCard({ ad }: { ad: SearchAdItem }) {
             href={ad.landingPage.finalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-[#059669] hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline"
           >
-            Mở landing page <ExternalLink size={11} />
+            Landing page <ExternalLink size={11} />
           </a>
         )}
       </div>
@@ -354,6 +429,7 @@ function AdResultCard({ ad }: { ad: SearchAdItem }) {
 function ScheduledResultDetail({ item }: { item: SearchAdsHistoryItem }) {
   const meta = statusMeta(item.status);
   const StatusIcon = meta.icon;
+  const videoUrl = mediaUrl(item.videoUrl);
 
   return (
     <div className="space-y-4">
@@ -387,6 +463,28 @@ function ScheduledResultDetail({ item }: { item: SearchAdsHistoryItem }) {
       </div>
 
       {item.finalSummary && <p className="text-xs italic text-muted-foreground">{item.finalSummary}</p>}
+
+      {videoUrl && item.videoStatus === "available" ? (
+        <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <Video size={13} />
+            Video quá trình quét
+          </p>
+          <video
+            src={videoUrl}
+            controls
+            preload="metadata"
+            className="aspect-video w-full rounded-lg border border-border bg-black"
+          />
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <VideoOff size={13} />
+            Không có video ghi lại cho lần quét này.
+          </span>
+        </div>
+      )}
 
       {item.errors.length > 0 && (
         <div className="space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
@@ -450,6 +548,12 @@ function ScheduleRow({
             <StatusIcon size={11} className={item.status === "running" ? "animate-spin" : ""} />
             {meta.label}
           </span>
+          {item.scheduleMode === "daily" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#0f766e]/10 px-2 py-0.5 text-[11px] font-medium text-[#0f766e]">
+              <CalendarDays size={11} />
+              Hằng ngày {item.dailyTime}
+            </span>
+          )}
         </div>
         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1"><MapPin size={10} />{locationLabel(item.location)}</span>
@@ -543,8 +647,14 @@ function ScheduleGroupAccordion({
               {meta.label}
             </span>
             <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-              {group.total} mốc
+              {group.scheduleMode === "daily" ? `${group.total} lần daily` : `${group.total} mốc`}
             </span>
+            {group.notifyTelegramOnChange && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#059669]/10 px-2 py-0.5 text-[11px] font-medium text-[#047857]">
+                <Bell size={11} />
+                Telegram
+              </span>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1"><MapPin size={10} />{locationLabel(group.location)}</span>
@@ -590,7 +700,11 @@ export function SearchAdsScheduleTab() {
   const [device, setDevice] = useState("desktop");
   const [useProxy, setUseProxy] = useState(false);
   const [selectedProxyId, setSelectedProxyId] = useState("");
+  const [scheduleMode, setScheduleMode] = useState<"once" | "daily">("once");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>([""]);
+  const [dailyTimes, setDailyTimes] = useState<string[]>(["09:00"]);
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [notifyTelegramOnChange, setNotifyTelegramOnChange] = useState(false);
   const [proxies, setProxies] = useState<ProxyResponse[]>([]);
   const [proxiesLoading, setProxiesLoading] = useState(false);
   const [schedules, setSchedules] = useState<SearchAdsScheduleItem[]>([]);
@@ -659,12 +773,25 @@ export function SearchAdsScheduleTab() {
     }
   }
 
+  async function fetchTelegramSubscription() {
+    try {
+      const subscription = await telegramService.getSubscription();
+      const linked = Boolean(subscription?.enabled);
+      setTelegramLinked(linked);
+      setNotifyTelegramOnChange(linked);
+    } catch {
+      setTelegramLinked(false);
+      setNotifyTelegramOnChange(false);
+    }
+  }
+
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
     fetchSchedules();
     fetchScheduledResults();
     fetchProxies();
+    fetchTelegramSubscription();
   }, []);
 
   const addScheduleTime = () => {
@@ -691,6 +818,30 @@ export function SearchAdsScheduleTab() {
     setScheduleTimes((prev) => (prev.length === 1 ? [""] : prev.filter((_, i) => i !== index)));
   };
 
+  const addDailyTime = () => {
+    const last = dailyTimes[dailyTimes.length - 1] || "09:00";
+    const [hourText, minuteText] = last.split(":");
+    const next = new Date();
+    next.setHours(Number(hourText) || 9, Number(minuteText) || 0, 0, 0);
+    next.setHours(next.getHours() + 1);
+    setDailyTimes((prev) => [
+      ...prev,
+      `${String(next.getHours()).padStart(2, "0")}:${String(next.getMinutes()).padStart(2, "0")}`,
+    ]);
+  };
+
+  const addQuickDailyTime = (value: string) => {
+    setDailyTimes((prev) => Array.from(new Set([...prev.filter(Boolean), value])).sort());
+  };
+
+  const updateDailyTime = (index: number, value: string) => {
+    setDailyTimes((prev) => prev.map((item, i) => (i === index ? value : item)));
+  };
+
+  const removeDailyTime = (index: number) => {
+    setDailyTimes((prev) => (prev.length === 1 ? [""] : prev.filter((_, i) => i !== index)));
+  };
+
   const handleCreateSchedules = async () => {
     if (!keyword.trim()) {
       toast.error("Vui lòng nhập từ khóa cần quét");
@@ -705,13 +856,19 @@ export function SearchAdsScheduleTab() {
       .filter(Boolean)
       .map((value) => new Date(value))
       .filter((value) => !Number.isNaN(value.getTime()));
+    const normalizedDailyTimes = Array.from(new Set(dailyTimes.filter(Boolean))).sort();
 
-    if (runAt.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một mốc thời gian");
-      return;
-    }
-    if (runAt.some((value) => value.getTime() <= Date.now())) {
-      toast.error("Mốc thời gian chạy phải lớn hơn hiện tại");
+    if (scheduleMode === "once") {
+      if (runAt.length === 0) {
+        toast.error("Vui lòng chọn ít nhất một mốc thời gian");
+        return;
+      }
+      if (runAt.some((value) => value.getTime() <= Date.now())) {
+        toast.error("Mốc thời gian chạy phải lớn hơn hiện tại");
+        return;
+      }
+    } else if (normalizedDailyTimes.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một giờ chạy hằng ngày");
       return;
     }
 
@@ -725,12 +882,21 @@ export function SearchAdsScheduleTab() {
         noProxy: !useProxy,
         headful: false,
         proxyId: useProxy ? selectedProxyId : null,
-        runAt: runAt.map((value) => value.toISOString()),
+        scheduleMode,
+        runAt: scheduleMode === "once" ? runAt.map((value) => value.toISOString()) : [],
+        dailyTimes: scheduleMode === "daily" ? normalizedDailyTimes : [],
+        notifyTelegramOnChange: scheduleMode === "daily" && notifyTelegramOnChange,
       });
       setSchedules((prev) => [...res.items, ...prev]);
-      setScheduleTimes([""]);
+      if (scheduleMode === "once") {
+        setScheduleTimes([""]);
+      }
       fetchScheduledResults();
-      toast.success(`Đã đặt ${res.total} lịch quét quảng cáo`);
+      toast.success(
+        scheduleMode === "daily"
+          ? `Đã đặt ${res.total} lịch quét hằng ngày`
+          : `Đã đặt ${res.total} lịch quét quảng cáo`
+      );
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Không thể đặt lịch quét");
     } finally {
@@ -893,50 +1059,155 @@ export function SearchAdsScheduleTab() {
           <div className="border-b border-border px-5 py-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold">Mốc thời gian chạy</h2>
-                <p className="text-xs text-muted-foreground">Có thể đặt nhiều mốc cho cùng một từ khóa.</p>
+                <h2 className="text-sm font-semibold">
+                  {scheduleMode === "daily" ? "Giờ chạy hằng ngày" : "Mốc thời gian chạy"}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {scheduleMode === "daily"
+                    ? "Chọn giờ trong ngày, hệ thống sẽ tự tạo lần chạy kế tiếp."
+                    : "Có thể đặt nhiều mốc cho cùng một từ khóa."}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={addScheduleTime}
+                onClick={scheduleMode === "daily" ? addDailyTime : addScheduleTime}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
               >
-                <Plus size={13} /> Thêm mốc
+                <Plus size={13} /> {scheduleMode === "daily" ? "Thêm giờ" : "Thêm mốc"}
               </button>
             </div>
           </div>
 
           <div className="space-y-3 p-5">
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => addQuickTime(1)} className="rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted">
-                Sau 1 giờ
-              </button>
-              <button type="button" onClick={() => addQuickTime(6)} className="rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted">
-                Sau 6 giờ
-              </button>
-              <button type="button" onClick={() => addQuickTime(24)} className="rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted">
-                Ngày mai
-              </button>
+            <div className="inline-flex w-full rounded-lg border border-border bg-background p-1">
+              {([
+                ["once", "Một lần", CalendarClock],
+                ["daily", "Hằng ngày", CalendarDays],
+              ] as const).map(([mode, label, Icon]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setScheduleMode(mode)}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors",
+                    scheduleMode === mode
+                      ? "bg-[#059669] text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Icon size={13} />
+                  {label}
+                </button>
+              ))}
             </div>
 
-            {scheduleTimes.map((time, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <input
-                  type="datetime-local"
-                  value={time}
-                  onChange={(event) => updateScheduleTime(index, event.target.value)}
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#059669]/30"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeScheduleTime(index)}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  title="Xóa mốc"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
+            {scheduleMode === "once" ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => addQuickTime(1)} className="rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted">
+                    Sau 1 giờ
+                  </button>
+                  <button type="button" onClick={() => addQuickTime(6)} className="rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted">
+                    Sau 6 giờ
+                  </button>
+                  <button type="button" onClick={() => addQuickTime(24)} className="rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted">
+                    Ngày mai
+                  </button>
+                </div>
+
+                {scheduleTimes.map((time, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="datetime-local"
+                      value={time}
+                      onChange={(event) => updateScheduleTime(index, event.target.value)}
+                      className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#059669]/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeScheduleTime(index)}
+                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      title="Xóa mốc"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {["09:00", "13:30", "18:00"].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => addQuickDailyTime(value)}
+                      className="rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted"
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+
+                {dailyTimes.map((time, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="time"
+                      value={time}
+                      onChange={(event) => updateDailyTime(index, event.target.value)}
+                      className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#059669]/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeDailyTime(index)}
+                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      title="Xóa giờ"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+
+                <div className="rounded-lg border border-border bg-muted/20 px-3 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-1.5 text-sm font-medium">
+                        <Bell size={14} className="text-[#059669]" />
+                        Nhận thông báo Telegram
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Gửi khi advertiser top 1 đổi so với lần quét trước của cùng lịch.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => telegramLinked && setNotifyTelegramOnChange((value) => !value)}
+                      disabled={!telegramLinked}
+                      className={cn(
+                        "relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-50",
+                        notifyTelegramOnChange && telegramLinked ? "bg-[#059669]" : "bg-border"
+                      )}
+                      aria-pressed={notifyTelegramOnChange && telegramLinked}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+                          notifyTelegramOnChange && telegramLinked ? "translate-x-4" : "translate-x-0.5"
+                        )}
+                      />
+                    </button>
+                  </div>
+                  {!telegramLinked && (
+                    <Link
+                      href="/dashboard?tab=telegram"
+                      className="mt-2 inline-flex text-xs font-medium text-[#059669] hover:underline"
+                    >
+                      Liên kết Telegram để bật thông báo
+                    </Link>
+                  )}
+                </div>
+              </>
+            )}
 
             <button
               type="button"
@@ -1035,7 +1306,7 @@ export function SearchAdsScheduleTab() {
               <div>
                 <h2 className="text-sm font-semibold">Kết quả quét từ lịch</h2>
                 <p className="text-xs text-muted-foreground">
-                  Kết quả này chỉ thuộc lịch quét và không hiển thị ở màn Đối thủ (Google Ads).
+                  Kết quả này cũng được lưu trong màn Đối thủ (Google Ads) với nhãn Theo lịch.
                 </p>
               </div>
               <button

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import base64
-import os
+import hashlib
+from urllib.parse import urlparse
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -12,8 +13,27 @@ from app.api.proxy.schema import ProxyCreate, ProxyListResponse, ProxyResponse, 
 from app.core.config import settings
 
 
-def _get_fernet():
-    """Return a Fernet instance if PROXY_ENCRYPTION_KEY is configured."""
+_FERNETS = None
+
+
+def _coerce_fernet_key(key: str) -> bytes:
+    """Accept either a Fernet key or a configured passphrase."""
+    try:
+        from cryptography.fernet import Fernet
+
+        encoded = key.encode()
+        Fernet(encoded)
+        return encoded
+    except ValueError:
+        return base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest())
+
+
+def _get_fernets():
+    """Return Fernet instances for current key followed by fallback keys."""
+    global _FERNETS
+    if _FERNETS is not None:
+        return _FERNETS
+
     try:
         from cryptography.fernet import Fernet
 
@@ -21,9 +41,15 @@ def _get_fernet():
         if not key:
             # Generate a volatile key so the server still boots in dev without config
             key = Fernet.generate_key().decode()
-        return Fernet(key.encode() if isinstance(key, str) else key)
+        keys = [key, *settings.proxy_encryption_key_fallbacks]
+        _FERNETS = [Fernet(_coerce_fernet_key(item)) for item in keys]
+        return _FERNETS
     except ImportError:
         raise RuntimeError("cryptography package is required for proxy password encryption. Run: pip install cryptography")
+
+
+def _get_fernet():
+    return _get_fernets()[0]
 
 
 def encrypt_password(password: str) -> str:
@@ -31,7 +57,36 @@ def encrypt_password(password: str) -> str:
 
 
 def decrypt_password(encrypted: str) -> str:
-    return _get_fernet().decrypt(encrypted.encode()).decode()
+    try:
+        from cryptography.fernet import InvalidToken
+    except ImportError:
+        raise RuntimeError("cryptography package is required for proxy password encryption. Run: pip install cryptography")
+
+    token = encrypted.encode()
+    for fernet in _get_fernets():
+        try:
+            return fernet.decrypt(token).decode()
+        except InvalidToken:
+            continue
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Không giải mã được mật khẩu proxy. Vui lòng cập nhật lại mật khẩu proxy.",
+    )
+
+
+def _build_proxy_server(protocol: str, host: str, port: str) -> str:
+    protocol = (protocol or "http").strip().lower()
+    host = (host or "").strip()
+    port = (port or "").strip()
+
+    parsed = urlparse(host)
+    if parsed.scheme and parsed.netloc:
+        host = parsed.hostname or parsed.netloc
+        if parsed.port and not port:
+            port = str(parsed.port)
+
+    return f"{protocol}://{host}:{port}"
 
 
 def _to_response(proxy: Proxy) -> ProxyResponse:
@@ -112,6 +167,7 @@ class ProxyService:
             "protocol": proxy.protocol,
             "host": proxy.host,
             "port": proxy.port,
+            "server": _build_proxy_server(proxy.protocol, proxy.host, proxy.port),
             "username": proxy.username,
             "password": password,
         }

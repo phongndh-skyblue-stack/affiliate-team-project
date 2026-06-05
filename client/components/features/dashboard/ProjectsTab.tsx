@@ -2,6 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, FolderOpen, Info, Loader2, Plus, Radar, SearchCheck } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 import { affiliateProjectService } from "@/services/affiliateProject.service";
 import type {
@@ -10,10 +24,117 @@ import type {
   ScanAffiliateProjectResponse,
   ScanTrafficResponse,
   TrafficCountryItem,
+  TrafficGlobalItem,
+  TrafficSocialItem,
+  TrafficSourceItem,
 } from "@/types/affiliateProject.types";
+
+const CHART_COLORS = ["#059669", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#4b5563"];
 
 function formatVisits(value: number): string {
   return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatCompact(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+function formatDuration(seconds?: number | null): string {
+  const value = Math.max(0, Math.round(seconds || 0));
+  const minutes = Math.floor(value / 60);
+  const rest = value % 60;
+  if (minutes <= 0) return `${rest}s`;
+  return `${minutes}m ${rest.toString().padStart(2, "0")}s`;
+}
+
+function latestTrafficMonth(): string {
+  const date = new Date();
+  date.setDate(1);
+  date.setMonth(date.getMonth() - 2);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function defaultStartPeriodForMonths(months: number): string {
+  const date = new Date();
+  date.setDate(1);
+  date.setMonth(date.getMonth() - (Math.max(1, months) + 1));
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function addMonths(period: string, offset: number): string {
+  const [yearText, monthText] = period.split("-");
+  const date = new Date(Number(yearText), Number(monthText) - 1, 1);
+  date.setMonth(date.getMonth() + offset);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function requestedPeriodRange(startPeriod: string, months: number): string {
+  const latest = latestTrafficMonth();
+  const end = addMonths(startPeriod, Math.max(1, months) - 1);
+  return `${startPeriod} - ${end > latest ? latest : end}`;
+}
+
+function sourceRows(source?: TrafficSourceItem | null) {
+  if (!source) return [];
+  const labels: Array<[keyof TrafficSourceItem, string]> = [
+    ["direct", "Direct"],
+    ["organic_search", "Organic"],
+    ["paid_search", "Paid"],
+    ["referrals", "Referral"],
+    ["social", "Social"],
+    ["display_ads", "Display"],
+    ["email", "Email"],
+  ];
+  return labels
+    .map(([key, label]) => ({
+      name: label,
+      value: Number(source[key] || 0),
+    }))
+    .filter((item) => item.value > 0)
+    .sort((a, b) => b.value - a.value);
+}
+
+function socialRows(items?: TrafficSocialItem[] | null) {
+  if (!items) return [];
+  return items
+    .map((item) => ({
+      name: item.platform_name,
+      value: Number(item.share_percentage || 0),
+    }))
+    .filter((item) => item.value > 0)
+    .sort((a, b) => b.value - a.value);
+}
+
+function globalRows(
+  items?: TrafficGlobalItem[] | null,
+  startPeriod?: string,
+  months?: number,
+) {
+  const sorted = [...(items || [])].sort((a, b) => a.period_month.localeCompare(b.period_month));
+  if (!startPeriod || !months) return sorted;
+  const byPeriod = new Map(sorted.map((item) => [item.period_month, item]));
+  const latest = latestTrafficMonth();
+  const rows: TrafficGlobalItem[] = [];
+  for (let index = 0; index < months; index += 1) {
+    const period = addMonths(startPeriod, index);
+    if (period > latest) break;
+    rows.push(
+      byPeriod.get(period) ?? {
+        period_month: period,
+        total_visits_monthly: 0,
+        avg_visits_monthly: 0,
+        unique_visits_monthly: 0,
+        repeat_visits_monthly: 0,
+        pages_per_visit: 0,
+        avg_visit_duration: 0,
+        bounce_rate_percentage: 0,
+      }
+    );
+  }
+  return rows.length > 0 ? rows : sorted;
 }
 
 function topCountries(countries?: TrafficCountryItem[]): TrafficCountryItem[] {
@@ -57,6 +178,61 @@ function toProjectResponse(
   };
 }
 
+function MiniMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl bg-muted/50 p-3">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function TrafficPie({
+  title,
+  data,
+}: {
+  title: string;
+  data: Array<{ name: string; value: number }>;
+}) {
+  if (data.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-border p-3">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
+      <div className="grid gap-3 md:grid-cols-[160px_1fr] md:items-center">
+        <div className="h-36">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={data} dataKey="value" nameKey="name" innerRadius={36} outerRadius={58} paddingAngle={2}>
+                {data.map((_, index) => (
+                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="space-y-1.5">
+          {data.slice(0, 7).map((item, index) => (
+            <div key={item.name} className="flex items-center justify-between gap-2 text-xs">
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
+                <span className="truncate">{item.name}</span>
+              </span>
+              <span className="font-medium">{item.value.toFixed(2)}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProjectsTab() {
   const [links, setLinks] = useState<AffiliateLinkModel[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(true);
@@ -68,6 +244,9 @@ export function ProjectsTab() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLinkInput, setNewLinkInput] = useState("");
   const [savingLink, setSavingLink] = useState(false);
+  const [trafficMonths, setTrafficMonths] = useState(4);
+  const [trafficStartPeriod, setTrafficStartPeriod] = useState(() => defaultStartPeriodForMonths(4));
+  const [trafficCustomStart, setTrafficCustomStart] = useState(false);
 
   const trafficResult = useMemo(() => (detail ? toTrafficResponse(detail) : null), [detail]);
   const projectResult = useMemo(() => (detail ? toProjectResponse(detail) : null), [detail]);
@@ -75,6 +254,27 @@ export function ProjectsTab() {
     () => topCountries(trafficResult?.traffic_details?.country),
     [trafficResult]
   );
+  const effectiveTrafficStartPeriod = trafficCustomStart
+    ? trafficStartPeriod
+    : defaultStartPeriodForMonths(trafficMonths);
+  const globalTraffic = useMemo(
+    () => globalRows(trafficResult?.traffic_details?.global, effectiveTrafficStartPeriod, trafficMonths),
+    [trafficResult, effectiveTrafficStartPeriod, trafficMonths]
+  );
+  const latestGlobal = globalTraffic.at(-1);
+  const trafficSources = useMemo(
+    () => sourceRows(trafficResult?.traffic_details?.source),
+    [trafficResult]
+  );
+  const socialTraffic = useMemo(
+    () => socialRows(trafficResult?.traffic_details?.social),
+    [trafficResult]
+  );
+  const trafficPeriodLabel = requestedPeriodRange(effectiveTrafficStartPeriod, trafficMonths);
+  const availablePeriodLabel =
+    trafficResult?.traffic_details?.global && trafficResult.traffic_details.global.length > 0
+      ? `${globalRows(trafficResult.traffic_details.global)[0].period_month} - ${globalRows(trafficResult.traffic_details.global).at(-1)?.period_month}`
+      : trafficResult?.period_month ?? "-";
   const isBusy = scanningTraffic || scanningProject || savingLink;
 
   // Load danh sách links khi mount
@@ -138,14 +338,21 @@ export function ProjectsTab() {
 
   async function handleScanTraffic() {
     if (!detail) return;
+    const startPeriod = trafficCustomStart ? trafficStartPeriod : defaultStartPeriodForMonths(trafficMonths);
+    setTrafficStartPeriod(startPeriod);
     setScanningTraffic(true);
+    const toastId = toast.loading(`Đang quét traffic từ ${startPeriod} (${trafficMonths} tháng)...`);
     try {
-      await affiliateProjectService.scanTraffic({ affiliate_link_id: detail.affiliate_link.id, months: 4 });
+      await affiliateProjectService.scanTraffic({
+        affiliate_link_id: detail.affiliate_link.id,
+        months: trafficMonths,
+        start_period: startPeriod || undefined,
+      });
       const refreshed = await affiliateProjectService.getAffiliateLinkDetail(detail.affiliate_link.affiliate_url);
       setDetail(refreshed);
-      toast.success("Quét traffic thành công");
-    } catch {
-      toast.error("Quét traffic thất bại");
+      toast.success("Quét traffic thành công", { id: toastId });
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Quét traffic thất bại", { id: toastId });
     } finally {
       setScanningTraffic(false);
     }
@@ -280,7 +487,38 @@ export function ProjectsTab() {
                     <ExternalLink size={10} className="shrink-0 text-[#059669]" />
                   </div>
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-2.5 py-1.5">
+                    <label className="text-[11px] text-muted-foreground">
+                      Từ tháng
+                      <input
+                        type="month"
+                        value={trafficStartPeriod}
+                        max={latestTrafficMonth()}
+                        onChange={(event) => {
+                          setTrafficCustomStart(true);
+                          setTrafficStartPeriod(event.target.value);
+                        }}
+                        disabled={isBusy}
+                        className="ml-2 h-7 rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none focus:ring-2 focus:ring-[#059669]/20"
+                      />
+                    </label>
+                    <select
+                      value={trafficMonths}
+                      onChange={(event) => {
+                        const months = Number(event.target.value);
+                        setTrafficMonths(months);
+                        setTrafficCustomStart(false);
+                        setTrafficStartPeriod(defaultStartPeriodForMonths(months));
+                      }}
+                      disabled={isBusy}
+                      className="h-7 rounded-md border border-border bg-background px-2 text-xs outline-none focus:ring-2 focus:ring-[#059669]/20"
+                    >
+                      {[1, 2, 3, 4, 6, 12].map((value) => (
+                        <option key={value} value={value}>{value} tháng</option>
+                      ))}
+                    </select>
+                  </div>
                   <button
                     onClick={() => void handleScanTraffic()}
                     disabled={isBusy}
@@ -315,8 +553,9 @@ export function ProjectsTab() {
                     <p className="mt-1 text-sm font-semibold">{formatVisits(trafficResult.monthly_visits)}</p>
                   </div>
                   <div className="rounded-xl bg-muted/50 p-3">
-                    <p className="text-[11px] text-muted-foreground">Period</p>
-                    <p className="mt-1 text-sm font-semibold">{trafficResult.period_month}</p>
+                    <p className="text-[11px] text-muted-foreground">Period đã chọn</p>
+                    <p className="mt-1 text-sm font-semibold">{trafficPeriodLabel}</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">Có data: {availablePeriodLabel}</p>
                   </div>
                 </div>
                 {topTrafficCountries.length > 0 && (
@@ -334,6 +573,81 @@ export function ProjectsTab() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {globalTraffic.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-border p-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Monthly trend</p>
+                      <span className="text-xs text-muted-foreground">
+                        {globalTraffic[0].period_month} - {globalTraffic[globalTraffic.length - 1].period_month}
+                      </span>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-4">
+                      <MiniMetric label="Unique Visits" value={formatCompact(latestGlobal?.unique_visits_monthly || 0)} />
+                      <MiniMetric label="Repeat Visits" value={formatCompact(latestGlobal?.repeat_visits_monthly || 0)} />
+                      <MiniMetric label="Pages / Visit" value={(latestGlobal?.pages_per_visit || 0).toFixed(2)} />
+                      <MiniMetric label="Avg Duration" value={formatDuration(latestGlobal?.avg_visit_duration)} />
+                    </div>
+                    <div className="mt-3 h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={globalTraffic} margin={{ left: 4, right: 12, top: 8, bottom: 4 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="period_month" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                          <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} tickFormatter={(value) => formatCompact(Number(value))} />
+                          <Tooltip
+                            formatter={(value, name) => [
+                              formatVisits(Number(value)),
+                              name === "total_visits_monthly" ? "Total visits" : "Unique visits",
+                            ]}
+                            labelFormatter={(label) => `Period ${label}`}
+                          />
+                          <Line type="monotone" dataKey="total_visits_monthly" stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="unique_visits_monthly" stroke="#2563eb" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {topTrafficCountries.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-border p-3">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Country share chart</p>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={topTrafficCountries} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                          <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} tickFormatter={(value) => `${value}%`} />
+                          <YAxis type="category" dataKey="country_name" width={96} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                          <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
+                          <Bar dataKey="traffic_share_percentage" radius={[0, 6, 6, 0]} fill="#059669" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {topTrafficCountries.map((item) => (
+                        <div key={`${item.country_code}-${item.country_name}-detail`} className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                          <div className="flex items-center justify-between gap-2 text-sm">
+                            <span className="font-medium text-foreground">{item.country_name}</span>
+                            <span>{item.traffic_share_percentage.toFixed(2)}%</span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                            <span>{formatCompact(item.total_visits_monthly || 0)} visits</span>
+                            <span>{item.pages_per_visit.toFixed(2)} pages</span>
+                            <span>{formatDuration(item.avg_visit_duration)}</span>
+                            <span>{item.bounce_rate_percentage.toFixed(2)}% bounce</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(trafficSources.length > 0 || socialTraffic.length > 0) && (
+                  <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                    <TrafficPie title="Traffic sources" data={trafficSources} />
+                    <TrafficPie title="Social traffic" data={socialTraffic} />
                   </div>
                 )}
               </section>

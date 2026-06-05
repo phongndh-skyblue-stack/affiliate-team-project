@@ -95,6 +95,40 @@ def _scan_months(n: int = _DEFAULT_MONTHS) -> list[tuple[datetime, datetime]]:
     return list(reversed(months))  # cũ → mới
 
 
+def _scan_months_from_period(
+    n: int,
+    start_period: str,
+) -> list[tuple[datetime, datetime]]:
+    now = datetime.now(timezone.utc)
+    previous_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc) - timedelta(days=1)
+    latest_complete = datetime(previous_month.year, previous_month.month, 1, tzinfo=timezone.utc) - timedelta(days=1)
+    latest_month = datetime(latest_complete.year, latest_complete.month, 1, tzinfo=timezone.utc)
+    try:
+        y_text, m_text = start_period.split("-", 1)
+        y, m = int(y_text), int(m_text)
+        base = datetime(y, m, 1, tzinfo=timezone.utc)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("start_period must be in YYYY-MM format") from exc
+
+    if base > latest_month:
+        base = latest_month
+
+    months: list[tuple[datetime, datetime]] = []
+    for offset in range(n):
+        month_index = base.month - 1 + offset
+        y = base.year + month_index // 12
+        m = month_index % 12 + 1
+        if (y, m) > (latest_complete.year, latest_complete.month):
+            break
+        last = monthrange(y, m)[1]
+        months.append(
+            (
+                datetime(y, m, 1, tzinfo=timezone.utc),
+                datetime(y, m, last, tzinfo=timezone.utc),
+            )
+        )
+    return months
+
 async def _get_widget(
     url: str,
     params: dict[str, Any],
@@ -387,7 +421,11 @@ async def _scan_one_month(
     return g, c, s, so
 
 
-async def scan_traffic(url: str, months: int = _DEFAULT_MONTHS) -> dict[str, Any]:
+async def scan_traffic(
+    url: str,
+    months: int = _DEFAULT_MONTHS,
+    start_period: str | None = None,
+) -> dict[str, Any]:
     """Quét traffic chi tiết của 1 URL từ SimilarWeb Pro.
 
     Returns:
@@ -407,7 +445,7 @@ async def scan_traffic(url: str, months: int = _DEFAULT_MONTHS) -> dict[str, Any
     social_data: list[dict] | None = None
     failed: list[tuple[datetime, datetime]] = []
 
-    month_ranges = _scan_months(months)
+    month_ranges = _scan_months_from_period(months, start_period) if start_period else _scan_months(months)
 
     # Pass 1
     for from_dt, to_dt in month_ranges:

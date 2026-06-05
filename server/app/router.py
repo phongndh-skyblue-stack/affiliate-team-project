@@ -8,6 +8,7 @@ from app.api.auth.router import router as auth_router
 from app.api.health.router import router as health_router
 from app.api.keyword_planner.router import mail_router as mail_delegation_router
 from app.api.keyword_planner.router import router as keyword_planner_router
+from app.api.keyword.router import router as keyword_router
 from app.api.manual_search.router import router as manual_search_router
 from app.api.notifications.router import router as notifications_router
 from app.api.proxy.router import router as proxy_router
@@ -26,6 +27,7 @@ api_router.include_router(search_ads_router)
 api_router.include_router(affiliate_data_router)
 api_router.include_router(keyword_planner_router)
 api_router.include_router(mail_delegation_router)
+api_router.include_router(keyword_router)
 api_router.include_router(notifications_router)
 api_router.include_router(proxy_router)
 api_router.include_router(telegram_router)

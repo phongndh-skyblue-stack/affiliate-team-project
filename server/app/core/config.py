@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     # --- Proxy encryption (Fernet symmetric key, base64url-encoded 32 bytes) ---
     # Generate once: from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
     PROXY_ENCRYPTION_KEY: str = ""
+    PROXY_ENCRYPTION_KEY_FALLBACKS: str = ""
 
     # --- Google Ads (Keyword Planner) ---
     GOOGLE_ADS_DEVELOPER_TOKEN: str = ""  # Google Ads API developer token
@@ -92,6 +93,10 @@ class Settings(BaseSettings):
     @property
     def tavily_keys(self) -> list[str]:
         return [k.strip() for k in self.TAVILY_KEYS.split(",") if k.strip()]
+
+    @property
+    def proxy_encryption_key_fallbacks(self) -> list[str]:
+        return [k.strip() for k in self.PROXY_ENCRYPTION_KEY_FALLBACKS.split(",") if k.strip()]
 
     @property
     def arq_redis_dsn(self) -> str:

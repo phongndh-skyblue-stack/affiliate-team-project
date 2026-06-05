@@ -15,6 +15,7 @@ import { notificationService } from "@/services/notification.service";
  */
 export function useNotifications() {
   const addDelegationResult = useNotificationStore((s) => s.addDelegationResult);
+  const addNotification = useNotificationStore((s) => s.addNotification);
   const setFromApi = useNotificationStore((s) => s.setFromApi);
   const hydrated = useNotificationStore((s) => s.hydrated);
   const socketRef = useRef<Socket | null>(null);
@@ -85,9 +86,46 @@ export function useNotifications() {
       );
     });
 
+    socket.on("telegram_linked", (data: {
+      userId: string;
+      chatId?: number;
+    }) => {
+      console.log("[Socket.IO] telegram_linked received:", data);
+      window.dispatchEvent(
+        new CustomEvent("telegram:linked", { detail: data })
+      );
+    });
+
+    socket.on("telegram_unlinked", (data: {
+      userId: string;
+    }) => {
+      console.log("[Socket.IO] telegram_unlinked received:", data);
+      window.dispatchEvent(
+        new CustomEvent("telegram:unlinked", { detail: data })
+      );
+    });
+
+    socket.on("telegram_notification", (data: {
+      id?: string;
+      type: string;
+      message: string;
+      description?: string;
+      chatId?: number;
+      createdAt?: string;
+    }) => {
+      addNotification({
+        id: data.id,
+        type: data.type,
+        message: data.message,
+        description: data.description,
+        chatId: data.chatId,
+        receivedAt: data.createdAt,
+      });
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [addDelegationResult]);
+  }, [addDelegationResult, addNotification]);
 }

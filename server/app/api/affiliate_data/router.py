@@ -73,6 +73,7 @@ async def scan_traffic_endpoint(
             user_id=current_user.id,
             affiliate_link_id=payload.affiliate_link_id,
             months=payload.months,
+            start_period=payload.start_period,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

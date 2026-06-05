@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  ChevronRight,
   Globe,
   Loader2,
   Pencil,
@@ -12,7 +11,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { proxyService } from "@/services/proxy.service";
 import type { ProxyCreate, ProxyResponse } from "@/types/proxy.types";
 
@@ -34,6 +32,23 @@ function emptyForm(): ProxyFormData {
   return { name: "", protocol: "http", host: "", port: "", username: "", password: "" };
 }
 
+function parseProxyLine(value: string): Pick<ProxyFormData, "host" | "port" | "username" | "password"> | null {
+  const parts = value.trim().split(":");
+  if (parts.length < 4) return null;
+
+  const [host, port, username, ...passwordParts] = parts;
+  const password = passwordParts.join(":");
+
+  if (!host.trim() || !port.trim() || !username.trim() || !password.trim()) return null;
+
+  return {
+    host: host.trim(),
+    port: port.trim(),
+    username: username.trim(),
+    password: password.trim(),
+  };
+}
+
 function ProxyForm({
   initial,
   onSubmit,
@@ -50,7 +65,16 @@ function ProxyForm({
   hasExistingPassword?: boolean;
 }) {
   const [form, setForm] = useState<ProxyFormData>(initial);
+  const [quickProxy, setQuickProxy] = useState("");
   const set = (k: keyof ProxyFormData, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const setFromQuickProxy = (value: string) => {
+    setQuickProxy(value);
+
+    const parsed = parseProxyLine(value);
+    if (!parsed) return;
+
+    setForm((f) => ({ ...f, protocol: "http", ...parsed }));
+  };
 
   const inputClass =
     "w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#059669]/30 disabled:opacity-50";
@@ -60,6 +84,19 @@ function ProxyForm({
   return (
     <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* Quick fill */}
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">Nhập nhanh proxy</label>
+          <input
+            value={quickProxy}
+            onChange={(e) => setFromQuickProxy(e.target.value)}
+            placeholder="154.222.193.24:63006:fWkgXwrJ:9TFXRX4a"
+            disabled={loading}
+            className={inputClass}
+            autoComplete="off"
+          />
+        </div>
+
         {/* Name */}
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground">Tên nhận diện *</label>

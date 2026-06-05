@@ -45,6 +45,7 @@ export interface TrafficDetails {
 export interface ScanTrafficRequest {
   affiliate_link_id: string;
   months?: number;
+  start_period?: string | null;
 }
 
 export interface ScanTrafficResponse {
