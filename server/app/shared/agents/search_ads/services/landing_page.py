@@ -104,7 +104,11 @@ class LandingPageService:
                     redirect_chain.append(final_url)
                 result["final_url"] = final_url
                 result["domain"] = urlparse(final_url).netloc.lower()
-                result["status"] = "success"
+                if response.is_error:
+                    result["status"] = "http_error"
+                    result["error"] = f"Landing page returned HTTP {response.status_code}"
+                else:
+                    result["status"] = "success"
                 return
 
             location = response.headers.get("location")

@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
-import { TOKEN_KEY } from "@/constants/config";
 import { WS_BASE_URL } from "@/constants/config";
+import { getAccessToken } from "@/lib/authStorage";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { notificationService } from "@/services/notification.service";
 
@@ -31,8 +31,7 @@ export function useNotifications() {
   }, [hydrated, setFromApi]);
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+    const token = getAccessToken();
     if (!token) return;
 
     const socket = io(WS_BASE_URL, {

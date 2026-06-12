@@ -24,6 +24,7 @@ class ManualSearchService:
             gl=payload.gl,
             num=payload.num,
             no_cache=payload.no_cache,
+            enrich_advertisers=payload.enrich_advertisers,
         )
         self.repository.save_competitor_search(user_id, payload, result)
         return CompetitorSearchResponse(

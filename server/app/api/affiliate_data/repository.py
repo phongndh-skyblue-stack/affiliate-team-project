@@ -71,6 +71,7 @@ class AffiliateDataRepository:
             project_link=project_result.get("project_link"),
             event_content=project_result.get("event_content"),
             sale_content=project_result.get("sale_content"),
+            restricted_countries=project_result.get("restricted_countries") or [],
             top_countries=project_result.get("top_countries") or [],
             answer=project_result.get("answer"),
             results=project_result.get("results") or [],
@@ -82,6 +83,21 @@ class AffiliateDataRepository:
 
     def commit(self) -> None:
         self.db.commit()
+
+    def delete_affiliate_link_for_user(
+        self,
+        user_id: str,
+        affiliate_link_id: str,
+    ) -> bool:
+        row = self.get_affiliate_link_by_id_for_user(
+            user_id=user_id,
+            affiliate_link_id=affiliate_link_id,
+        )
+        if not row:
+            return False
+        self.db.delete(row)
+        self.db.flush()
+        return True
 
     def get_affiliate_link_by_id_for_user(
         self,

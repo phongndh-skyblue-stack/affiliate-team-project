@@ -37,14 +37,23 @@ class BrowserService:
             ],
         }
 
-        browser = await playwright.chromium.launch(**launch_args)
+        try:
+            browser = await playwright.chromium.launch(**launch_args)
+        except Exception as exc:
+            await playwright.stop()
+            if "Executable doesn't exist" in str(exc):
+                raise RuntimeError(
+                    "Patchright Chromium is not installed. "
+                    "Run: server/.venv/Scripts/python.exe -m patchright install chromium"
+                ) from exc
+            raise
 
         context_options = {
             "locale": locale,
             "viewport": {"width": 1366, "height": 768},
             "user_agent": self.get_user_agent(device),
             "extra_http_headers": {
-                "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Accept-Language": self.get_accept_language(locale),
             },
         }
 
@@ -76,3 +85,8 @@ class BrowserService:
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/120.0.0.0 Safari/537.36"
         )
+
+    def get_accept_language(self, locale: str):
+        if locale.startswith("vi"):
+            return "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
+        return f"{locale},{locale.split('-')[0]};q=0.9,en-US;q=0.8,en;q=0.7"

@@ -61,5 +61,9 @@ echo "==> Installing server dependencies (requirements.txt) ..."
 "$PY" -m pip install --quiet -r "$SERVER_DIR/requirements.txt"
 echo "==> Server dependencies installed."
 
+echo "==> Installing Patchright Chromium ..."
+"$PY" -m patchright install chromium
+echo "==> Patchright Chromium installed."
+
 echo ""
 echo "Setup complete. Run 'sh run-dev.sh' to start the project."

@@ -22,6 +22,9 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      rememberMe: false,
+    },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
@@ -92,6 +95,15 @@ export function LoginForm() {
             <p className="text-xs text-[#EF4444] mt-1">{errors.password.message}</p>
           )}
         </div>
+
+        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#475569]">
+          <input
+            type="checkbox"
+            className="size-4 rounded border-[#CBD5E1] accent-[#059669]"
+            {...register("rememberMe")}
+          />
+          Ghi nhớ đăng nhập
+        </label>
 
         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
           {isLoading ? (

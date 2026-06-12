@@ -98,6 +98,25 @@ def get_competitor_search_history(
                     "link": ad.link,
                     "sitelinks": ad.sitelinks,
                     "type": ad.type,
+                    "displayed_link": (ad.raw_data or {}).get(
+                        "displayed_link", ad.advertiser
+                    ),
+                    "tracking_link": (ad.raw_data or {}).get("tracking_link", ""),
+                    "source": (ad.raw_data or {}).get("source", ""),
+                    "destination_domain": (ad.raw_data or {}).get(
+                        "destination_domain", ""
+                    ),
+                    "destination_path": (ad.raw_data or {}).get(
+                        "destination_path", ""
+                    ),
+                    "ref_parameters": (ad.raw_data or {}).get("ref_parameters", {}),
+                    "sitelink_items": (ad.raw_data or {}).get("sitelink_items", []),
+                    "advertiser_candidates": (ad.raw_data or {}).get(
+                        "advertiser_candidates", []
+                    ),
+                    "advertiser_lookup_status": (ad.raw_data or {}).get(
+                        "advertiser_lookup_status", "not_requested"
+                    ),
                 }
                 for ad in item.ads
             ],
