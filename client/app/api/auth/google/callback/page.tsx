@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { mailDelegationService } from "@/services/mailDelegation.service";
@@ -75,19 +76,13 @@ function CallbackHandler() {
   const [result, setResult] = useState<CallbackResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const called = useRef(false);
+  const code = params.get("code");
+  const state = params.get("state");
+  const missingAuthParams = !code || !state;
 
   useEffect(() => {
-    if (called.current) return;
+    if (called.current || missingAuthParams) return;
     called.current = true;
-
-    const code = params.get("code");
-    const state = params.get("state");
-
-    if (!code || !state) {
-      setErrorMsg("Thiếu thông tin xác thực (code hoặc state không hợp lệ).");
-      setStatus("error");
-      return;
-    }
 
     mailDelegationService
       .handleCallback(code, state)
@@ -103,7 +98,7 @@ function CallbackHandler() {
         setErrorMsg(msg);
         setStatus("error");
       });
-  }, [params]);
+  }, [code, missingAuthParams, state]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -122,21 +117,25 @@ function CallbackHandler() {
           </div>
         )}
 
-        {status === "error" && (
+        {(missingAuthParams || status === "error") && (
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="flex size-16 items-center justify-center rounded-full bg-destructive/10">
               <XCircle className="size-8 text-destructive" />
             </div>
             <div>
               <h1 className="text-lg font-semibold">Uỷ quyền thất bại</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{errorMsg}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {missingAuthParams
+                  ? "Thiếu thông tin xác thực (code hoặc state không hợp lệ)."
+                  : errorMsg}
+              </p>
             </div>
-            <a
+            <Link
               href="/"
               className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               Về trang chủ
-            </a>
+            </Link>
           </div>
         )}
 
@@ -180,12 +179,12 @@ function CallbackHandler() {
               <p className="text-xs text-muted-foreground">
                 Bạn có thể đóng tab này.
               </p>
-              <a
+              <Link
                 href="/"
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
                 Về trang chủ
-              </a>
+              </Link>
             </div>
           </div>
         )}

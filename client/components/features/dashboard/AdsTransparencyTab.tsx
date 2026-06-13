@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Search,
   ScanLine,
@@ -346,33 +346,56 @@ function DetailDrawer({
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [imageError, setImageError] = useState(false);
+  const handleScanned = useCallback(
+    (creativeId: string) => onScanned?.(creativeId),
+    [onScanned]
+  );
 
   useEffect(() => {
-    if (!creative) { setDetail(null); return; }
-    setImageError(false);
+    let active = true;
 
-    if (mode === "view") {
-      setLoading(false);
-      const latestDetail = creative.details[0];
-      setDetail(latestDetail ? (latestDetail as unknown as Record<string, unknown>) : null);
-      return;
-    }
+    void Promise.resolve().then(() => {
+      if (!active) return;
 
-    setLoading(true);
-    setDetail(null);
-    adsTransparentService
-      .getDetails({
-        advertiserId: creative.advertiserId,
-        creativeId: creative.adCreativeId,
-        adCreativeId: creative.id,
-      })
-      .then((r) => {
-        setDetail(r.data);
-        onScanned?.(creative.id);
-      })
-      .catch(() => toast.error("Không lấy được chi tiết quảng cáo"))
-      .finally(() => setLoading(false));
-  }, [creative, mode]);
+      if (!creative) {
+        setDetail(null);
+        return;
+      }
+
+      setImageError(false);
+
+      if (mode === "view") {
+        setLoading(false);
+        const latestDetail = creative.details[0];
+        setDetail(latestDetail ? (latestDetail as unknown as Record<string, unknown>) : null);
+        return;
+      }
+
+      setLoading(true);
+      setDetail(null);
+      adsTransparentService
+        .getDetails({
+          advertiserId: creative.advertiserId,
+          creativeId: creative.adCreativeId,
+          adCreativeId: creative.id,
+        })
+        .then((r) => {
+          if (!active) return;
+          setDetail(r.data);
+          handleScanned(creative.id);
+        })
+        .catch(() => {
+          if (active) toast.error("Không lấy được chi tiết quảng cáo");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [creative, handleScanned, mode]);
 
   if (!creative) return null;
 
@@ -652,8 +675,7 @@ function ScanForm({ onScanDone }: ScanFormProps) {
         creativeFormat: form.creativeFormat || undefined,
         region: form.region || undefined,
       };
-      const res = await adsTransparentService.search(payload);
-      const count = res.data?.adCreatives?.length ?? 0;
+      await adsTransparentService.search(payload);
       toast.success("Quét xong thành công!");
       setOpen(false);
       onScanDone();

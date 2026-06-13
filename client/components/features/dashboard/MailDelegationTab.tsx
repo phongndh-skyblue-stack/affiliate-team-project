@@ -11,7 +11,6 @@ import {
   Plus,
   RefreshCw,
   Trash2,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -103,7 +102,7 @@ function MailCard({
   mail: MailResponse;
   onDeleted: (id: string) => void;
 }) {
-  const [mail, setMail] = useState(init);
+  const mail = init;
   const [sendingAuth, setSendingAuth] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -362,7 +361,9 @@ export function MailDelegationTab() {
     }
   }, []);
 
-  useEffect(() => { loadMails(); }, [loadMails]);
+  useEffect(() => {
+    void Promise.resolve().then(loadMails);
+  }, [loadMails]);
 
   useEffect(() => {
     const h = () => loadMails();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import {
   CalendarClock,
   Eye,
@@ -85,7 +85,7 @@ function isTabId(value: string | null): value is TabId {
   return DASHBOARD_TABS.some((tab) => tab.id === value);
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
@@ -167,5 +167,13 @@ export default function DashboardPage() {
         onClose={() => setEditProfileOpen(false)}
       />
     </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
   );
 }

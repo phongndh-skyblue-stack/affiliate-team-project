@@ -46,7 +46,7 @@ export default function RegisterPage() {
           </ul>
           <div className="mt-12 rounded-xl border border-white/10 bg-white/5 p-5">
             <p className="text-sm text-[#94A3B8] italic">
-              "Tôi kiếm được ₫15 triệu/tháng chỉ từ việc chia sẻ link trên blog."
+              &ldquo;Tôi kiếm được ₫15 triệu/tháng chỉ từ việc chia sẻ link trên blog.&rdquo;
             </p>
             <div className="flex items-center gap-2 mt-3">
               <div className="size-8 rounded-full bg-[#059669]/20 border border-[#059669]/25 flex items-center justify-center text-xs font-bold text-[#34D399]">T</div>

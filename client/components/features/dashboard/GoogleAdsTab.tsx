@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Hash, Mail } from "lucide-react";
+import { Hash, Mail, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AdCopyGeneratorTab } from "@/components/features/dashboard/AdCopyGeneratorTab";
 import { KeywordPlannerTab } from "@/components/features/dashboard/KeywordPlannerTab";
 import { MailDelegationTab } from "@/components/features/dashboard/MailDelegationTab";
 
@@ -11,6 +12,11 @@ const TABS = [
     id: "keyword-planner",
     label: "Keyword Planner",
     icon: Hash,
+  },
+  {
+    id: "ad-copy",
+    label: "Tạo mẫu quảng cáo",
+    icon: Megaphone,
   },
   {
     id: "mail-delegation",
@@ -53,6 +59,8 @@ export function GoogleAdsTab() {
       <div className="flex-1 min-h-0">
         {activeTab === "keyword-planner" ? (
           <KeywordPlannerTab />
+        ) : activeTab === "ad-copy" ? (
+          <AdCopyGeneratorTab />
         ) : (
           <MailDelegationTab />
         )}

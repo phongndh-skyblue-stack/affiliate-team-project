@@ -42,6 +42,16 @@ cleanup() {
   exit "$exit_code"
 }
 
+is_running_job() {
+  local job_pid
+  for job_pid in $(jobs -r -p); do
+    if [[ "$job_pid" == "$1" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:9030/api}"
 export PORT="${PORT:-3000}"
 
@@ -62,4 +72,14 @@ echo "Starting frontend -> http://localhost:${PORT}"
 ) &
 CLIENT_PID=$!
 
-wait -n "$SERVER_PID" "$CLIENT_PID"
+while is_running_job "$SERVER_PID" && is_running_job "$CLIENT_PID"; do
+  sleep 1
+done
+
+if ! is_running_job "$SERVER_PID"; then
+  server_status=0
+  wait "$SERVER_PID" || server_status=$?
+  exit "$server_status"
+fi
+
+wait "$CLIENT_PID"

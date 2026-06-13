@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     # --- Third-party API keys (comma-separated for key rotation) ---
     SERPAPI_KEYS: str = ""
     TAVILY_KEYS: str = ""
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     # --- Redis ---
     REDIS_URL: str = "redis://127.0.0.1:6379/0"

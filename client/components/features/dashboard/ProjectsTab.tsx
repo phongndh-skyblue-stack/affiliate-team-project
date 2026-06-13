@@ -53,14 +53,14 @@ function formatDuration(seconds?: number | null): string {
 function latestTrafficMonth(): string {
   const date = new Date();
   date.setDate(1);
-  date.setMonth(date.getMonth() - 2);
+  date.setMonth(date.getMonth() - 1);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function defaultStartPeriodForMonths(months: number): string {
   const date = new Date();
   date.setDate(1);
-  date.setMonth(date.getMonth() - (Math.max(1, months) + 1));
+  date.setMonth(date.getMonth() - Math.max(1, months));
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 

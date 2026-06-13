@@ -100,8 +100,7 @@ def _scan_months_from_period(
     start_period: str,
 ) -> list[tuple[datetime, datetime]]:
     now = datetime.now(timezone.utc)
-    previous_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc) - timedelta(days=1)
-    latest_complete = datetime(previous_month.year, previous_month.month, 1, tzinfo=timezone.utc) - timedelta(days=1)
+    latest_complete = datetime(now.year, now.month, 1, tzinfo=timezone.utc) - timedelta(days=1)
     latest_month = datetime(latest_complete.year, latest_complete.month, 1, tzinfo=timezone.utc)
     try:
         y_text, m_text = start_period.split("-", 1)
@@ -118,7 +117,7 @@ def _scan_months_from_period(
         month_index = base.month - 1 + offset
         y = base.year + month_index // 12
         m = month_index % 12 + 1
-        if (y, m) > (latest_complete.year, latest_complete.month):
+        if (y, m) > (latest_month.year, latest_month.month):
             break
         last = monthrange(y, m)[1]
         months.append(

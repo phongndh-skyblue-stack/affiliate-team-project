@@ -264,7 +264,7 @@ export default function LandingPage() {
                       <Star key={j} className="size-4 fill-[#EAB308] text-[#EAB308]" />
                     ))}
                   </div>
-                  <p className="text-sm text-[#475569] leading-relaxed mb-5 italic">"{text}"</p>
+                  <p className="text-sm text-[#475569] leading-relaxed mb-5 italic">&ldquo;{text}&rdquo;</p>
                   <div className="flex items-center gap-3 pt-4 border-t border-[#F1F5F9]">
                     <div className="size-10 rounded-full bg-[#0F172A] flex items-center justify-center text-white font-bold font-heading text-sm shrink-0">
                       {name.charAt(0)}

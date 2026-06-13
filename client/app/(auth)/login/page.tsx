@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, BarChart3, Shield, TrendingUp } from "lucide-react";
+import { ArrowLeft, BarChart3, Shield, TrendingUp } from "lucide-react";
 import { LoginForm } from "@/components/features/auth/LoginForm";
 import { RedirectIfAuthenticated } from "@/components/common/RedirectIfAuthenticated";
 

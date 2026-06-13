@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.api.ad_copy.router import router as ad_copy_router
 from app.api.ads_transparent.router import router as ads_transparent_router
 from app.api.affiliate_data.router import router as affiliate_data_router
 from app.api.auth.router import router as auth_router
@@ -21,6 +22,7 @@ api_router = APIRouter(prefix=settings.API_PREFIX)
 api_router.include_router(health_router)
 api_router.include_router(auth_router)
 api_router.include_router(users_router)
+api_router.include_router(ad_copy_router)
 api_router.include_router(ads_transparent_router)
 api_router.include_router(manual_search_router)
 api_router.include_router(search_ads_router)

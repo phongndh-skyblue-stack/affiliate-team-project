@@ -97,7 +97,7 @@ function Sparkline({ data }: { data: { year: number; month: number; searches: nu
           </defs>
           <Tooltip
             contentStyle={{ fontSize: 11, padding: "4px 8px", borderRadius: 6 }}
-            formatter={(v: number) => [v.toLocaleString("vi-VN"), "Lượt"]}
+            formatter={(v) => [Number(v ?? 0).toLocaleString("vi-VN"), "Lượt"]}
             labelStyle={{ fontWeight: 600, fontSize: 11 }}
           />
           <Area
@@ -360,12 +360,10 @@ function ScanForm({ onDone }: { onDone: (result: JobResultsResponse) => void }) 
     if (open && accounts.length === 0) {
       keywordPlannerService.listAccounts().then((res) => {
         setAccounts(res.items);
-        if (res.items.length > 0 && !selectedAdsId) {
-          setSelectedAdsId(res.items[0].adsId);
-        }
+        setSelectedAdsId((current) => current || res.items[0]?.adsId || "");
       }).catch(() => {});
     }
-  }, [open]);
+  }, [accounts.length, open]);
 
   // Keyword mode
   const [keywordsRaw, setKeywordsRaw] = useState("");

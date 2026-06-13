@@ -1,0 +1,14 @@
+
+cd server
+sh run-dev.sh
+
+Tao 3 git bash terminal
+    - Terminal 1: sh run-dev.sh
+    - Terminal 2: 
+        + cd server
+        + source .venv/bin/activate
+        + arq app.api.search_ads.tasks.WorkerSettings hoac python -m arq app.api.search_ads.tasks.WorkerSettings
+    - Terminal 3: 
+        + cd server
+        + source .venv/bin/activate
+        + python -m bot.main
