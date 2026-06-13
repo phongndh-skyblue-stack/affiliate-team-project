@@ -220,7 +220,7 @@ export function TelegramLinkTab() {
   }
 
   const botLink = config?.botUsername ? `https://t.me/${config.botUsername}` : null;
-  const polling = Boolean(verification && !subscription);
+  const pendingVerification = !subscription ? verification : null;
 
   return (
     <div className="space-y-5">
@@ -427,8 +427,8 @@ export function TelegramLinkTab() {
                   Tạo mã xác thực
                 </button>
                 <div className="rounded-lg border border-dashed border-border bg-muted/20 p-3 text-xs leading-5 text-muted-foreground">
-                  {polling
-                    ? `Đang chờ bot xác nhận liên kết. Mã hiện tại hết hạn lúc ${formatDateTime(verification.expiresAt)}.`
+                  {pendingVerification
+                    ? `Đang chờ bot xác nhận liên kết. Mã hiện tại hết hạn lúc ${formatDateTime(pendingVerification.expiresAt)}.`
                     : "Sau khi gửi lệnh cho bot, trạng thái sẽ tự cập nhật hoặc bạn có thể bấm Làm mới."}
                 </div>
               </div>

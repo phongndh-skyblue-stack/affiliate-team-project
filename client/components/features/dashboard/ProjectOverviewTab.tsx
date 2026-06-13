@@ -361,6 +361,26 @@ function getTransparencyProjectCompetitors(
     .slice(0, 24);
 }
 
+function getCompetitorName(item: ProjectCompetitor): string {
+  return item.advertiserName || item.advertiserDomain || item.title || item.keyword || "-";
+}
+
+function getCompetitorTitle(item: ProjectCompetitor): string | null {
+  const title = item.title?.trim();
+  if (!title || normalize(title) === normalize(getCompetitorName(item))) return null;
+  return title;
+}
+
+function getCompetitorMeta(item: ProjectCompetitor): string {
+  const source = item.source === "ttmb" ? "TTMB" : "Quét quảng cáo";
+  const parts = [source];
+  if (item.keyword) parts.push(`Từ khóa: ${item.keyword}`);
+  if ("totalDaysShown" in item && item.totalDaysShown != null) {
+    parts.push(`${item.totalDaysShown} ngày hiển thị`);
+  }
+  return parts.join(" · ");
+}
+
 function getTopTrafficCountries(traffic: AffiliateLinkTrafficModel | null): TrafficCountryItem[] {
   return [...(traffic?.traffic_details?.country || [])]
     .sort((a, b) => b.traffic_share_percentage - a.traffic_share_percentage)
@@ -1412,7 +1432,7 @@ export function ProjectOverviewTab() {
                         <div key={item.rowId} className="rounded-md border border-border p-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold">{item.advertiserName || item.advertiserDomain || item.title || item.keyword}</p>
+                              <p className="truncate text-sm font-semibold">{getCompetitorName(item)}</p>
                               <p className="mt-1 text-xs text-muted-foreground">
                                 {item.source === "ttmb" ? "TTMB" : "Quét quảng cáo"} · Keyword: {item.keyword}
                               </p>

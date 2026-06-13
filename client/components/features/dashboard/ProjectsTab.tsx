@@ -418,11 +418,32 @@ function getEvidence(country: RestrictedCountryInsight, project: ScanAffiliatePr
   return country.evidence_links?.length ? country.evidence_links : fallbackEvidence(country, project);
 }
 
+function getDomainBrand(project: ScanAffiliateProjectResponse): string {
+  const host = project.domain.replace(/^www\./, "").toLowerCase();
+  const parts = host.split(".").filter(Boolean);
+  if (parts.length === 0) return "Project";
+
+  const secondLevelTlds = new Set(["co", "com", "net", "org", "ac", "gov"]);
+  const beforeTld = parts[parts.length - 2];
+  if (parts.length >= 3 && secondLevelTlds.has(beforeTld)) {
+    return titleCase(parts[parts.length - 3] || beforeTld);
+  }
+
+  return titleCase(beforeTld || parts[0] || "Project");
+}
+
 function getBrand(project: ScanAffiliateProjectResponse): string {
+  const domainBrand = getDomainBrand(project);
   const name = project.project_name?.trim();
-  if (name && name.length <= 22) return titleCase(name);
-  const host = project.domain.replace(/^www\./, "");
-  return titleCase(host.split(".")[0] || "Project");
+  if (!name || name.length > 22) return domainBrand;
+
+  const normalizedName = normalizeText(name);
+  const normalizedDomainBrand = normalizeText(domainBrand);
+  const isSameBrand =
+    normalizedName.includes(normalizedDomainBrand) ||
+    normalizedDomainBrand.includes(normalizedName);
+
+  return isSameBrand ? titleCase(name) : domainBrand;
 }
 
 function extractPhrases(project: ScanAffiliateProjectResponse): string[] {
