@@ -53,7 +53,7 @@ Kiểm tra đang đứng đúng thư mục:
 
 ```bash
 pwd
-```
+``` 222
 
 Nếu đúng, sẽ thấy gần giống:
 
