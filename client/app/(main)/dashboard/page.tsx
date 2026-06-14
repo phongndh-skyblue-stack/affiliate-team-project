@@ -3,6 +3,7 @@
 import { Suspense, useMemo, useState } from "react";
 import {
   CalendarClock,
+  ClipboardList,
   Eye,
   FolderOpen,
   LayoutDashboard,
@@ -14,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { AdsStrategySkillTab } from "@/components/features/dashboard/AdsStrategySkillTab";
 import { AdsTransparencyTab } from "@/components/features/dashboard/AdsTransparencyTab";
 import {
   DASHBOARD_TABS,
@@ -86,6 +88,11 @@ const EMPTY_STATES: Record<
     heading: "Chưa có dữ liệu Google Ads",
     description: "Quét keyword ideas hoặc ủy quyền Gmail truy cập Google Ads.",
   },
+  "ads-strategy-skill": {
+    icon: ClipboardList,
+    heading: "Chưa có chiến lược ads",
+    description: "Nhập website để tạo prompt phân tích và lập chiến lược Google Search Ads.",
+  },
 };
 
 function isTabId(value: string | null): value is TabId {
@@ -150,6 +157,8 @@ function DashboardContent() {
               <TelegramLinkTab />
             ) : activeTab === "keyword-planner" ? (
               <GoogleAdsTab />
+            ) : activeTab === "ads-strategy-skill" ? (
+              <AdsStrategySkillTab />
             ) : (
               <div className="flex h-full min-h-[400px] flex-col items-center justify-center text-center">
                 <div className="mb-5 flex size-20 items-center justify-center rounded-2xl bg-[#059669]/10 ring-8 ring-[#059669]/5">

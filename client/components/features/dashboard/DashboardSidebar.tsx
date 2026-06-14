@@ -7,6 +7,7 @@ import {
   CalendarClock,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   Eye,
   FolderOpen,
   LayoutDashboard,
@@ -93,6 +94,13 @@ export const DASHBOARD_TABS = [
     shortLabel: "Google Ads",
     icon: TrendingUp,
     description: "Keyword Planner & ủy quyền Gmail",
+  },
+  {
+    id: "ads-strategy-skill",
+    label: "Chiến lược chạy",
+    shortLabel: "Skill Ads",
+    icon: ClipboardList,
+    description: "Tạo prompt phân tích website và lập chiến lược Google Search Ads",
   },
 ] as const;
 

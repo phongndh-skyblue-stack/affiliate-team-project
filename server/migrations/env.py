@@ -12,6 +12,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 from app.api.ads_transparent.model import AdCreative, AdCreativeDetail, AdTransparencySearch  # noqa: F401
+from app.api.ads_strategy.model import AdsStrategyApiKey, AdsStrategyPrompt, AdsStrategyResult  # noqa: F401
 from app.api.affiliate_data.model import (  # noqa: F401
     AffiliateLink,
     AffiliateLinkProjectDataScan,
