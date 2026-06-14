@@ -1,0 +1,14 @@
+
+cd server
+source .venv/Scripts/activate
+
+Tạo 3 git bash terminal
+    - Terminal 1: sh run-dev.sh
+    - Terminal 2: 
+        + cd server
+        + source .venv/Scripts/activate
+        + arq app.api.search_ads.tasks.WorkerSettings hoặc python -m arq app.api.search_ads.tasks.WorkerSettings
+    - Terminal 3: 
+        + cd server
+        + source .venv/Scripts/activate 
+        + python -m bot.main

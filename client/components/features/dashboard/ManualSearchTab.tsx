@@ -13,11 +13,18 @@ import {
   Layers3,
   Globe,
   MapPin,
+  BadgeCheck,
+  CircleHelp,
+  ContactRound,
+  Check,
+  ChevronsUpDown,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { manualSearchService } from "@/services/manualSearch.service";
 import type {
+  AdvertiserCandidate,
   CompetitorAdItem,
   ManualCompetitorSearchHistoryItem,
   ManualCompetitorSearchRequest,
@@ -30,10 +37,41 @@ type CodeOption = {
 };
 
 const LOCATION_OPTIONS = [
-  { value: "Vietnam", label: "Vietnam" },
-  { value: "United States", label: "United States" },
-  { value: "United Kingdom", label: "United Kingdom" },
-  { value: "Australia", label: "Australia" },
+  { value: "Vietnam", gl: "vn", label: "Việt Nam" },
+  { value: "United States", gl: "us", label: "Hoa Kỳ" },
+  { value: "United Kingdom", gl: "uk", label: "Vương quốc Anh" },
+  { value: "Australia", gl: "au", label: "Australia" },
+  { value: "Canada", gl: "ca", label: "Canada" },
+  { value: "Singapore", gl: "sg", label: "Singapore" },
+  { value: "Thailand", gl: "th", label: "Thái Lan" },
+  { value: "Malaysia", gl: "my", label: "Malaysia" },
+  { value: "Indonesia", gl: "id", label: "Indonesia" },
+  { value: "Philippines", gl: "ph", label: "Philippines" },
+  { value: "India", gl: "in", label: "Ấn Độ" },
+  { value: "Japan", gl: "jp", label: "Nhật Bản" },
+  { value: "South Korea", gl: "kr", label: "Hàn Quốc" },
+  { value: "China", gl: "cn", label: "Trung Quốc" },
+  { value: "Taiwan", gl: "tw", label: "Đài Loan" },
+  { value: "Hong Kong", gl: "hk", label: "Hong Kong" },
+  { value: "Germany", gl: "de", label: "Đức" },
+  { value: "France", gl: "fr", label: "Pháp" },
+  { value: "Spain", gl: "es", label: "Tây Ban Nha" },
+  { value: "Italy", gl: "it", label: "Ý" },
+  { value: "Netherlands", gl: "nl", label: "Hà Lan" },
+  { value: "Belgium", gl: "be", label: "Bỉ" },
+  { value: "Switzerland", gl: "ch", label: "Thụy Sĩ" },
+  { value: "Sweden", gl: "se", label: "Thụy Điển" },
+  { value: "Norway", gl: "no", label: "Na Uy" },
+  { value: "Denmark", gl: "dk", label: "Đan Mạch" },
+  { value: "Finland", gl: "fi", label: "Phần Lan" },
+  { value: "Poland", gl: "pl", label: "Ba Lan" },
+  { value: "Brazil", gl: "br", label: "Brazil" },
+  { value: "Mexico", gl: "mx", label: "Mexico" },
+  { value: "United Arab Emirates", gl: "ae", label: "UAE" },
+  { value: "Saudi Arabia", gl: "sa", label: "Saudi Arabia" },
+  { value: "Turkey", gl: "tr", label: "Thổ Nhĩ Kỳ" },
+  { value: "South Africa", gl: "za", label: "Nam Phi" },
+  { value: "New Zealand", gl: "nz", label: "New Zealand" },
 ];
 
 const HL_OPTIONS = [
@@ -45,17 +83,26 @@ const HL_OPTIONS = [
   { value: "de", label: "Tiếng Đức" },
   { value: "es", label: "Tiếng Tây Ban Nha" },
   { value: "th", label: "Tiếng Thái" },
-] satisfies CodeOption[];
-
-const GL_OPTIONS = [
-  { value: "vn", label: "Việt Nam" },
-  { value: "us", label: "United States" },
-  { value: "uk", label: "United Kingdom" },
-  { value: "au", label: "Australia" },
-  { value: "sg", label: "Singapore" },
-  { value: "ca", label: "Canada" },
-  { value: "jp", label: "Nhật Bản" },
-  { value: "kr", label: "Hàn Quốc" },
+  { value: "id", label: "Tiếng Indonesia" },
+  { value: "ms", label: "Tiếng Malaysia" },
+  { value: "tl", label: "Tiếng Filipino" },
+  { value: "zh-CN", label: "Tiếng Trung giản thể" },
+  { value: "zh-TW", label: "Tiếng Trung phồn thể" },
+  { value: "pt", label: "Tiếng Bồ Đào Nha" },
+  { value: "it", label: "Tiếng Ý" },
+  { value: "nl", label: "Tiếng Hà Lan" },
+  { value: "pl", label: "Tiếng Ba Lan" },
+  { value: "ru", label: "Tiếng Nga" },
+  { value: "tr", label: "Tiếng Thổ Nhĩ Kỳ" },
+  { value: "ar", label: "Tiếng Ả Rập" },
+  { value: "hi", label: "Tiếng Hindi" },
+  { value: "bn", label: "Tiếng Bengal" },
+  { value: "sv", label: "Tiếng Thụy Điển" },
+  { value: "da", label: "Tiếng Đan Mạch" },
+  { value: "no", label: "Tiếng Na Uy" },
+  { value: "fi", label: "Tiếng Phần Lan" },
+  { value: "cs", label: "Tiếng Séc" },
+  { value: "uk", label: "Tiếng Ukraina" },
 ] satisfies CodeOption[];
 
 function formatDateTime(value: string): string {
@@ -68,7 +115,120 @@ function formatDateTime(value: string): string {
   });
 }
 
+function formatEpoch(value?: number): string {
+  if (!value) return "—";
+  const milliseconds = value < 10_000_000_000 ? value * 1000 : value;
+  return new Date(milliseconds).toLocaleDateString("vi-VN");
+}
+
+function AdvertiserInfoCard({
+  candidate,
+  advertiserLabel,
+  defaultOpen,
+}: {
+  candidate: AdvertiserCandidate;
+  advertiserLabel: string;
+  defaultOpen: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const otherAdsLink = candidate.advertiserAdsLink || candidate.detailsLink;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-background">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <ContactRound size={17} className="shrink-0 text-foreground/80" />
+        <span className="min-w-0 flex-1 text-sm font-semibold">
+          Giới thiệu về nhà quảng cáo này
+        </span>
+        <ChevronUp
+          size={16}
+          className={cn(
+            "shrink-0 text-muted-foreground transition-transform",
+            !open && "rotate-180"
+          )}
+        />
+      </button>
+
+      {open && (
+        <div className="border-t border-border px-4 pb-4 pt-3">
+          <div className="flex items-start gap-2.5 text-xs text-foreground/90">
+            <BadgeCheck size={16} className="mt-0.5 shrink-0 text-[#059669]" />
+            <span className="flex-1">
+              Thông tin nhà quảng cáo được tra cứu từ Google Ads Transparency
+            </span>
+            <span
+              title="Google Ads Transparency là nguồn công khai của Google. Kết quả được khớp theo domain quảng cáo."
+              className="cursor-help text-muted-foreground"
+            >
+              <CircleHelp size={15} />
+            </span>
+          </div>
+
+          <dl className="mt-4 space-y-3 pl-6">
+            <div>
+              <dt className="text-[11px] text-muted-foreground">Nhà quảng cáo</dt>
+              <dd className="mt-0.5 break-words text-sm font-medium">
+                {advertiserLabel || candidate.targetDomain || "Chưa xác định"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-muted-foreground">
+                Bên trả tiền quảng cáo
+              </dt>
+              <dd className="mt-0.5 break-words text-sm font-medium">
+                {candidate.paidForBy || "Chưa được Google công bố"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-muted-foreground">Vị trí hiển thị</dt>
+              <dd className="mt-0.5 text-sm font-medium">
+                {candidate.displayRegion || "Chưa xác định"}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="mt-4 border-t border-border pt-3">
+            {otherAdsLink && (
+              <a
+                href={otherAdsLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-[#0655d6] hover:underline"
+              >
+                Xem các quảng cáo khác mà nhà quảng cáo này dùng Google để phân phát
+                <ExternalLink size={12} />
+              </a>
+            )}
+            <p className="mt-2 break-all font-mono text-[10px] text-muted-foreground">
+              Advertiser ID: {candidate.advertiserId}
+              {candidate.creativeId ? ` · Creative ID: ${candidate.creativeId}` : ""}
+            </p>
+            {(candidate.firstShown || candidate.lastShown) && (
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Đã hiển thị: {formatEpoch(candidate.firstShown)} →{" "}
+                {formatEpoch(candidate.lastShown)}
+                {candidate.totalDaysShown ? ` · ${candidate.totalDaysShown} ngày` : ""}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdItemCard({ ad }: { ad: CompetitorAdItem }) {
+  const [showDetails, setShowDetails] = useState(
+    (ad.advertiserCandidates?.length ?? 0) > 0
+  );
+  const advertiserCandidates = ad.advertiserCandidates ?? [];
+  const refEntries = Object.entries(ad.refParameters ?? {});
+  const sitelinkItems = ad.sitelinkItems ?? [];
+
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
@@ -104,15 +264,118 @@ function AdItemCard({ ad }: { ad: CompetitorAdItem }) {
       )}
 
       {ad.link && (
-        <a
-          href={ad.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[#059669] hover:underline"
-        >
-          Mở quảng cáo
-          <ExternalLink size={12} />
-        </a>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <a
+            href={ad.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#059669] hover:underline"
+          >
+            Mở quảng cáo
+            <ExternalLink size={12} />
+          </a>
+          <button
+            type="button"
+            onClick={() => setShowDetails((value) => !value)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground/70 hover:text-foreground"
+          >
+            <Link2 size={12} />
+            {showDetails ? "Ẩn thông tin nhà quảng cáo" : "Thông tin nhà quảng cáo"}
+          </button>
+        </div>
+      )}
+
+      {showDetails && (
+        <div className="mt-4 space-y-3 border-t border-border pt-4">
+          <div className="grid gap-2 text-xs sm:grid-cols-2">
+            <div className="rounded-lg bg-muted/50 p-3">
+              <p className="font-medium text-foreground">Link đích</p>
+              <p className="mt-1 break-all text-muted-foreground">{ad.link || "—"}</p>
+              {(ad.destinationDomain || ad.destinationPath) && (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Domain: {ad.destinationDomain || "—"} · Path: {ad.destinationPath || "/"}
+                </p>
+              )}
+            </div>
+            <div className="rounded-lg bg-muted/50 p-3">
+              <p className="font-medium text-foreground">Google tracking / ref</p>
+              <p className="mt-1 break-all text-muted-foreground">
+                {ad.trackingLink || "SerpAPI không trả về tracking link"}
+              </p>
+            </div>
+          </div>
+
+          {refEntries.length > 0 ? (
+            <div>
+              <p className="mb-2 text-xs font-medium">Tham số affiliate / campaign</p>
+              <div className="flex flex-wrap gap-1.5">
+                {refEntries.map(([key, value]) => (
+                  <span
+                    key={key}
+                    className="rounded-md border border-border bg-background px-2 py-1 font-mono text-[11px]"
+                  >
+                    {key}={value}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Không phát hiện tham số ref/affiliate/campaign trong URL đích.
+            </p>
+          )}
+
+          {sitelinkItems.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-medium">Sitelink chi tiết</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {sitelinkItems.map((item, index) => (
+                  <a
+                    key={`${item.link}-${index}`}
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg border border-border p-2.5 text-xs hover:bg-muted/50"
+                  >
+                    <span className="font-medium">{item.title || "Sitelink"}</span>
+                    <span className="mt-1 block break-all text-[11px] text-muted-foreground">
+                      {item.link || "Không có URL"}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            {advertiserCandidates.length > 0 ? (
+              <div className="space-y-2">
+                {advertiserCandidates.map((candidate, index) => (
+                  <AdvertiserInfoCard
+                    key={`${candidate.advertiserId}-${candidate.creativeId}`}
+                    candidate={candidate}
+                    advertiserLabel={
+                      ad.source || ad.displayedLink || ad.destinationDomain || ad.advertiser
+                    }
+                    defaultOpen={index === 0}
+                  />
+                ))}
+                <p className="text-[11px] text-muted-foreground">
+                  Kết quả được khớp theo domain. Một domain có thể được nhiều tài khoản quảng cáo sử
+                  dụng, nên cần mở Transparency để xác nhận creative chính xác.
+                </p>
+              </div>
+            ) : (
+              <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+                {ad.advertiserLookupStatus === "failed"
+                  ? "Tra cứu Ads Transparency thất bại."
+                  : ad.advertiserLookupStatus === "not_requested"
+                    ? "Chưa bật tra cứu thông tin nhà quảng cáo cho lần search này."
+                    : "Không tìm thấy nhà quảng cáo phù hợp trong Ads Transparency."}
+              </p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -217,6 +480,7 @@ function EmptyState() {
 }
 
 function CodeSuggestionField({
+  id,
   label,
   description,
   placeholder,
@@ -224,6 +488,7 @@ function CodeSuggestionField({
   onChange,
   options,
 }: {
+  id: string;
   label: string;
   description: string;
   placeholder: string;
@@ -231,43 +496,176 @@ function CodeSuggestionField({
   onChange: (value: string) => void;
   options: CodeOption[];
 }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const selectedOption = options.find(
+    (option) => option.value.toLowerCase() === value.toLowerCase()
+  );
+  const normalizedQuery = query.trim().toLocaleLowerCase("vi");
+  const filteredOptions = normalizedQuery
+    ? options.filter(
+        (option) =>
+          option.value.toLocaleLowerCase("vi").includes(normalizedQuery) ||
+          option.label.toLocaleLowerCase("vi").includes(normalizedQuery)
+      )
+    : options;
+
+  function closeDropdown(commitQuery = false) {
+    if (commitQuery && query.trim()) {
+      onChange(query.trim());
+    }
+    setOpen(false);
+    setQuery("");
+  }
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        closeDropdown(true);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  });
+
   return (
-    <div>
-      <label className="mb-1.5 block text-xs font-medium text-foreground/90">
+    <div ref={containerRef} className="relative">
+      <label
+        htmlFor={id}
+        className="mb-1.5 block text-xs font-medium text-foreground/90"
+      >
         {label}
         <span className="ml-1 font-normal text-muted-foreground">({description})</span>
       </label>
 
-      <input
-        type="text"
-        value={value}
-        onChange={(event) => onChange(event.target.value.toLowerCase())}
-        placeholder={placeholder}
-        className="h-11 w-full rounded-xl border border-border bg-background px-3 font-mono text-sm tracking-[0.08em] transition-colors hover:border-[#059669]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-      />
-
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {options.map((option) => {
-          const active = value.toLowerCase() === option.value;
-
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onChange(option.value)}
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition-colors",
-                active
-                  ? "border-[#059669] bg-[#059669]/10 text-[#047857]"
-                  : "border-border bg-background text-muted-foreground hover:border-[#059669]/30 hover:text-foreground"
-              )}
-            >
-              <span className="font-mono font-semibold uppercase">{option.value}</span>
-              <span>{option.label}</span>
-            </button>
-          );
-        })}
+      <div className="relative">
+        <Search
+          size={14}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          id={id}
+          type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={`${id}-listbox`}
+          value={open ? query : value}
+          onFocus={() => {
+            setOpen(true);
+            setQuery("");
+          }}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setOpen(true);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              closeDropdown();
+            }
+            if (event.key === "Tab") {
+              closeDropdown(true);
+            }
+            if (event.key === "Enter" && open) {
+              event.preventDefault();
+              const option = filteredOptions[0];
+              onChange(option?.value ?? query.trim());
+              closeDropdown();
+            }
+          }}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="h-11 w-full rounded-xl border border-border bg-background pl-9 pr-32 font-mono text-sm tracking-[0.06em] transition-colors hover:border-[#059669]/30 focus-visible:border-[#059669]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/20"
+        />
+        <div className="pointer-events-none absolute right-3 top-1/2 flex max-w-28 -translate-y-1/2 items-center gap-2">
+          {!open && selectedOption && (
+            <span className="truncate text-[11px] text-muted-foreground">
+              {selectedOption.label}
+            </span>
+          )}
+          <ChevronsUpDown size={14} className="shrink-0 text-muted-foreground" />
+        </div>
       </div>
+
+      {open && (
+        <div
+          id={`${id}-listbox`}
+          role="listbox"
+          className="absolute inset-x-0 top-full z-50 mt-1.5 overflow-hidden rounded-xl border border-border bg-popover shadow-xl shadow-black/10"
+        >
+          <div className="flex items-center justify-between border-b border-border bg-muted/30 px-3 py-2">
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {normalizedQuery
+                ? `${filteredOptions.length} kết quả`
+                : `${options.length} lựa chọn`}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              Gõ mã hoặc tên
+            </span>
+          </div>
+          <div className="max-h-56 overflow-y-auto p-1.5">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => {
+                const selected =
+                  option.value.toLowerCase() === value.toLowerCase();
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => {
+                      onChange(option.value);
+                      closeDropdown();
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors",
+                      selected
+                        ? "bg-[#059669]/10 text-[#047857]"
+                        : "hover:bg-muted"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex min-w-10 items-center justify-center rounded-md border px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase",
+                        selected
+                          ? "border-[#059669]/30 bg-white/70 text-[#047857]"
+                          : "border-border bg-background text-foreground"
+                      )}
+                    >
+                      {option.value}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs">
+                      {option.label}
+                    </span>
+                    <Check
+                      size={14}
+                      className={selected ? "text-[#059669]" : "opacity-0"}
+                    />
+                  </button>
+                );
+              })
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange(query.trim());
+                  closeDropdown();
+                }}
+                className="w-full rounded-lg px-3 py-3 text-left text-xs hover:bg-muted"
+              >
+                Dùng mã tùy chỉnh{" "}
+                <span className="font-mono font-semibold">{query.trim()}</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -285,6 +683,7 @@ export function ManualSearchTab() {
     gl: "vn",
     num: 10,
     noCache: true,
+    enrichAdvertisers: true,
   });
 
   function set<K extends keyof ManualCompetitorSearchRequest>(
@@ -292,6 +691,17 @@ export function ManualSearchTab() {
     value: ManualCompetitorSearchRequest[K]
   ) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function setCountry(location: string) {
+    const country = LOCATION_OPTIONS.find((option) => option.value === location);
+    if (!country) return;
+
+    setForm((current) => ({
+      ...current,
+      location: country.value,
+      gl: country.gl,
+    }));
   }
 
   async function fetchHistory() {
@@ -398,15 +808,17 @@ export function ManualSearchTab() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground/90">Location</label>
+            <label className="mb-1.5 block text-xs font-medium text-foreground/90">
+              Quốc gia tìm kiếm
+            </label>
             <select
               value={form.location}
-              onChange={(event) => set("location", event.target.value)}
+              onChange={(event) => setCountry(event.target.value)}
               className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm transition-colors hover:border-[#059669]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
             >
               {LOCATION_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {option.label} ({option.gl.toUpperCase()})
                 </option>
               ))}
             </select>
@@ -415,9 +827,10 @@ export function ManualSearchTab() {
 
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3">
 
           <CodeSuggestionField
+            id="google-language-options"
             label="HL"
             description="ngôn ngữ giao diện Google"
             placeholder="vi"
@@ -426,14 +839,6 @@ export function ManualSearchTab() {
             options={HL_OPTIONS}
           />
 
-          <CodeSuggestionField
-            label="GL"
-            description="mã quốc gia tìm kiếm"
-            placeholder="vn"
-            value={form.gl ?? ""}
-            onChange={(value) => set("gl", value)}
-            options={GL_OPTIONS}
-          />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -457,6 +862,16 @@ export function ManualSearchTab() {
               className="size-4 rounded border-border text-[#059669]"
             />
             No cache
+          </label>
+
+          <label className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={form.enrichAdvertisers}
+              onChange={(event) => set("enrichAdvertisers", event.target.checked)}
+              className="size-4 rounded border-border text-[#059669]"
+            />
+            Tra cứu người trả tiền quảng cáo
           </label>
 
           <button

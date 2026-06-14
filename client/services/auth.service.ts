@@ -3,7 +3,11 @@ import type { LoginRequest, RegisterRequest, AuthResponse } from "@/types/auth.t
 
 export const authService = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
-    const response = await axiosInstance.post<AuthResponse>("/auth/login", data);
+    const credentials = {
+      username: data.username,
+      password: data.password,
+    };
+    const response = await axiosInstance.post<AuthResponse>("/auth/login", credentials);
     return response.data;
   },
 

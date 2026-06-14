@@ -68,6 +68,7 @@ Backend:
 ```bash
 cd /d/MICACE/affiliate-project/server
 pip install -r requirements.txt
+python -m patchright install chromium
 ```
 
 Frontend:
@@ -262,6 +263,7 @@ Backend:
 ```zsh
 cd ~/Documents/MICACE/affiliate-project/server
 pip install -r requirements.txt
+python -m patchright install chromium
 ```
 
 Frontend:

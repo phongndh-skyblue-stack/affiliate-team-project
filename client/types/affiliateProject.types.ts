@@ -63,6 +63,19 @@ export interface TopCountryInsight {
   signals: string[];
 }
 
+export interface RestrictedCountryInsight {
+  country: string;
+  restriction_type: "banned" | "restricted";
+  signals: string[];
+  evidence_links?: Array<{
+    title?: string | null;
+    url?: string | null;
+    snippet?: string | null;
+  }>;
+  confidence?: "high" | "medium" | "low" | null;
+  verification_note?: string | null;
+}
+
 export interface ScanAffiliateProjectRequest {
   affiliate_link_id: string;
   max_results?: number;
@@ -78,6 +91,7 @@ export interface ScanAffiliateProjectResponse {
   project_link?: string | null;
   event_content?: string | null;
   sale_content?: string | null;
+  restricted_countries: RestrictedCountryInsight[];
   top_countries: TopCountryInsight[];
   answer?: string | null;
   results: Array<Record<string, unknown>>;
@@ -117,6 +131,7 @@ export interface AffiliateLinkProjectDataModel {
   project_link?: string | null;
   event_content?: string | null;
   sale_content?: string | null;
+  restricted_countries: RestrictedCountryInsight[];
   top_countries: TopCountryInsight[];
   answer?: string | null;
   results: Array<Record<string, unknown>>;

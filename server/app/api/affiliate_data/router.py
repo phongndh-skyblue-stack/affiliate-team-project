@@ -156,6 +156,26 @@ def get_affiliate_links_endpoint(
     return [AffiliateLinkModel(**r) for r in rows]
 
 
+@router.delete(
+    "/affiliate-link/{affiliate_link_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
+    summary="Xoá affiliate link và toàn bộ dữ liệu scan liên quan",
+    responses={
+        404: {"description": "Không tìm thấy affiliate link của user hiện tại"},
+    },
+)
+def delete_affiliate_link_endpoint(
+    affiliate_link_id: str,
+    current_user: User = Depends(get_current_user),
+    service: AffiliateDataService = Depends(get_service),
+) -> None:
+    try:
+        service.delete_affiliate_link(current_user.id, affiliate_link_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
 @router.get(
     "/affiliate-link-detail",
     response_model=AffiliateLinkDetailResponse,

@@ -27,6 +27,10 @@ export const affiliateProjectService = {
     return response.data;
   },
 
+  deleteAffiliateLink: async (affiliateLinkId: string): Promise<void> => {
+    await axiosInstance.delete(`/affiliate-data/affiliate-link/${affiliateLinkId}`);
+  },
+
   getAffiliateLinkDetail: async (website: string): Promise<AffiliateLinkDetailResponse> => {
     const response = await axiosInstance.get<AffiliateLinkDetailResponse>(
       "/affiliate-data/affiliate-link-detail",
@@ -35,20 +39,26 @@ export const affiliateProjectService = {
     return response.data;
   },
 
-  scanTraffic: async (payload: ScanTrafficRequest): Promise<ScanTrafficResponse> => {
+  scanTraffic: async (
+    payload: ScanTrafficRequest,
+    signal?: AbortSignal
+  ): Promise<ScanTrafficResponse> => {
     const response = await axiosInstance.post<ScanTrafficResponse>(
       "/affiliate-data/scan-traffic",
-      payload
+      payload,
+      { signal }
     );
     return response.data;
   },
 
   scanAffiliateProject: async (
-    payload: ScanAffiliateProjectRequest
+    payload: ScanAffiliateProjectRequest,
+    signal?: AbortSignal
   ): Promise<ScanAffiliateProjectResponse> => {
     const response = await axiosInstance.post<ScanAffiliateProjectResponse>(
       "/affiliate-data/scan-affiliate-project",
-      payload
+      payload,
+      { signal }
     );
     return response.data;
   },

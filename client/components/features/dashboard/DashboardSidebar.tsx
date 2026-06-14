@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Eye,
   FolderOpen,
+  LayoutDashboard,
   LogOut,
   MonitorPlay,
   Search,
@@ -29,6 +30,13 @@ export const DASHBOARD_TABS = [
     shortLabel: "Dự án",
     icon: FolderOpen,
     description: "Quản lý các dự án affiliate của bạn",
+  },
+  {
+    id: "project-overview",
+    label: "Tổng hợp dự án",
+    shortLabel: "Tổng hợp",
+    icon: LayoutDashboard,
+    description: "Xem content, keyword, traffic, quốc gia và đối thủ trong một màn hình",
   },
   {
     id: "transparency",

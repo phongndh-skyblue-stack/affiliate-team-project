@@ -99,11 +99,7 @@ class GoogleSearchService:
     def build_google_search_url(self, keyword: str, language: str, location: str = "Vietnam"):
         q = quote_plus(keyword)
         hl = language or "vi"
-        # gl = country code giúp Google trả đúng kết quả địa phương
-        gl_map = {
-            "vi": "vn", "en": "us",
-        }
-        gl = gl_map.get(hl, "vn")
+        gl = self.resolve_google_country(location, language)
 
         return f"https://www.google.com/search?q={q}&hl={hl}&gl={gl}"
 
@@ -111,7 +107,80 @@ class GoogleSearchService:
         if language == "vi":
             return "vi-VN"
 
-        return "en-US"
+        locale_map = {
+            "United States": "en-US",
+            "United Kingdom": "en-GB",
+            "Australia": "en-AU",
+            "Canada": "en-CA",
+            "Singapore": "en-SG",
+            "Hong Kong": "en-HK",
+            "New Zealand": "en-NZ",
+            "India": "en-IN",
+            "Malaysia": "en-MY",
+            "Philippines": "en-PH",
+            "South Africa": "en-ZA",
+            "Ireland": "en-IE",
+        }
+        return locale_map.get(location, "en-US")
+
+    def resolve_google_country(self, location: str, language: str):
+        country_map = {
+            "Vietnam": "vn",
+            "United States": "us",
+            "United Kingdom": "gb",
+            "Australia": "au",
+            "Singapore": "sg",
+            "Canada": "ca",
+            "Germany": "de",
+            "France": "fr",
+            "Italy": "it",
+            "Spain": "es",
+            "Netherlands": "nl",
+            "Switzerland": "ch",
+            "Sweden": "se",
+            "Norway": "no",
+            "Denmark": "dk",
+            "Finland": "fi",
+            "Ireland": "ie",
+            "Belgium": "be",
+            "Austria": "at",
+            "Poland": "pl",
+            "Portugal": "pt",
+            "Greece": "gr",
+            "Czech Republic": "cz",
+            "Hungary": "hu",
+            "Romania": "ro",
+            "Turkey": "tr",
+            "United Arab Emirates": "ae",
+            "Saudi Arabia": "sa",
+            "Qatar": "qa",
+            "Kuwait": "kw",
+            "India": "in",
+            "Thailand": "th",
+            "Indonesia": "id",
+            "Malaysia": "my",
+            "Philippines": "ph",
+            "Japan": "jp",
+            "South Korea": "kr",
+            "Taiwan": "tw",
+            "Hong Kong": "hk",
+            "China": "cn",
+            "New Zealand": "nz",
+            "Brazil": "br",
+            "Mexico": "mx",
+            "Argentina": "ar",
+            "Chile": "cl",
+            "Colombia": "co",
+            "Peru": "pe",
+            "South Africa": "za",
+            "Nigeria": "ng",
+            "Kenya": "ke",
+            "Egypt": "eg",
+            "Israel": "il",
+        }
+        if location in country_map:
+            return country_map[location]
+        return "vn" if language == "vi" else "us"
 
     @staticmethod
     def _extract_ad_click_url(a_tag, fallback_href: str) -> str:

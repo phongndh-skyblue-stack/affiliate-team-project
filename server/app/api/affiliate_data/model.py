@@ -77,6 +77,7 @@ class AffiliateLinkProjectDataScan(Base):
     project_link: Mapped[str | None] = mapped_column(Text, nullable=True)
     event_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     sale_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    restricted_countries: Mapped[list | None] = mapped_column(JSON, nullable=True)
     top_countries: Mapped[list | None] = mapped_column(JSON, nullable=True)
     answer: Mapped[str | None] = mapped_column(Text, nullable=True)
     results: Mapped[list | None] = mapped_column(JSON, nullable=True)

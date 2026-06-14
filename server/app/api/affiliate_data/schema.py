@@ -55,6 +55,21 @@ class TopCountryInsight(BaseModel):
     signals: list[str] = Field(default_factory=list)
 
 
+class EvidenceLink(BaseModel):
+    title: str | None = None
+    url: str | None = None
+    snippet: str | None = None
+
+
+class RestrictedCountryInsight(BaseModel):
+    country: str
+    restriction_type: Literal["banned", "restricted"] = "restricted"
+    signals: list[str] = Field(default_factory=list)
+    evidence_links: list[EvidenceLink] = Field(default_factory=list)
+    confidence: Literal["high", "medium", "low"] | None = None
+    verification_note: str | None = None
+
+
 class AffiliateProjectScanResponse(BaseModel):
     website: str
     domain: str
@@ -63,6 +78,7 @@ class AffiliateProjectScanResponse(BaseModel):
     project_link: str | None = None
     event_content: str | None = None
     sale_content: str | None = None
+    restricted_countries: list[RestrictedCountryInsight] = Field(default_factory=list)
     top_countries: list[TopCountryInsight] = Field(default_factory=list)
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)
@@ -102,6 +118,7 @@ class AffiliateLinkProjectDataModel(BaseModel):
     project_link: str | None = None
     event_content: str | None = None
     sale_content: str | None = None
+    restricted_countries: list[RestrictedCountryInsight] = Field(default_factory=list)
     top_countries: list[TopCountryInsight] = Field(default_factory=list)
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)

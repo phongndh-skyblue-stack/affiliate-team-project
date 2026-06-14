@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import {
   CalendarClock,
   Eye,
   FolderOpen,
+  LayoutDashboard,
   MonitorPlay,
   Search,
   Send,
@@ -24,6 +25,7 @@ import { GoogleAdsTab } from "@/components/features/dashboard/GoogleAdsTab";
 import { ManualSearchTab } from "@/components/features/dashboard/ManualSearchTab";
 import { MySearchAdsCompetitorsTab } from "@/components/features/dashboard/MySearchAdsCompetitorsTab";
 import { NotificationBell } from "@/components/features/dashboard/NotificationBell";
+import { ProjectOverviewTab } from "@/components/features/dashboard/ProjectOverviewTab";
 import { ProjectsTab } from "@/components/features/dashboard/ProjectsTab";
 import { ProxyTab } from "@/components/features/dashboard/ProxyTab";
 import { SearchAdsScheduleTab } from "@/components/features/dashboard/SearchAdsScheduleTab";
@@ -38,6 +40,11 @@ const EMPTY_STATES: Record<
     icon: FolderOpen,
     heading: "Chưa có dự án nào",
     description: "Các dự án affiliate của bạn sẽ hiển thị ở đây.",
+  },
+  "project-overview": {
+    icon: LayoutDashboard,
+    heading: "Chưa có dữ liệu tổng hợp",
+    description: "Quét dữ liệu dự án, traffic, keyword và đối thủ để xem toàn cảnh ở đây.",
   },
   transparency: {
     icon: Eye,
@@ -85,7 +92,7 @@ function isTabId(value: string | null): value is TabId {
   return DASHBOARD_TABS.some((tab) => tab.id === value);
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
@@ -125,6 +132,8 @@ export default function DashboardPage() {
           <main className="flex-1 overflow-y-auto p-6">
             {activeTab === "projects" ? (
               <ProjectsTab />
+            ) : activeTab === "project-overview" ? (
+              <ProjectOverviewTab />
             ) : activeTab === "transparency" ? (
               <AdsTransparencyTab />
             ) : activeTab === "manual" ? (
@@ -167,5 +176,19 @@ export default function DashboardPage() {
         onClose={() => setEditProfileOpen(false)}
       />
     </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+          Đang tải dashboard...
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }

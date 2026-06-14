@@ -42,6 +42,32 @@ _COUNTRY_ALIASES: dict[str, tuple[str, ...]] = {
     "Mexico": ("mexico", "mx"),
 }
 
+_RESTRICTION_KEYWORDS = (
+    "banned",
+    "prohibited",
+    "not allowed",
+    "not accepted",
+    "not available",
+    "unable to offer",
+    "do not extend our services",
+    "cease operations",
+    "unavailable",
+    "excluded",
+    "blocked",
+    "restricted",
+    "cannot participate",
+    "cannot purchase",
+    "ineligible",
+)
+
+_BANNED_KEYWORDS = (
+    "banned",
+    "prohibited",
+    "not allowed",
+    "not accepted",
+    "blocked",
+)
+
 _CC_TLD_TO_COUNTRY = {
     "us": "United States",
     "uk": "United Kingdom",
@@ -216,6 +242,106 @@ def _build_country_signals(results: list[dict], answer: str | None) -> list[dict
     return ranked[:5]
 
 
+def _snippet_around(text: str, needle: str, max_chars: int = 300) -> str:
+    lowered = text.lower()
+    index = lowered.find(needle.lower())
+    if index < 0:
+        return re.sub(r"\s+", " ", text).strip()[:max_chars]
+    start = max(0, index - max_chars // 2)
+    end = min(len(text), index + max_chars // 2)
+    return re.sub(r"\s+", " ", text[start:end]).strip()
+
+
+def _split_restriction_contexts(text: str) -> list[str]:
+    cleaned = re.sub(r"\s+", " ", text or "").strip()
+    if not cleaned:
+        return []
+    sentences = re.split(r"(?<=[.!?])\s+", cleaned)
+    if len(sentences) <= 1:
+        return [cleaned[:700]]
+    return [sentence[:700] for sentence in sentences if sentence.strip()]
+
+
+def _build_restricted_country_insights(results: list[dict], answer: str | None) -> list[dict]:
+    buckets: dict[str, dict[str, object]] = {}
+
+    def add_context(country: str, context: str, result: dict | None) -> None:
+        lowered = context.lower()
+        hard = any(keyword in lowered for keyword in _BANNED_KEYWORDS)
+        bucket = buckets.setdefault(
+            country,
+            {
+                "country": country,
+                "restriction_type": "restricted",
+                "signals": [],
+                "evidence_links": [],
+                "confidence": "low",
+                "verification_note": (
+                    "Kết quả này được suy luận tự động từ dữ liệu web. "
+                    "Hãy mở nguồn để kiểm tra Terms, eligibility hoặc restricted jurisdictions."
+                ),
+            },
+        )
+        if hard:
+            bucket["restriction_type"] = "banned"
+
+        signals = bucket["signals"]
+        if isinstance(signals, list):
+            snippet = context[:500]
+            if snippet not in signals:
+                signals.append(snippet)
+
+        url = str(result.get("url") or "") if result else ""
+        if url:
+            evidence_links = bucket["evidence_links"]
+            if isinstance(evidence_links, list) and all(link.get("url") != url for link in evidence_links):
+                evidence_links.append(
+                    {
+                        "title": result.get("title"),
+                        "url": url,
+                        "snippet": _snippet_around(context, country),
+                    }
+                )
+            bucket["confidence"] = "medium"
+
+    sources: list[tuple[str, dict | None]] = []
+    if answer:
+        sources.append((answer, None))
+    for result in results:
+        sources.extend(
+            (
+                (str(result.get("title") or ""), result),
+                (str(result.get("content") or ""), result),
+                (str(result.get("raw_content") or ""), result),
+            )
+        )
+
+    for text, result in sources:
+        for context in _split_restriction_contexts(text):
+            lowered = context.lower()
+            if not any(keyword in lowered for keyword in _RESTRICTION_KEYWORDS):
+                continue
+            for country, aliases in _COUNTRY_ALIASES.items():
+                if any(re.search(rf"\b{re.escape(alias.lower())}\b", lowered) for alias in aliases):
+                    add_context(country, context, result)
+
+    ranked = sorted(
+        buckets.values(),
+        key=lambda item: (
+            1 if item.get("restriction_type") == "banned" else 0,
+            len(item.get("evidence_links") or []),
+            len(item.get("signals") or []),
+        ),
+        reverse=True,
+    )
+    for item in ranked:
+        if isinstance(item.get("evidence_links"), list):
+            item["evidence_links"] = item["evidence_links"][:3]
+        if isinstance(item.get("signals"), list):
+            item["signals"] = item["signals"][:4]
+    return ranked
+
+
 async def scan_affiliate_project_insights(
     website: str,
     max_results: int,
@@ -227,11 +353,8 @@ async def scan_affiliate_project_insights(
     query = " ".join(
         [
             domain,
-            (
-                "affiliate program commission rate payout referral terms percentage fixed amount "
-                "project campaign event sale promotion discount coupon "
-                "headquarters branch office languages countries regions locales"
-            ),
+            "official product features pricing affiliate program commission payout referral terms",
+            "campaign sale promotion offer headquarters countries restricted unavailable regions",
         ]
     )
 
@@ -275,6 +398,7 @@ async def scan_affiliate_project_insights(
     )
 
     top_countries = _build_country_signals(results, data.get("answer"))
+    restricted_countries = _build_restricted_country_insights(results, data.get("answer"))
 
     return {
         "website": website,
@@ -283,6 +407,7 @@ async def scan_affiliate_project_insights(
         "project_link": project_link,
         "event_content": event_content,
         "sale_content": sale_content,
+        "restricted_countries": restricted_countries,
         "top_countries": top_countries,
         "query": data.get("query", query),
         "answer": data.get("answer"),
@@ -388,6 +513,15 @@ class AffiliateDataService:
             for row in rows
         ]
 
+    def delete_affiliate_link(self, user_id: str, affiliate_link_id: str) -> None:
+        deleted = self.repository.delete_affiliate_link_for_user(
+            user_id=user_id,
+            affiliate_link_id=affiliate_link_id,
+        )
+        if not deleted:
+            raise ValueError("Affiliate link không tồn tại hoặc không thuộc user hiện tại")
+        self.repository.commit()
+
     def get_affiliate_link_detail_by_user(self, user_id: str, website: str) -> dict | None:
         normalized_url = normalize_affiliate_url(website)
         row = self.repository.get_affiliate_link_detail_by_user(
@@ -441,6 +575,7 @@ class AffiliateDataService:
                     "project_link": item.project_link,
                     "event_content": item.event_content,
                     "sale_content": item.sale_content,
+                    "restricted_countries": item.restricted_countries or [],
                     "top_countries": item.top_countries or [],
                     "answer": item.answer,
                     "results": item.results or [],

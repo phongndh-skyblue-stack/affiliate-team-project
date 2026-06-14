@@ -73,6 +73,13 @@ def _sw_date(dt: datetime) -> str:
     return f"{dt.year}|{dt.month:02d}|{dt.day:02d}"
 
 
+def _share_percentage(value: Any) -> float:
+    share = float(value or 0)
+    if 0 < share <= 1:
+        share *= 100
+    return round(share, 2)
+
+
 def _scan_months(n: int = _DEFAULT_MONTHS) -> list[tuple[datetime, datetime]]:
     """Trả list (from_dt, to_dt) cho N tháng gần nhất, skip tháng hiện tại.
 
@@ -332,13 +339,13 @@ async def _fetch_sources(
     domain_total = total.get(domain) or {}
     return {
         "period_month": from_dt.strftime("%Y-%m"),
-        "organic_search": round(domain_total.get("Organic Search") or 0),
-        "social": round(domain_total.get("Social") or 0),
-        "email": round(domain_total.get("Email") or 0),
-        "display_ads": round(domain_total.get("Display Ads") or 0),
-        "direct": round(domain_total.get("Direct") or 0),
-        "referrals": round(domain_total.get("Referrals") or 0),
-        "paid_search": round(domain_total.get("Paid Search") or 0),
+        "organic_search": _share_percentage(domain_total.get("Organic Search")),
+        "social": _share_percentage(domain_total.get("Social")),
+        "email": _share_percentage(domain_total.get("Email")),
+        "display_ads": _share_percentage(domain_total.get("Display Ads")),
+        "direct": _share_percentage(domain_total.get("Direct")),
+        "referrals": _share_percentage(domain_total.get("Referrals")),
+        "paid_search": _share_percentage(domain_total.get("Paid Search")),
     }
 
 

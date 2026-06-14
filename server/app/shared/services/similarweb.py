@@ -11,6 +11,7 @@ import logging
 import random
 import time
 import uuid
+from contextlib import suppress
 
 from redis.asyncio import Redis
 
@@ -202,22 +203,37 @@ def _create_driver(headless: bool = False):
     logger.info("[Driver] Connecting Selenium Hub: %s (headless=%s)", settings.SELENIUM_HUB_URL, headless)
     _wait_for_hub(settings.SELENIUM_HUB_URL)
 
-    opts = Options()
-    if headless:
-        opts.add_argument("--headless=new")
-    opts.add_argument("--no-sandbox")
-    opts.add_argument("--disable-dev-shm-usage")
-    opts.add_argument(f"--user-agent={USER_AGENT}")
-    opts.add_argument("--user-data-dir=/home/seluser/selenium")
-    opts.add_argument("--profile-directory=Default")
+    def build_options(use_shared_profile: bool) -> Options:
+        opts = Options()
+        if headless:
+            opts.add_argument("--headless=new")
+        opts.add_argument("--no-sandbox")
+        opts.add_argument("--disable-dev-shm-usage")
+        opts.add_argument(f"--user-agent={USER_AGENT}")
+        if use_shared_profile:
+            opts.add_argument("--user-data-dir=/home/seluser/selenium")
+            opts.add_argument("--profile-directory=Default")
+        return opts
 
     try:
         driver = webdriver.Remote(
             command_executor=settings.SELENIUM_HUB_URL,
-            options=opts,
+            options=build_options(use_shared_profile=True),
         )
     except Exception as exc:
-        raise RuntimeError(f"Could not create Selenium session at {settings.SELENIUM_HUB_URL}: {exc}") from exc
+        logger.warning(
+            "[Driver] Shared Chrome profile failed; retrying with a temporary profile: %s",
+            exc,
+        )
+        try:
+            driver = webdriver.Remote(
+                command_executor=settings.SELENIUM_HUB_URL,
+                options=build_options(use_shared_profile=False),
+            )
+        except Exception as retry_exc:
+            raise RuntimeError(
+                f"Could not create Selenium session at {settings.SELENIUM_HUB_URL}: {retry_exc}"
+            ) from retry_exc
 
     driver.set_page_load_timeout(120)
     driver.maximize_window()
@@ -238,7 +254,7 @@ def _get_page_title(driver, timeout: int = 10) -> str:
         return ""
 
 
-def _wait_for_manual(driver, timeout: int = 600) -> None:
+def _wait_for_manual(driver, timeout: int = 30) -> None:
     logger.warning("Manual SimilarWeb action required. Open noVNC: %s, timeout=%ds", settings.NOVNC_URL, timeout)
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -312,4 +328,5 @@ def refresh_cookie_blocking(headless: bool = False) -> str:
         logger.info("SimilarWeb cookie refresh succeeded")
         return cookie
     finally:
-        driver.quit()
+        with suppress(Exception):
+            driver.quit()
