@@ -61,5 +61,11 @@ echo "==> Installing server dependencies (requirements.txt) ..."
 "$PY" -m pip install --quiet -r "$SERVER_DIR/requirements.txt"
 echo "==> Server dependencies installed."
 
+# --- Trình duyệt cho Patchright (module Quét quảng cáo) ---
+# Bắt buộc: search_ads dùng patchright.chromium.launch(); thiếu binary sẽ fail.
+echo "==> Installing Chromium for Patchright (ad scanning) ..."
+"$PY" -m patchright install chromium
+echo "==> Chromium for Patchright installed."
+
 echo ""
 echo "Setup complete. Run 'sh run-dev.sh' to start the project."

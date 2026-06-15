@@ -12,10 +12,13 @@ venv/
 env/
 ENV/
 
-# Environment
+# Environment (tất cả file env thật — chỉ commit .env.example)
 .env
 .env.local
 .env.production
+*.env
+server.env
+!.env.example
 
 # Distribution / packaging
 dist/

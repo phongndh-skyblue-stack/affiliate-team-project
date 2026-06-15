@@ -1,0 +1,3 @@
+# Dev/test-only dependencies (không cần cho production)
+-r requirements.txt
+pytest>=9.0
