@@ -97,7 +97,7 @@ function Sparkline({ data }: { data: { year: number; month: number; searches: nu
           </defs>
           <Tooltip
             contentStyle={{ fontSize: 11, padding: "4px 8px", borderRadius: 6 }}
-            formatter={(v: number) => [v.toLocaleString("vi-VN"), "Lượt"]}
+            formatter={(v) => [Number(v).toLocaleString("vi-VN"), "Lượt"]}
             labelStyle={{ fontWeight: 600, fontSize: 11 }}
           />
           <Area
