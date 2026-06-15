@@ -105,6 +105,26 @@ export function useNotifications() {
       );
     });
 
+    socket.on("policy_change", (data: {
+      type: string;
+      message: string;
+      description?: string;
+      sourceUrl?: string;
+      createdAt?: string;
+    }) => {
+      console.log("[Socket.IO] policy_change received:", data);
+      addNotification({
+        type: "policy_change",
+        message: data.message,
+        description: data.description,
+        receivedAt: data.createdAt,
+      });
+      toast.warning(data.message ?? "Chính sách Google Ads vừa thay đổi", {
+        description: data.description,
+        duration: 12000,
+      });
+    });
+
     socket.on("telegram_notification", (data: {
       id?: string;
       type: string;

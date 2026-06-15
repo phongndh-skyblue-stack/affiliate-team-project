@@ -3,9 +3,11 @@ from __future__ import annotations
 from datetime import UTC, timedelta
 from zoneinfo import ZoneInfo
 
+from arq import cron
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from app.api.policy_watch.tasks import check_google_ads_policies
 from app.api.search_ads.arq_client import get_arq_redis_settings
 from app.api.search_ads.model import GoogleAdsSearch, GoogleAdsSearchAd, GoogleAdsSearchSchedule
 from app.api.search_ads.repository import SearchAdsRepository
@@ -79,6 +81,8 @@ async def run_scheduled_search_ads(ctx, schedule_id: str) -> dict:
 
 class WorkerSettings:
     functions = [run_scheduled_search_ads]
+    # Cron: kiểm tra chính sách Google Ads mỗi giờ (phút 0)
+    cron_jobs = [cron(check_google_ads_policies, minute=0)]
     redis_settings = get_arq_redis_settings()
     queue_name = settings.ARQ_QUEUE_NAME
     max_jobs = 2

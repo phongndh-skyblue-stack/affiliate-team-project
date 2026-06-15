@@ -21,7 +21,11 @@ function formatDate(iso: string) {
 type NotificationItem = ReturnType<typeof useNotificationStore.getState>["notifications"][number];
 
 function notificationDescription(n: NotificationItem) {
-  if (n.type === "telegram_linked" || n.type === "telegram_unlinked") {
+  if (
+    n.type === "telegram_linked" ||
+    n.type === "telegram_unlinked" ||
+    n.type === "policy_change"
+  ) {
     return n.description;
   }
 
