@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Hash, Mail } from "lucide-react";
+import { Hash, Mail, Sparkles, MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KeywordPlannerTab } from "@/components/features/dashboard/KeywordPlannerTab";
 import { MailDelegationTab } from "@/components/features/dashboard/MailDelegationTab";
+import { SeoContentTab } from "@/components/features/dashboard/SeoContentTab";
+import { SocialCaptionTab } from "@/components/features/dashboard/SocialCaptionTab";
 
 const TABS = [
   {
@@ -16,6 +18,16 @@ const TABS = [
     id: "mail-delegation",
     label: "Ủy quyền Mail",
     icon: Mail,
+  },
+  {
+    id: "seo-content",
+    label: "SEO Content Builder",
+    icon: Sparkles,
+  },
+  {
+    id: "social-caption",
+    label: "Social Caption Writer",
+    icon: MessageSquareText,
   },
 ] as const;
 
@@ -53,8 +65,12 @@ export function GoogleAdsTab() {
       <div className="flex-1 min-h-0">
         {activeTab === "keyword-planner" ? (
           <KeywordPlannerTab />
-        ) : (
+        ) : activeTab === "mail-delegation" ? (
           <MailDelegationTab />
+        ) : activeTab === "seo-content" ? (
+          <SeoContentTab />
+        ) : (
+          <SocialCaptionTab />
         )}
       </div>
     </div>

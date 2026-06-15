@@ -15,6 +15,9 @@ from app.api.proxy.router import router as proxy_router
 from app.api.search_ads.router import router as search_ads_router
 from app.api.telegram.router import router as telegram_router
 from app.api.users.router import router as users_router
+from app.api.seo_content.router import router as seo_content_router
+from app.api.policy_watch.router import router as policy_watch_router
+from app.api.social_caption.router import router as social_caption_router
 from app.core.config import settings
 
 api_router = APIRouter(prefix=settings.API_PREFIX)
@@ -31,3 +34,6 @@ api_router.include_router(keyword_router)
 api_router.include_router(notifications_router)
 api_router.include_router(proxy_router)
 api_router.include_router(telegram_router)
+api_router.include_router(seo_content_router)
+api_router.include_router(policy_watch_router)
+api_router.include_router(social_caption_router)

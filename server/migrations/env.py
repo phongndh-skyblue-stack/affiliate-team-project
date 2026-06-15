@@ -27,8 +27,10 @@ from app.api.keyword_planner.model import (  # noqa: F401
 )
 from app.api.manual_search.model import ManualCompetitorSearch, ManualCompetitorSearchAd  # noqa: F401
 from app.api.notifications.model import Notification  # noqa: F401
+from app.api.policy_watch.model import PolicyChangeEvent, PolicyWatchSnapshot  # noqa: F401
 from app.api.proxy.model import Proxy  # noqa: F401
 from app.api.search_ads.model import GoogleAdsSearch, GoogleAdsSearchAd, GoogleAdsSearchSchedule  # noqa: F401
+from app.api.seo_content.model import SeoContent  # noqa: F401
 from app.api.telegram.model import TelegramSubscription  # noqa: F401
 from app.core.config import settings
 from app.core.database import Base

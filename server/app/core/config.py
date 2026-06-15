@@ -75,6 +75,31 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_USERNAME: str = ""
     TELEGRAM_VERIFICATION_TTL_SECONDS: int = 600
 
+    # --- Gemini AI (Deep Research) ---
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+    # Model dự phòng khi model chính trả 503/UNAVAILABLE (quá tải)
+    GEMINI_FALLBACK_MODEL: str = "gemini-2.0-flash"
+
+    # --- Policy Watch (theo dõi chính sách Google Ads, comma-separated URLs) ---
+    # Hub + danh mục tổng + các trang chính sách cụ thể quan trọng nhất với affiliate.
+    POLICY_WATCH_URLS: str = ",".join(
+        [
+            # 6008942: trang hub "Google Ads policies" (có mục What's changing)
+            "https://support.google.com/adspolicy/answer/6008942?hl=en",
+            # topic/1626336: danh mục toàn bộ Advertising policies
+            "https://support.google.com/adspolicy/topic/1626336?hl=en",
+            # 6020955: Misrepresentation — lý do affiliate hay bị cấm nhất
+            "https://support.google.com/adspolicy/answer/6020955?hl=en",
+            # 6020954: Abusing the ad network (cloaking, landing page lừa đảo...)
+            "https://support.google.com/adspolicy/answer/6020954?hl=en",
+            # 6020956: Data collection and use
+            "https://support.google.com/adspolicy/answer/6020956?hl=en",
+            # 176031: Healthcare and medicines (ngành hạn chế phổ biến)
+            "https://support.google.com/adspolicy/answer/176031?hl=en",
+        ]
+    )
+
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
@@ -101,6 +126,10 @@ class Settings(BaseSettings):
     @property
     def arq_redis_dsn(self) -> str:
         return self.ARQ_REDIS_URL or self.REDIS_URL
+
+    @property
+    def policy_watch_urls(self) -> list[str]:
+        return [u.strip() for u in self.POLICY_WATCH_URLS.split(",") if u.strip()]
 
 
 settings = Settings()
