@@ -35,6 +35,17 @@ def get_service(db: Session = Depends(get_db)) -> SearchAdsService:
     return SearchAdsService(db)
 
 
+@router.get(
+    "/options",
+    summary="Danh sách quốc gia (gl) & ngôn ngữ (hl) hỗ trợ cho quét quảng cáo",
+)
+def get_search_options() -> dict:
+    # Nguồn chân lý duy nhất — frontend fetch để dropdown không lệch với backend.
+    from app.shared.agents.search_ads.services.geo import COUNTRIES, LANGUAGES
+
+    return {"locations": COUNTRIES, "languages": LANGUAGES}
+
+
 @router.post(
     "/run",
     response_model=SearchAdsResponse,

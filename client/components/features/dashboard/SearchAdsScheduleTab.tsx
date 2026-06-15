@@ -33,6 +33,7 @@ import { API_BASE_URL } from "@/constants/config";
 import { cn } from "@/lib/utils";
 import { proxyService } from "@/services/proxy.service";
 import { searchAdsService } from "@/services/searchAds.service";
+import { useSearchOptions } from "@/hooks/useSearchOptions";
 import { telegramService } from "@/services/telegram.service";
 import type { ProxyResponse } from "@/types/proxy.types";
 import type {
@@ -694,6 +695,7 @@ function ScheduleGroupAccordion({
 }
 
 export function SearchAdsScheduleTab() {
+  const { locations: locationOptions, languages: languageOptions } = useSearchOptions();
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("Vietnam");
   const [language, setLanguage] = useState("vi");
@@ -969,7 +971,7 @@ export function SearchAdsScheduleTab() {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Vị trí</label>
                 <select value={location} onChange={(event) => setLocation(event.target.value)} className={selectClass}>
-                  {LOCATION_OPTIONS.map((option) => (
+                  {locationOptions.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
@@ -977,7 +979,7 @@ export function SearchAdsScheduleTab() {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Ngôn ngữ</label>
                 <select value={language} onChange={(event) => setLanguage(event.target.value)} className={selectClass}>
-                  {LANGUAGE_OPTIONS.map((option) => (
+                  {languageOptions.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>

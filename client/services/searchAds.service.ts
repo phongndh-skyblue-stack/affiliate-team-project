@@ -10,7 +10,29 @@ import type {
   SearchAdsScheduleResponse,
 } from "@/types/searchAds.types";
 
+export interface SearchLocationOption {
+  value: string;
+  label: string;
+  gl: string;
+  region: string;
+}
+export interface SearchLanguageOption {
+  value: string;
+  label: string;
+}
+export interface SearchOptionsResponse {
+  locations: SearchLocationOption[];
+  languages: SearchLanguageOption[];
+}
+
 export const searchAdsService = {
+  getOptions: async (): Promise<SearchOptionsResponse> => {
+    const response = await axiosInstance.get<SearchOptionsResponse>(
+      "/search-ads/options"
+    );
+    return response.data;
+  },
+
   run: async (data: SearchAdsRequest): Promise<SearchAdsResponse> => {
     const response = await axiosInstance.post<SearchAdsResponse>(
       "/search-ads/run",

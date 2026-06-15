@@ -6,6 +6,11 @@ from urllib.parse import parse_qs, quote_plus, unquote, urljoin, urlparse
 from bs4 import BeautifulSoup
 
 from app.shared.agents.search_ads.services.browser import BrowserService
+from app.shared.agents.search_ads.services.geo import (
+    gl_for_location,
+    locale_for,
+    normalize_hl,
+)
 
 # Nhãn section / UI labels mà Google chèn vào — KHÔNG phải ad title
 _AD_LABEL_PATTERN = re.compile(
@@ -98,20 +103,13 @@ class GoogleSearchService:
 
     def build_google_search_url(self, keyword: str, language: str, location: str = "Vietnam"):
         q = quote_plus(keyword)
-        hl = language or "vi"
-        # gl = country code giúp Google trả đúng kết quả địa phương
-        gl_map = {
-            "vi": "vn", "en": "us",
-        }
-        gl = gl_map.get(hl, "vn")
-
+        hl = normalize_hl(language)
+        # gl = mã quốc gia lấy từ LOCATION (không phải ngôn ngữ) → SERP địa phương đúng nước
+        gl = gl_for_location(location)
         return f"https://www.google.com/search?q={q}&hl={hl}&gl={gl}"
 
     def resolve_locale(self, language: str, location: str):
-        if language == "vi":
-            return "vi-VN"
-
-        return "en-US"
+        return locale_for(language, location)
 
     @staticmethod
     def _extract_ad_click_url(a_tag, fallback_href: str) -> str:
@@ -328,7 +326,7 @@ class GoogleSearchService:
             page = await context.new_page()
 
             search_url = self.build_google_search_url(
-                keyword=keyword, language=language
+                keyword=keyword, language=language, location=location
             )
             await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
             await page.wait_for_timeout(2000)

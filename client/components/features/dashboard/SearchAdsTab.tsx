@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/constants/config";
 import { searchAdsService } from "@/services/searchAds.service";
+import { useSearchOptions } from "@/hooks/useSearchOptions";
 import { proxyService } from "@/services/proxy.service";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,21 +49,7 @@ import type {
 import type { ProxyResponse } from "@/types/proxy.types";
 
 // Constants
-
-const LOCATION_OPTIONS = [
-  { value: "Vietnam", label: "Việt Nam" },
-  { value: "United States", label: "Hoa Kỳ" },
-  { value: "United Kingdom", label: "Vương quốc Anh" },
-  { value: "Australia", label: "Úc" },
-  { value: "Singapore", label: "Singapore" },
-];
-
-const LANGUAGE_OPTIONS = [
-  { value: "vi", label: "Tiếng Việt" },
-  { value: "en", label: "Tiếng Anh" },
-  { value: "ja", label: "Tiếng Nhật" },
-  { value: "ko", label: "Tiếng Hàn" },
-];
+// LOCATION_OPTIONS & LANGUAGE_OPTIONS giờ lấy realtime từ backend qua useSearchOptions().
 
 const DEVICE_OPTIONS = [
   { value: "desktop", label: "Desktop" },
@@ -636,6 +623,7 @@ function EmptyHistoryState() {
 }
 
 export function SearchAdsTab() {
+  const { locations: LOCATION_OPTIONS, languages: LANGUAGE_OPTIONS } = useSearchOptions();
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("Vietnam");
   const [language, setLanguage] = useState("vi");
@@ -870,7 +858,7 @@ export function SearchAdsTab() {
             <div key={label} className="space-y-1">
               <label className="text-xs text-muted-foreground">{label}</label>
               <select value={value} onChange={(e) => setter(e.target.value)} disabled={submitting} className={selectClass}>
-                {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {options.map((o: { value: string; label: string }) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
           ))}
