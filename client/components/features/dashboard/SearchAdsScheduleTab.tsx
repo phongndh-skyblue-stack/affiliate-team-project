@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -144,8 +144,8 @@ function formatResultTime(value: string) {
 function mediaUrl(path?: string | null) {
   if (!path) return null;
   if (path.startsWith("http")) return path;
-  const apiOrigin = new URL(API_BASE_URL).origin;
-  return `${apiOrigin}${path.startsWith("/") ? path : `/${path}`}`;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function optionLabel(options: { value: string; label: string }[], value: string) {
