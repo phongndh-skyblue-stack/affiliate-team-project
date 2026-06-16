@@ -6,9 +6,11 @@ Tạo 3 git bash terminal
     - Terminal 1: sh run-dev.sh
     - Terminal 2: 
         + cd server
-        + source .venv/bin/activate
+        + source .venv/Scripts/activate
         + arq app.api.search_ads.tasks.WorkerSettings hoac python -m arq app.api.search_ads.tasks.WorkerSettings
     - Terminal 3: 
         + cd server
-        + source .venv/bin/activate
+        + source .venv/Scripts/activate
         + python -m bot.main
+        + Neu van bao thieu thu vien, chay truc tiep bang venv:
+          .venv/Scripts/python -m bot.main

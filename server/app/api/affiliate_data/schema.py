@@ -89,6 +89,8 @@ class AffiliateLinkModel(BaseModel):
     user_id: str | None = None
     affiliate_url: str
     domain: str
+    name: str | None = None
+    search_query: str | None = None
     raw_data: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
@@ -96,6 +98,14 @@ class AffiliateLinkModel(BaseModel):
 
 class AffiliateLinkCreateRequest(BaseModel):
     website: str = Field(..., min_length=1, description="Affiliate link cần tạo/lưu")
+    name: str | None = Field(None, description="Project name")
+    search: str | None = Field(None, description="Shared search keyword for project-linked searches")
+
+
+class AffiliateLinkUpdateRequest(BaseModel):
+    website: str = Field(..., min_length=1, description="Affiliate link")
+    name: str | None = Field(None, description="Project name")
+    search: str | None = Field(None, description="Shared search keyword for project-linked searches")
 
 
 class AffiliateLinkTrafficModel(BaseModel):

@@ -6,6 +6,7 @@ export interface SearchAdsRequest {
   noProxy?: boolean;
   headful?: boolean;
   proxyId?: string | null;
+  projectId?: string | null;
 }
 
 export interface LandingPageInfo {
@@ -40,6 +41,8 @@ export interface OrganicLinkItem {
 
 export interface SearchAdsResponse {
   id?: string | null;
+  projectId?: string | null;
+  projectName?: string | null;
   keyword: string;
   searchUrl?: string | null;
   status: string;
@@ -69,6 +72,8 @@ export interface SearchAdsHistoryItem {
   proxyName?: string | null;
   isScheduled?: boolean;
   source?: "manual" | "scheduled";
+  projectId?: string | null;
+  projectName?: string | null;
   videoUrl?: string | null;
   videoStatus?: string;
   createdAt: string;
@@ -87,6 +92,7 @@ export interface SearchAdsScheduleCreate {
   noProxy?: boolean;
   headful?: boolean;
   proxyId?: string | null;
+  projectId?: string | null;
   scheduleMode?: "once" | "daily";
   runAt?: string[];
   dailyTimes?: string[];
@@ -104,6 +110,8 @@ export interface SearchAdsScheduleItem {
   headful: boolean;
   proxyId?: string | null;
   proxyName?: string | null;
+  projectId?: string | null;
+  projectName?: string | null;
   batchId?: string | null;
   scheduleMode: "once" | "daily";
   dailyTime?: string | null;

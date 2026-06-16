@@ -198,3 +198,10 @@ class ResultResponse(CamelModel):
 class ResultListResponse(CamelModel):
     total: int
     items: list[ResultResponse]
+
+
+class CountryResponse(CamelModel):
+    code: str
+    name_vi: str
+    name_en: str
+

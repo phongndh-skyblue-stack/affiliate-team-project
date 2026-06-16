@@ -35,6 +35,8 @@ class AdsTransparencyRepository:
             political_ads=payload.political_ads,
             num=payload.num,
             next_page_token_input=payload.next_page_token,
+            project_id=payload.project_id,
+            project_name=response.get("project_name"),
             total_results=search_info.get("total_results"),
             next_page_token_output=pagination.get("next_page_token"),
             raw_data=response,

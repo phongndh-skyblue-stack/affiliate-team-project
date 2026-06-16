@@ -27,6 +27,8 @@ class SearchAdsRepository:
         proxy_id: str | None = None,
         proxy_name: str | None = None,
         is_scheduled: bool = False,
+        project_id: str | None = None,
+        project_name: str | None = None,
         video_path: str | None = None,
         video_status: str = "none",
     ) -> GoogleAdsSearch:
@@ -47,6 +49,8 @@ class SearchAdsRepository:
             proxy_id=proxy_id,
             proxy_name=proxy_name,
             is_scheduled=is_scheduled,
+            project_id=project_id,
+            project_name=project_name,
         )
         self.db.add(search)
         self.db.flush()
@@ -116,6 +120,8 @@ class SearchAdsRepository:
         headful: bool,
         proxy_id: str | None,
         proxy_name: str | None,
+        project_id: str | None,
+        project_name: str | None,
         batch_id: str | None,
         run_at,
         schedule_mode: str = "once",
@@ -132,6 +138,8 @@ class SearchAdsRepository:
             headful=headful,
             proxy_id=proxy_id,
             proxy_name=proxy_name,
+            project_id=project_id,
+            project_name=project_name,
             batch_id=batch_id,
             schedule_mode=schedule_mode,
             daily_time=daily_time,

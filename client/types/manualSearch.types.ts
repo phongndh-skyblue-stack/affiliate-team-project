@@ -6,6 +6,7 @@ export interface ManualCompetitorSearchRequest {
   num?: number;
   noCache?: boolean;
   enrichAdvertisers?: boolean;
+  projectId?: string | null;
 }
 
 export interface CompetitorSitelinkItem {
@@ -49,6 +50,8 @@ export interface CompetitorAdItem {
 }
 
 export interface ManualCompetitorSearchResponse {
+  projectId?: string | null;
+  projectName?: string | null;
   keyword: string;
   googleUrl: string;
   totalAdsFound: number;
@@ -67,6 +70,8 @@ export interface ManualCompetitorSearchHistoryItem {
   gl: string;
   num: number;
   noCache: boolean;
+  projectId?: string | null;
+  projectName?: string | null;
   totalAdsFound: number;
   topAdsCount: number;
   bottomAdsCount: number;

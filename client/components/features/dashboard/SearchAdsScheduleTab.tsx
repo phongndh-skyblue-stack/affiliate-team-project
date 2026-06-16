@@ -31,10 +31,12 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/constants/config";
 import { cn } from "@/lib/utils";
+import { affiliateProjectService } from "@/services/affiliateProject.service";
 import { proxyService } from "@/services/proxy.service";
 import { searchAdsService } from "@/services/searchAds.service";
 import { telegramService } from "@/services/telegram.service";
 import type { ProxyResponse } from "@/types/proxy.types";
+import type { AffiliateLinkModel } from "@/types/affiliateProject.types";
 import type {
   OrganicLinkItem,
   SearchAdItem,
@@ -491,6 +493,15 @@ function ScheduledResultDetail({ item }: { item: SearchAdsHistoryItem }) {
               <StatusIcon size={11} />
               {meta.label}
             </span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                item.projectId ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"
+              )}
+            >
+              <Link2 size={11} />
+              {item.projectId ? `Dự án: ${item.projectName || "Project"}` : "Riêng lẻ"}
+            </span>
           </div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1"><MapPin size={10} />{locationLabel(item.location)}</span>
@@ -601,6 +612,15 @@ function ScheduleRow({
               Hằng ngày {item.dailyTime}
             </span>
           )}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+              item.projectId ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"
+            )}
+          >
+            <Link2 size={11} />
+            {item.projectId ? `Dự án: ${item.projectName || "Project"}` : "Riêng lẻ"}
+          </span>
         </div>
         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1"><MapPin size={10} />{locationLabel(item.location)}</span>
@@ -675,6 +695,7 @@ function ScheduleGroupAccordion({
   const [open, setOpen] = useState(defaultOpen);
   const meta = groupStatusMeta(group);
   const StatusIcon = meta.icon;
+  const groupProject = group.items.find((item) => item.projectId);
 
   return (
     <div className="border-b border-border last:border-b-0">
@@ -695,6 +716,15 @@ function ScheduleGroupAccordion({
             </span>
             <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
               {group.scheduleMode === "daily" ? `${group.total} lần daily` : `${group.total} mốc`}
+            </span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                groupProject ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"
+              )}
+            >
+              <Link2 size={11} />
+              {groupProject ? `Dự án: ${groupProject.projectName || "Project"}` : "Riêng lẻ"}
             </span>
             {group.notifyTelegramOnChange && (
               <span className="inline-flex items-center gap-1 rounded-full bg-[#059669]/10 px-2 py-0.5 text-[11px] font-medium text-[#047857]">
@@ -747,6 +777,8 @@ export function SearchAdsScheduleTab() {
   const [device, setDevice] = useState("desktop");
   const [useProxy, setUseProxy] = useState(false);
   const [selectedProxyId, setSelectedProxyId] = useState("");
+  const [projects, setProjects] = useState<AffiliateLinkModel[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [scheduleMode, setScheduleMode] = useState<"once" | "daily">("once");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>([""]);
   const [dailyTimes, setDailyTimes] = useState<string[]>(["09:00"]);
@@ -776,6 +808,14 @@ export function SearchAdsScheduleTab() {
     () => new Map(scheduledResults.map((item) => [item.id, item])),
     [scheduledResults]
   );
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+  const projectSchedules = schedules.filter((item) => item.projectId).length;
+  const standaloneSchedules = schedules.length - projectSchedules;
+
+  function applySelectedProject() {
+    if (!selectedProject) return;
+    setKeyword(selectedProject.search_query || selectedProject.name || selectedProject.domain);
+  }
   const selectedResult = selectedResultId ? resultById.get(selectedResultId) : null;
 
   async function fetchSchedules() {
@@ -839,6 +879,10 @@ export function SearchAdsScheduleTab() {
     fetchScheduledResults();
     fetchProxies();
     fetchTelegramSubscription();
+    affiliateProjectService
+      .getAffiliateLinks()
+      .then(setProjects)
+      .catch(() => toast.error("Không tải được danh sách dự án"));
   }, []);
 
   const addScheduleTime = () => {
@@ -929,6 +973,7 @@ export function SearchAdsScheduleTab() {
         noProxy: !useProxy,
         headful: false,
         proxyId: useProxy ? selectedProxyId : null,
+        projectId: selectedProjectId || null,
         scheduleMode,
         runAt: scheduleMode === "once" ? runAt.map((value) => value.toISOString()) : [],
         dailyTimes: scheduleMode === "daily" ? normalizedDailyTimes : [],
@@ -1010,6 +1055,46 @@ export function SearchAdsScheduleTab() {
                   className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#059669]/30"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 rounded-lg border border-dashed border-border bg-muted/20 p-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+              <select
+                value={selectedProjectId}
+                onChange={(event) => setSelectedProjectId(event.target.value)}
+                className={selectClass}
+              >
+                <option value="">Chọn dự án để đặt lịch theo project</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name || project.domain} - {project.search_query || project.domain}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={applySelectedProject}
+                disabled={!selectedProject}
+                className={cn(
+                  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium disabled:opacity-50",
+                  selectedProjectId
+                    ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Link2 size={14} /> Dùng search dự án
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedProjectId("")}
+                className={cn(
+                  "h-10 rounded-lg border px-3 text-sm font-medium",
+                  !selectedProjectId
+                    ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Riêng lẻ
+              </button>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
@@ -1278,7 +1363,8 @@ export function SearchAdsScheduleTab() {
             <h2 className="text-sm font-semibold">Lịch quét đã đặt</h2>
             <p className="text-xs text-muted-foreground">
               {upcomingSchedules} lịch đang chờ hoặc đang chạy trong {scheduleGroups.length}{" "}
-              {scheduleView === "history" ? "lần đặt lịch" : "từ khóa"}.
+              {scheduleView === "history" ? "lần đặt lịch" : "từ khóa"}. Theo dự án: {projectSchedules}, riêng lẻ:{" "}
+              {standaloneSchedules}.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

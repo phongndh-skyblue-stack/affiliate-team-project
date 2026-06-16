@@ -498,6 +498,62 @@ class AffiliateDataService:
         self.repository.commit()
         return project_result
 
+    def update_affiliate_link(
+        self,
+        user_id: str,
+        affiliate_link_id: str,
+        website: str,
+        name: str | None = None,
+        search: str | None = None,
+    ) -> dict:
+        link = self.repository.get_affiliate_link_by_id_for_user(
+            user_id=user_id,
+            affiliate_link_id=affiliate_link_id,
+        )
+        if not link:
+            raise KeyError("Không tìm thấy affiliate link của user hiện tại")
+
+        normalized_url = normalize_affiliate_url(website)
+        domain = extract_domain(normalized_url)
+        clean_name = (name or "").strip() or domain
+        clean_search = (search or "").strip() or clean_name or domain
+
+        from sqlalchemy import select
+        from app.api.affiliate_data.model import AffiliateLink
+        stmt = select(AffiliateLink).where(
+            AffiliateLink.user_id == user_id,
+            AffiliateLink.affiliate_url == normalized_url,
+            AffiliateLink.id != affiliate_link_id,
+        )
+        dup = self.repository.db.scalar(stmt)
+        if dup:
+            raise ValueError("Dự án với affiliate URL này đã tồn tại")
+
+        link.affiliate_url = normalized_url
+        link.domain = domain
+        link.name = clean_name
+        link.search_query = clean_search
+        link.raw_data = {
+            "affiliate_url": normalized_url,
+            "domain": domain,
+            "name": clean_name,
+            "search_query": clean_search,
+        }
+
+        self.repository.commit()
+
+        return {
+            "id": link.id,
+            "user_id": link.user_id,
+            "affiliate_url": link.affiliate_url,
+            "domain": link.domain,
+            "name": link.name,
+            "search_query": link.search_query,
+            "raw_data": link.raw_data,
+            "created_at": link.created_at,
+            "updated_at": link.updated_at,
+        }
+
     def get_all_affiliate_links(self, user_id: str) -> list[dict]:
         rows = self.repository.get_all_affiliate_links_for_user(user_id)
         return [
@@ -506,6 +562,8 @@ class AffiliateDataService:
                 "user_id": row.user_id,
                 "affiliate_url": row.affiliate_url,
                 "domain": row.domain,
+                "name": row.name,
+                "search_query": row.search_query,
                 "raw_data": row.raw_data,
                 "created_at": row.created_at,
                 "updated_at": row.updated_at,

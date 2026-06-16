@@ -30,6 +30,10 @@ class AdTransparencySearch(Base):
     political_ads: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     num: Mapped[int] = mapped_column(Integer, nullable=False, default=40)
     next_page_token_input: Mapped[str | None] = mapped_column(Text, nullable=True)
+    project_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("affiliate_links.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    project_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Response metadata
     total_results: Mapped[int | None] = mapped_column(Integer, nullable=True)

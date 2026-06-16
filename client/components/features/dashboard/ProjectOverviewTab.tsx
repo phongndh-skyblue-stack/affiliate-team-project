@@ -298,12 +298,18 @@ function getDomainKeywordCandidates(domain: string): Set<string> {
 
 function getProjectAdCompetitors(
   histories: SearchAdsHistoryItem[],
-  domain: string
+  domain: string,
+  projectId?: string
 ): ProjectAdCompetitor[] {
   const keywordCandidates = getDomainKeywordCandidates(domain);
 
   return histories
-    .filter((history) => keywordCandidates.has(normalize(history.keyword)) || matchesProjectKeyword(history.keyword, domain))
+    .filter(
+      (history) =>
+        (projectId && history.projectId === projectId) ||
+        keywordCandidates.has(normalize(history.keyword)) ||
+        matchesProjectKeyword(history.keyword, domain)
+    )
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .flatMap((history) =>
       history.ads.map((ad, index) => ({
@@ -340,10 +346,12 @@ function toTransparencyCompetitor(
 
 function getTransparencyProjectCompetitors(
   histories: AdSearchHistoryItem[],
-  domain: string
+  domain: string,
+  projectId?: string
 ): TransparencyProjectCompetitor[] {
   return histories
     .filter((history) => {
+      if (projectId && history.projectId === projectId) return true;
       const queryMatches =
         matchesProjectKeyword(history.text, domain) ||
         matchesProjectKeyword(history.advertiserIdQuery, domain);
@@ -861,12 +869,12 @@ export function ProjectOverviewTab() {
     [domain, keywordIdeas, keywordSignals]
   );
   const searchAdCompetitors = useMemo(
-    () => getProjectAdCompetitors(searchHistories, domain),
-    [domain, searchHistories]
+    () => getProjectAdCompetitors(searchHistories, domain, selected?.link.id),
+    [domain, searchHistories, selected?.link.id]
   );
   const transparencyCompetitors = useMemo(
-    () => getTransparencyProjectCompetitors(transparencyHistories, domain),
-    [domain, transparencyHistories]
+    () => getTransparencyProjectCompetitors(transparencyHistories, domain, selected?.link.id),
+    [domain, selected?.link.id, transparencyHistories]
   );
   const relevantCompetitors = useMemo<ProjectCompetitor[]>(
     () => [...searchAdCompetitors, ...transparencyCompetitors].slice(0, 36),

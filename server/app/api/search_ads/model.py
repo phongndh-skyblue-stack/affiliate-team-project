@@ -38,6 +38,10 @@ class GoogleAdsSearch(Base):
     proxy_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     proxy_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_scheduled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    project_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("affiliate_links.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    project_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
@@ -91,6 +95,10 @@ class GoogleAdsSearchSchedule(Base):
 
     proxy_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     proxy_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    project_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("affiliate_links.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    project_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     batch_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     schedule_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="once", index=True)

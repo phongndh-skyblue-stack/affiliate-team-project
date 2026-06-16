@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -7,6 +9,7 @@ from app.api.ads_strategy.schema import (
     ApiKeyCreate,
     ApiKeyListResponse,
     ApiKeyResponse,
+    CountryResponse,
     GenerateRequest,
     GenerateResponse,
     PromptCreate,
@@ -19,6 +22,7 @@ from app.api.ads_strategy.schema import (
 )
 from app.api.ads_strategy.service import AdsStrategyService
 from app.api.auth.model import User
+from app.core.config import SERVER_DIR
 from app.core.database import get_db
 from app.shared.deps import get_current_user
 
@@ -127,3 +131,26 @@ def delete_result(
     service: AdsStrategyService = Depends(get_service),
 ) -> None:
     service.delete_result(current_user.id, result_id)
+
+
+@router.get("/countries", response_model=list[CountryResponse])
+def list_countries(
+    current_user: User = Depends(get_current_user),
+) -> list[CountryResponse]:
+    country_file = SERVER_DIR / "country.json"
+    if not country_file.exists():
+        return []
+    try:
+        with open(country_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return [
+                CountryResponse(
+                    code=item["code"],
+                    name_vi=item["name_vi"],
+                    name_en=item["name_en"]
+                )
+                for item in data
+            ]
+    except Exception:
+        return []
+

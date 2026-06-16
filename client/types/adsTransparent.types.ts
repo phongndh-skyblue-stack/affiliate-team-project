@@ -10,6 +10,7 @@ export interface AdsTransparencySearchRequest {
   region?: string;
   num?: number;
   nextPageToken?: string;
+  projectId?: string | null;
 }
 
 export interface AdDetailsRequest {
@@ -103,6 +104,8 @@ export interface AdSearchHistoryItem {
   politicalAds: boolean;
   num: number;
   nextPageTokenInput?: string;
+  projectId?: string | null;
+  projectName?: string | null;
   totalResults?: number;
   nextPageTokenOutput?: string;
   createdAt: string;

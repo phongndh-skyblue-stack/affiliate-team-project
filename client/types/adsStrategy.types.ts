@@ -77,3 +77,10 @@ export interface AdsStrategyResultListResponse {
   total: number;
   items: AdsStrategyResult[];
 }
+
+export interface Country {
+  code: string;
+  nameVi: string;
+  nameEn: string;
+}
+

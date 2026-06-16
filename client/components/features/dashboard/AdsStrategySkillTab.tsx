@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState, useRef } from "react";
 import {
   Check,
   Clipboard,
@@ -20,6 +20,7 @@ import type {
   AdsStrategyGenerateResponse,
   AdsStrategyPrompt,
   AdsStrategyResult,
+  Country,
 } from "@/types/adsStrategy.types";
 
 const DEFAULT_FIELDS = [
@@ -318,9 +319,63 @@ export function AdsStrategySkillTab() {
   const [responseLanguage, setResponseLanguage] = useState("Tiếng Việt");
   const [notes, setNotes] = useState("");
 
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const filteredCountries = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return countries;
+    return countries.filter(
+      (c) =>
+        c.nameVi.toLowerCase().includes(query) ||
+        c.nameEn.toLowerCase().includes(query) ||
+        c.code.toLowerCase().includes(query)
+    );
+  }, [countries, searchQuery]);
+
   const [promptName, setPromptName] = useState("Prompt chiến lược ads");
   const [promptTemplate, setPromptTemplate] = useState(DEFAULT_PROMPT);
   const [lastResponse, setLastResponse] = useState<AdsStrategyGenerateResponse | null>(null);
+
+  const [promptMode, setPromptMode] = useState<"template" | "compiled">("compiled");
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  const compiledPrompt = useMemo(() => {
+    let result = promptTemplate;
+    const values = {
+      website_url: websiteUrl.trim(),
+      market: market.trim(),
+      budget: budget.trim(),
+      response_language: responseLanguage,
+      notes: notes.trim(),
+    };
+    for (const [key, val] of Object.entries(values)) {
+      result = result.replaceAll(`{{${key}}}`, val || `[chưa nhập ${key}]`);
+    }
+    return result;
+  }, [promptTemplate, websiteUrl, market, budget, responseLanguage, notes]);
+
+  const handleCopyPrompt = async () => {
+    const textToCopy = promptMode === "template" ? promptTemplate : compiledPrompt;
+    await navigator.clipboard.writeText(textToCopy);
+    setPromptCopied(true);
+    window.setTimeout(() => setPromptCopied(false), 1500);
+    toast.success("Đã copy nội dung prompt!");
+  };
 
   const selectedPrompt = useMemo(
     () => prompts.find((prompt) => prompt.id === selectedPromptId) ?? null,
@@ -351,14 +406,16 @@ export function AdsStrategySkillTab() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [keysRes, promptsRes, resultsRes] = await Promise.all([
+      const [keysRes, promptsRes, resultsRes, countriesRes] = await Promise.all([
         adsStrategyService.listApiKeys(),
         adsStrategyService.listPrompts(),
         adsStrategyService.listResults(),
+        adsStrategyService.getCountries(),
       ]);
       setApiKeys(keysRes.items);
       setPrompts(promptsRes.items);
       setResults(resultsRes.items);
+      setCountries(countriesRes);
       setSelectedKeyId((current) => current || keysRes.items[0]?.id || "");
       const defaultPrompt = promptsRes.items.find((item) => item.isDefault) ?? promptsRes.items[0];
       if (defaultPrompt) {
@@ -640,10 +697,106 @@ export function AdsStrategySkillTab() {
                 <span className="text-sm font-medium">Website hoặc Landing Page</span>
                 <input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
               </label>
-              <label className="block">
+              <div className="relative flex flex-col" ref={dropdownRef}>
                 <span className="text-sm font-medium">Thị trường ưu tiên</span>
-                <input value={market} onChange={(e) => setMarket(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
-              </label>
+                <div
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="mt-1 flex w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none hover:border-[#059669]/50 focus-within:border-[#059669]"
+                >
+                  <span className={market ? "text-foreground" : "text-muted-foreground"}>
+                    {(() => {
+                      if (market === "All") {
+                        return "Tất cả quốc gia (All)";
+                      }
+                      const matched = countries.find(
+                        (c) => c.nameEn === market || c.nameVi === market || c.code === market
+                      );
+                      if (matched) {
+                        return `${matched.nameVi} (${matched.nameEn})`;
+                      }
+                      return market || "Chọn quốc gia...";
+                    })()}
+                  </span>
+                  <span className="text-xs text-muted-foreground">▼</span>
+                </div>
+                {dropdownOpen && (
+                  <div className="absolute left-0 top-full z-50 mt-1.5 flex w-full flex-col rounded-lg border border-border bg-card p-2 shadow-lg max-h-[300px]">
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm quốc gia..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mb-2 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-[#059669]"
+                      autoFocus
+                    />
+                    <div className="overflow-y-auto flex-1 space-y-0.5 max-h-[200px]">
+                      {market && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMarket("");
+                            setDropdownOpen(false);
+                            setSearchQuery("");
+                          }}
+                          className="flex w-full items-center px-3 py-2 text-left text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md"
+                        >
+                          Xóa lựa chọn (Bỏ chọn)
+                        </button>
+                      )}
+                      {(() => {
+                        const query = searchQuery.trim().toLowerCase();
+                        const showAllOption = !query || "tất cả".includes(query) || "all".includes(query);
+                        return showAllOption && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMarket("All");
+                              setDropdownOpen(false);
+                              setSearchQuery("");
+                            }}
+                            className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted ${
+                              market === "All" ? "bg-[#059669]/10 font-medium text-[#059669]" : "text-foreground"
+                            }`}
+                          >
+                            <span>Tất cả quốc gia (All)</span>
+                            {market === "All" && <Check size={14} className="text-[#059669]" />}
+                          </button>
+                        );
+                      })()}
+                      {filteredCountries.length === 0 ? (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">
+                          Không tìm thấy quốc gia
+                        </div>
+                      ) : (
+                        filteredCountries.map((c) => {
+                          const isSelected = market === c.nameEn || market === c.nameVi || market === c.code;
+                          return (
+                            <button
+                              key={c.code}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMarket(c.nameEn);
+                                setDropdownOpen(false);
+                                setSearchQuery("");
+                              }}
+                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted ${
+                                isSelected ? "bg-[#059669]/10 font-medium text-[#059669]" : "text-foreground"
+                              }`}
+                            >
+                              <span>{c.nameVi} ({c.nameEn})</span>
+                              {isSelected && <Check size={14} className="text-[#059669]" />}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <label className="block">
                 <span className="text-sm font-medium">Ngân sách dự kiến</span>
                 <input value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="VD: 500 USD/tháng" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
@@ -663,11 +816,105 @@ export function AdsStrategySkillTab() {
           </section>
 
           <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold">Prompt sẽ gửi sang Gemini</h3>
-              <span className="text-xs text-muted-foreground">Dùng biến: {"{{website_url}}"}, {"{{market}}"}, {"{{budget}}"}, {"{{response_language}}"}, {"{{notes}}"}</span>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="font-semibold text-base">Prompt chiến dịch</h3>
+                <div className="flex rounded-lg border border-border bg-muted/60 p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPromptMode("template")}
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${
+                      promptMode === "template"
+                        ? "bg-[#059669] text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Mẫu (Template)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPromptMode("compiled")}
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${
+                      promptMode === "compiled"
+                        ? "bg-[#059669] text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Xem trước (Compiled)
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {promptMode === "compiled" && (
+                  <div className="flex items-center gap-1.5 border-r border-border pr-3">
+                    <span className="text-xs font-medium text-muted-foreground">Mở nhanh:</span>
+                    <a
+                      href="https://chatgpt.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded bg-[#10a37f]/10 px-2 py-1 text-xs font-semibold text-[#10a37f] hover:bg-[#10a37f]/20 transition"
+                    >
+                      ChatGPT
+                    </a>
+                    <a
+                      href="https://gemini.google.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded bg-[#1a73e8]/10 px-2 py-1 text-xs font-semibold text-[#1a73e8] hover:bg-[#1a73e8]/20 transition"
+                    >
+                      Gemini
+                    </a>
+                    <a
+                      href="https://grok.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded bg-black/10 dark:bg-white/10 px-2 py-1 text-xs font-semibold text-foreground hover:bg-black/20 dark:hover:bg-white/20 transition"
+                    >
+                      Grok
+                    </a>
+                  </div>
+                )}
+                
+                <Button
+                  onClick={handleCopyPrompt}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-8 text-xs font-medium"
+                >
+                  {promptCopied ? <Check size={13} /> : <Clipboard size={13} />}
+                  {promptCopied ? "Đã copy" : "Copy prompt"}
+                </Button>
+              </div>
             </div>
-            <textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} rows={14} className="w-full resize-y rounded-lg border border-input bg-background p-3 text-sm leading-6 outline-none focus:border-[#059669]" />
+            
+            {promptMode === "template" ? (
+              <div>
+                <textarea
+                  value={promptTemplate}
+                  onChange={(e) => setPromptTemplate(e.target.value)}
+                  rows={14}
+                  className="w-full resize-y rounded-lg border border-input bg-background p-3 text-sm leading-6 outline-none focus:border-[#059669]"
+                  placeholder="Nhập cấu trúc prompt..."
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Dùng các biến: {"{{website_url}}"}, {"{{market}}"}, {"{{budget}}"}, {"{{response_language}}"}, {"{{notes}}"} để tự động điền giá trị.
+                </span>
+              </div>
+            ) : (
+              <div>
+                <textarea
+                  value={compiledPrompt}
+                  readOnly
+                  rows={14}
+                  className="w-full resize-y rounded-lg border border-input bg-muted/30 p-3 text-sm leading-6 outline-none"
+                  placeholder="Prompt sau khi điền các trường thông tin..."
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Đây là prompt đã điền đầy đủ các thông tin bạn nhập ở trên. Bạn có thể copy để gửi sang các AI khác (ChatGPT, Gemini, Grok).
+                </span>
+              </div>
+            )}
           </section>
 
           {lastResponse && (

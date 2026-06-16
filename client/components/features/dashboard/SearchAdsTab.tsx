@@ -27,6 +27,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/constants/config";
+import { affiliateProjectService } from "@/services/affiliateProject.service";
 import { searchAdsService } from "@/services/searchAds.service";
 import { proxyService } from "@/services/proxy.service";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ import type {
   SearchAdsHistoryItem,
   OrganicLinkItem,
 } from "@/types/searchAds.types";
+import type { AffiliateLinkModel } from "@/types/affiliateProject.types";
 import type { ProxyResponse } from "@/types/proxy.types";
 
 // Constants
@@ -533,6 +535,15 @@ function HistoryCard({
                 {isScheduled ? <CalendarClock size={11} /> : <Search size={11} />}
                 {isScheduled ? "Theo lịch" : "Tự quét"}
               </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  item.projectId ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"
+                )}
+              >
+                <Link2 size={11} />
+                {item.projectId ? `Dự án: ${item.projectName || "Project"}` : "Riêng lẻ"}
+              </span>
             </div>
             <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-1"><MapPin size={10} />{item.location}</span>
@@ -689,6 +700,8 @@ export function SearchAdsTab() {
   const [device, setDevice] = useState("desktop");
   const [useProxy, setUseProxy] = useState(false);
   const [selectedProxyId, setSelectedProxyId] = useState("");
+  const [projects, setProjects] = useState<AffiliateLinkModel[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [proxies, setProxies] = useState<ProxyResponse[]>([]);
   const [proxiesLoading, setProxiesLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -713,6 +726,13 @@ export function SearchAdsTab() {
     }
     return acc;
   }, []);
+
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+
+  function applySelectedProject() {
+    if (!selectedProject) return;
+    setKeyword(selectedProject.search_query || selectedProject.name || selectedProject.domain);
+  }
 
   async function fetchHistory(source = historySource) {
     setHistoryLoading(true);
@@ -805,6 +825,14 @@ export function SearchAdsTab() {
       .finally(() => {
         if (!ignore) setHistoryLoading(false);
       });
+    affiliateProjectService
+      .getAffiliateLinks()
+      .then((items) => {
+        if (!ignore) setProjects(items);
+      })
+      .catch(() => {
+        if (!ignore) toast.error("Không tải được danh sách dự án");
+      });
     return () => {
       ignore = true;
     };
@@ -842,6 +870,7 @@ export function SearchAdsTab() {
         noProxy: !useProxy,
         headful: false,
         proxyId: useProxy ? selectedProxyId : null,
+        projectId: selectedProjectId || null,
       });
       if (data.status === "failed") {
         toast.error(data.errors[0] || "Tìm kiếm thất bại");
@@ -867,6 +896,8 @@ export function SearchAdsTab() {
         organicLinks: data.organicLinks ?? [],
         finalSummary: data.finalSummary ?? null,
         proxyName: proxyNameUsed,
+        projectId: data.projectId ?? (selectedProjectId || null),
+        projectName: data.projectName ?? selectedProject?.name ?? selectedProject?.domain ?? null,
         videoUrl: data.videoUrl ?? null,
         videoStatus: data.videoStatus ?? "none",
         isScheduled: false,
@@ -885,6 +916,8 @@ export function SearchAdsTab() {
 
   const selectClass =
     "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#059669]/30 disabled:opacity-50";
+  const projectSearches = history.filter((item) => item.projectId).length;
+  const standaloneSearches = history.length - projectSearches;
 
   return (
     <div className="flex h-full flex-col gap-5">
@@ -906,6 +939,40 @@ export function SearchAdsTab() {
             disabled={submitting}
             className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#059669]/30 disabled:opacity-50"
           />
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 rounded-lg border border-dashed border-border bg-muted/20 p-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <select
+            value={selectedProjectId}
+            onChange={(event) => setSelectedProjectId(event.target.value)}
+            disabled={submitting}
+            className={selectClass}
+          >
+            <option value="">Chọn dự án để tìm theo project</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name || project.domain} - {project.search_query || project.domain}
+              </option>
+            ))}
+          </select>
+          <Button
+            type="button"
+            variant={selectedProjectId ? "sage" : "secondary"}
+            onClick={applySelectedProject}
+            disabled={submitting || !selectedProject}
+            className="h-10"
+          >
+            <Link2 size={14} /> Dùng search dự án
+          </Button>
+          <Button
+            type="button"
+            variant={!selectedProjectId ? "sage" : "ghost"}
+            onClick={() => setSelectedProjectId("")}
+            disabled={submitting}
+            className={cn("h-10 border", selectedProjectId ? "border-border" : "border-[#059669]")}
+          >
+            Riêng lẻ
+          </Button>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
@@ -1007,6 +1074,25 @@ export function SearchAdsTab() {
       </div>
 
       {/* History section */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[
+          { label: "Lần quét", value: history.length, icon: Search },
+          { label: "Ads", value: history.reduce((sum, item) => sum + item.totalAdsFound, 0), icon: MonitorPlay },
+          { label: "Theo dự án", value: projectSearches, icon: Link2 },
+          { label: "Riêng lẻ", value: standaloneSearches, icon: Layers3 },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[#059669]/10">
+              <Icon size={15} className="text-[#059669]" />
+            </div>
+            <div>
+              <p className="text-lg font-bold leading-none">{value}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap gap-2">
           <div className="flex gap-1 rounded-xl border border-border bg-card p-1">

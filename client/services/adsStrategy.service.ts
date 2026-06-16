@@ -8,6 +8,7 @@ import type {
   AdsStrategyPromptListResponse,
   AdsStrategyResult,
   AdsStrategyResultListResponse,
+  Country,
 } from "@/types/adsStrategy.types";
 
 export const adsStrategyService = {
@@ -101,5 +102,10 @@ export const adsStrategyService = {
 
   deleteResult: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/ads-strategy/results/${id}`);
+  },
+
+  getCountries: async (): Promise<Country[]> => {
+    const response = await axiosInstance.get<Country[]>("/ads-strategy/countries");
+    return response.data;
   },
 };
