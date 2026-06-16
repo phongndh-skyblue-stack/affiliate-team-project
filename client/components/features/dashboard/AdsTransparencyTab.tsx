@@ -18,6 +18,7 @@ import {
   Tag,
   X,
   RefreshCw,
+  Link2,
 } from "lucide-react";
 import { DayPicker, type DateRange } from "react-day-picker";
 import { format } from "date-fns";
@@ -25,7 +26,9 @@ import { vi } from "date-fns/locale";
 import "react-day-picker/style.css";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { affiliateProjectService } from "@/services/affiliateProject.service";
 import { adsTransparentService } from "@/services/adsTransparent.service";
+import type { AffiliateLinkModel } from "@/types/affiliateProject.types";
 import type {
   AdsTransparencySearchRequest,
   AdCreativeHistoryItem,
@@ -623,6 +626,8 @@ function DateRangePicker({
 function ScanForm({ onScanDone }: ScanFormProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<AffiliateLinkModel[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [form, setForm] = useState<AdsTransparencySearchRequest>({
     text: "",
     platform: undefined,
@@ -638,10 +643,33 @@ function ScanForm({ onScanDone }: ScanFormProps) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+
+  function applySelectedProject() {
+    if (!selectedProject) return;
+    setForm((current) => ({
+      ...current,
+      text: selectedProject.domain,
+      advertiserId: undefined,
+      projectId: selectedProject.id,
+    }));
+  }
+
+  useEffect(() => {
+    affiliateProjectService
+      .getAffiliateLinks()
+      .then(setProjects)
+      .catch(() => toast.error("Không tải được danh sách dự án"));
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.text && !form.advertiserId) {
       toast.error("Nhập domain hoặc Advertiser ID trước khi quét");
+      return;
+    }
+    if (form.text && (form.text.startsWith("http://") || form.text.startsWith("https://") || form.text.includes("://"))) {
+      toast.error("Vui lòng nhập domain hoặc tên nhà quảng cáo không kèm theo http:// hoặc https:// (ví dụ: binance.com)");
       return;
     }
     setLoading(true);
@@ -690,6 +718,66 @@ function ScanForm({ onScanDone }: ScanFormProps) {
                 <span className="font-semibold text-[#dc2626]">*</span> Trường bắt buộc
               </span>
               <span>Điền ít nhất 1 trong 2 trường: Domain / Tên nhà quảng cáo hoặc Advertiser ID.</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 rounded-lg border border-dashed border-border bg-background/60 p-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+              <select
+                value={selectedProjectId}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  setSelectedProjectId(val);
+                  const proj = projects.find((project) => project.id === val);
+                  if (proj) {
+                    setForm((current) => ({
+                      ...current,
+                      text: proj.domain,
+                      advertiserId: undefined,
+                      projectId: proj.id,
+                    }));
+                  } else {
+                    setForm((current) => ({
+                      ...current,
+                      projectId: undefined,
+                    }));
+                  }
+                }}
+                className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+              >
+                <option value="">Chọn dự án để quét theo project</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name || project.domain} - {project.affiliate_url || project.domain}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={applySelectedProject}
+                disabled={!selectedProject}
+                className={cn(
+                  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium disabled:opacity-50",
+                  selectedProjectId
+                    ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Link2 size={14} /> Dùng URL dự án
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedProjectId("");
+                  set("projectId", null);
+                }}
+                className={cn(
+                  "h-10 rounded-lg border px-3 text-sm font-medium",
+                  !selectedProjectId
+                    ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Riêng lẻ
+              </button>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

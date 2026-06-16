@@ -12,6 +12,7 @@ import {
   ExternalLink,
   FolderOpen,
   Loader2,
+  Pencil,
   Plus,
   Radar,
   SearchCheck,
@@ -707,10 +708,18 @@ export function ProjectsTab() {
   const [scanningProject, setScanningProject] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLinkInput, setNewLinkInput] = useState("");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectSearch, setNewProjectSearch] = useState("");
   const [savingLink, setSavingLink] = useState(false);
   const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const [openEvidenceKey, setOpenEvidenceKey] = useState<string | null>(null);
   const [trafficMonths, setTrafficMonths] = useState(4);
+
+  const [editingLink, setEditingLink] = useState<AffiliateLinkModel | null>(null);
+  const [editLinkInput, setEditLinkInput] = useState("");
+  const [editProjectName, setEditProjectName] = useState("");
+  const [editProjectSearch, setEditProjectSearch] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const trafficResult = useMemo(() => (detail ? toTrafficResponse(detail) : null), [detail]);
   const projectResult = useMemo(() => (detail ? toProjectResponse(detail) : null), [detail]);
@@ -724,7 +733,59 @@ export function ProjectsTab() {
     () => generateAdCopy(projectResult, detail?.affiliate_link.affiliate_url),
     [detail?.affiliate_link.affiliate_url, projectResult]
   );
-  const isBusy = scanningTraffic || scanningProject || savingLink || Boolean(deletingLinkId);
+  const isBusy = scanningTraffic || scanningProject || savingLink || Boolean(deletingLinkId) || savingEdit;
+
+  useEffect(() => {
+    if (editingLink) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [editingLink]);
+
+  function openEditModal(link: AffiliateLinkModel) {
+    setEditingLink(link);
+    setEditLinkInput(link.affiliate_url);
+    setEditProjectName(link.name || "");
+    setEditProjectSearch(link.search_query || "");
+  }
+
+  async function handleSaveEdit() {
+    if (!editingLink) return;
+    const trimmedLink = editLinkInput.trim();
+    if (!trimmedLink) {
+      toast.error("Vui lòng nhập affiliate URL");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const updated = await affiliateProjectService.updateAffiliateLink(editingLink.id, {
+        website: trimmedLink,
+        name: editProjectName.trim() || null,
+        search: editProjectSearch.trim() || null,
+      });
+
+      const updatedLinks = links.map((link) => (link.id === updated.id ? updated : link));
+      setLinks(updatedLinks);
+
+      if (selectedLink?.id === updated.id) {
+        setSelectedLink(updated);
+        const refreshed = await affiliateProjectService.getAffiliateLinkDetail(updated.affiliate_url);
+        setDetail(refreshed);
+      }
+
+      setEditingLink(null);
+      toast.success("Đã cập nhật dự án");
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || "Cập nhật dự án thất bại";
+      toast.error(errorMsg);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -781,11 +842,17 @@ export function ProjectsTab() {
     if (!trimmed) return;
     setSavingLink(true);
     try {
-      const created = await affiliateProjectService.createAffiliateLink({ website: trimmed });
+      const created = await affiliateProjectService.createAffiliateLink({
+        website: trimmed,
+        name: newProjectName.trim() || null,
+        search: newProjectSearch.trim() || null,
+      });
       const updatedLinks = await affiliateProjectService.getAffiliateLinks();
       setLinks(updatedLinks);
       setSelectedLink(updatedLinks.find((link) => link.id === created.id) ?? created);
       setNewLinkInput("");
+      setNewProjectName("");
+      setNewProjectSearch("");
       setShowAddForm(false);
       toast.success("Đã thêm affiliate link");
     } catch {
@@ -938,6 +1005,21 @@ export function ProjectsTab() {
               disabled={savingLink}
               autoFocus
             />
+            <input
+              value={newProjectName}
+              onChange={(event) => setNewProjectName(event.target.value)}
+              placeholder="Tên dự án"
+              className="mt-2 h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+              disabled={savingLink}
+            />
+            <input
+              value={newProjectSearch}
+              onChange={(event) => setNewProjectSearch(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && void handleAddLink()}
+              placeholder="Search dùng chung, ví dụ: xm trading"
+              className="mt-2 h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+              disabled={savingLink}
+            />
             <div className="mt-2 grid grid-cols-2 gap-2">
               <button
                 onClick={() => void handleAddLink()}
@@ -950,6 +1032,8 @@ export function ProjectsTab() {
                 onClick={() => {
                   setShowAddForm(false);
                   setNewLinkInput("");
+                  setNewProjectName("");
+                  setNewProjectSearch("");
                 }}
                 className="h-8 rounded-md border border-border text-xs text-muted-foreground hover:bg-muted"
               >
@@ -992,6 +1076,18 @@ export function ProjectsTab() {
                       </p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">{link.affiliate_url}</p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openEditModal(link);
+                      }}
+                      disabled={isBusy}
+                      title={`Sửa ${link.domain}`}
+                      className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 transition hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-40 group-hover:opacity-100 group-focus-within:opacity-100 mr-1"
+                    >
+                      <Pencil size={14} />
+                    </button>
                     <button
                       type="button"
                       onClick={(event) => {
@@ -1539,6 +1635,97 @@ export function ProjectsTab() {
           </div>
         )}
       </main>
+
+      {/* Edit Project Modal */}
+      {editingLink && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingLink(null);
+          }}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+          {/* Modal content */}
+          <div
+            className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-background shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <h2 className="text-lg font-semibold">Sửa dự án: {editingLink.domain}</h2>
+              <button
+                onClick={() => setEditingLink(null)}
+                className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <XCircle size={16} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Affiliate URL
+                </label>
+                <input
+                  type="text"
+                  value={editLinkInput}
+                  onChange={(e) => setEditLinkInput(e.target.value)}
+                  placeholder="https://example.com/ref"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+                  disabled={savingEdit}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Tên dự án
+                </label>
+                <input
+                  type="text"
+                  value={editProjectName}
+                  onChange={(e) => setEditProjectName(e.target.value)}
+                  placeholder="Tên dự án"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+                  disabled={savingEdit}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Search dùng chung (keywords)
+                </label>
+                <input
+                  type="text"
+                  value={editProjectSearch}
+                  onChange={(e) => setEditProjectSearch(e.target.value)}
+                  placeholder="xm trading"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+                  disabled={savingEdit}
+                />
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={savingEdit || !editLinkInput.trim()}
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+                >
+                  {savingEdit ? <Loader2 size={16} className="animate-spin" /> : "Lưu thay đổi"}
+                </button>
+                <button
+                  onClick={() => setEditingLink(null)}
+                  disabled={savingEdit}
+                  className="h-10 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

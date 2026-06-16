@@ -169,6 +169,8 @@ def get_user_history(
                 political_ads=s.political_ads,
                 num=s.num,
                 next_page_token_input=s.next_page_token_input,
+                project_id=s.project_id,
+                project_name=s.project_name,
                 total_results=s.total_results,
                 next_page_token_output=s.next_page_token_output,
                 created_at=s.created_at,

@@ -99,6 +99,14 @@ export interface ScanAffiliateProjectResponse {
 
 export interface AffiliateLinkCreateRequest {
   website: string;
+  name?: string | null;
+  search?: string | null;
+}
+
+export interface AffiliateLinkUpdateRequest {
+  website: string;
+  name?: string | null;
+  search?: string | null;
 }
 
 export interface AffiliateLinkModel {
@@ -106,6 +114,8 @@ export interface AffiliateLinkModel {
   user_id?: string | null;
   affiliate_url: string;
   domain: string;
+  name?: string | null;
+  search_query?: string | null;
   raw_data?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;

@@ -50,6 +50,7 @@ class CompetitorSearchRequest(CamelModel):
     gl: str = Field("vn", description="Mã quốc gia (vn, us...)")
     num: int = Field(10, ge=1, le=100, description="Số kết quả organic")
     no_cache: bool = Field(False, description="Bỏ qua cache SerpAPI")
+    project_id: str | None = Field(None, description="Project ID when searching from a saved project")
 
     enrich_advertisers: bool = Field(
         True,
@@ -120,6 +121,8 @@ class CompetitorAdItem(CamelModel):
 
 
 class CompetitorSearchResponse(CamelModel):
+    project_id: str | None = None
+    project_name: str | None = None
     keyword: str
     google_url: str
     total_ads_found: int
@@ -138,6 +141,8 @@ class CompetitorSearchHistoryItem(CamelModel):
     gl: str
     num: int
     no_cache: bool
+    project_id: str | None = None
+    project_name: str | None = None
     total_ads_found: int
     top_ads_count: int
     bottom_ads_count: int

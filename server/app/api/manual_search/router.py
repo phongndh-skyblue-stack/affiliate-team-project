@@ -86,6 +86,8 @@ def get_competitor_search_history(
             gl=item.gl,
             num=item.num,
             no_cache=item.no_cache,
+            project_id=item.project_id,
+            project_name=item.project_name,
             total_ads_found=item.total_ads_found,
             top_ads_count=item.top_ads_count,
             bottom_ads_count=item.bottom_ads_count,

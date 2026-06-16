@@ -28,6 +28,8 @@ class ManualSearchRepository:
             gl=payload.gl,
             num=payload.num,
             no_cache=payload.no_cache,
+            project_id=payload.project_id,
+            project_name=response.get("project_name"),
             total_ads_found=response.get("total_ads_found") or 0,
             top_ads_count=response.get("top_ads_count") or 0,
             bottom_ads_count=response.get("bottom_ads_count") or 0,

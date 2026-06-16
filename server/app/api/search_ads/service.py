@@ -14,6 +14,7 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.affiliate_data.repository import AffiliateDataRepository
 from app.api.search_ads.model import GoogleAdsSearch
 from app.api.search_ads.repository import SearchAdsRepository
 from app.api.search_ads.schema import (
@@ -68,6 +69,12 @@ class SearchAdsService:
         # Resolve proxy config
         proxy_config: dict = {}
         proxy_name: str | None = None
+        project_name: str | None = None
+        if payload.project_id and self.db is not None:
+            project = AffiliateDataRepository(self.db).get_project_label_by_id_for_user(user_id, payload.project_id)
+            if not project:
+                raise HTTPException(status_code=404, detail="Project not found")
+            _, project_name = project
         if payload.no_proxy:
             proxy_config = {"enabled": False}
         elif payload.proxy_id and self.db is not None:
@@ -161,11 +168,15 @@ class SearchAdsService:
                 proxy_id=payload.proxy_id if not payload.no_proxy else None,
                 proxy_name=proxy_name,
                 is_scheduled=is_scheduled,
+                project_id=payload.project_id,
+                project_name=project_name,
                 video_path=video_path,
                 video_status=video_status,
             )
             self.last_search_id = saved_search.id
             response.id = saved_search.id
+            response.project_id = payload.project_id
+            response.project_name = project_name
             response.video_url = _video_url(video_path)
             response.video_status = video_status
         else:
@@ -185,6 +196,12 @@ class SearchAdsService:
 
         proxy_name: str | None = None
         proxy_id = None if payload.no_proxy else payload.proxy_id
+        project_name: str | None = None
+        if payload.project_id:
+            project = AffiliateDataRepository(self.db).get_project_label_by_id_for_user(user_id, payload.project_id)
+            if not project:
+                raise HTTPException(status_code=404, detail="Project not found")
+            _, project_name = project
         if not payload.no_proxy:
             if not payload.proxy_id:
                 raise HTTPException(status_code=400, detail="proxy_id is required when no_proxy is false")
@@ -216,6 +233,8 @@ class SearchAdsService:
                 headful=payload.headful,
                 proxy_id=proxy_id,
                 proxy_name=proxy_name,
+                project_id=payload.project_id,
+                project_name=project_name,
                 batch_id=batch_id,
                 run_at=normalized_run_at,
                 schedule_mode=payload.schedule_mode,

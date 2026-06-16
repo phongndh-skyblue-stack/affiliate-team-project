@@ -11,6 +11,7 @@ from app.api.affiliate_data.schema import (
     AffiliateLinkCreateRequest,
     AffiliateLinkModel,
     AffiliateLinkDetailResponse,
+    AffiliateLinkUpdateRequest,
     AffiliateProjectScanRequest,
     AffiliateProjectScanResponse,
     ScanTrafficRequest,
@@ -42,7 +43,7 @@ def create_affiliate_link_endpoint(
     service: AffiliateDataService = Depends(get_service),
 ) -> AffiliateLinkModel:
     try:
-        row = service.create_affiliate_link(current_user.id, payload.website)
+        row = service.create_affiliate_link(current_user.id, payload.website, payload.name, payload.search)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return AffiliateLinkModel(**row)
@@ -202,3 +203,33 @@ def get_affiliate_link_detail_endpoint(
         )
 
     return AffiliateLinkDetailResponse(**result)
+
+
+@router.put(
+    "/affiliate-link/{affiliate_link_id}",
+    response_model=AffiliateLinkModel,
+    summary="Cập nhật affiliate link",
+    responses={
+        404: {"description": "Không tìm thấy affiliate link của user hiện tại"},
+        400: {"description": "Website/domain không hợp lệ"},
+    },
+)
+def update_affiliate_link_endpoint(
+    affiliate_link_id: str,
+    payload: AffiliateLinkUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    service: AffiliateDataService = Depends(get_service),
+) -> AffiliateLinkModel:
+    try:
+        row = service.update_affiliate_link(
+            user_id=current_user.id,
+            affiliate_link_id=affiliate_link_id,
+            website=payload.website,
+            name=payload.name,
+            search=payload.search,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return AffiliateLinkModel(**row)

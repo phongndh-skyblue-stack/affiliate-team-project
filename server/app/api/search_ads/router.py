@@ -202,6 +202,8 @@ def _schedule_item(schedule) -> SearchAdsScheduleItem:
         headful=schedule.headful,
         proxy_id=schedule.proxy_id,
         proxy_name=schedule.proxy_name,
+        project_id=schedule.project_id,
+        project_name=schedule.project_name,
         batch_id=schedule.batch_id,
         schedule_mode=schedule.schedule_mode,
         daily_time=schedule.daily_time,
@@ -241,6 +243,8 @@ def _history_item(search) -> SearchAdsHistoryItem:
         proxy_name=search.proxy_name,
         is_scheduled=search.is_scheduled,
         source="scheduled" if search.is_scheduled else "manual",
+        project_id=search.project_id,
+        project_name=search.project_name,
         video_url=_video_url(search.video_path) if video_status == "available" else None,
         video_status=video_status,
         ads=[

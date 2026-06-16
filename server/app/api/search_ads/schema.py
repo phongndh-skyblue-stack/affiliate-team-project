@@ -16,6 +16,7 @@ class SearchAdsRequest(CamelModel):
     no_proxy: bool = Field(True, description="Disable proxy")
     headful: bool = Field(False, description="Open browser UI for debugging")
     proxy_id: str | None = Field(None, description="Saved proxy ID, ignored when no_proxy=True")
+    project_id: str | None = Field(None, description="Project ID when searching from a saved project")
 
     model_config = {
         "json_schema_extra": {
@@ -65,6 +66,8 @@ class OrganicLinkItem(CamelModel):
 
 class SearchAdsResponse(CamelModel):
     id: str | None = None
+    project_id: str | None = None
+    project_name: str | None = None
     keyword: str
     search_url: str | None = None
     status: str
@@ -94,6 +97,8 @@ class SearchAdsHistoryItem(CamelModel):
     proxy_name: str | None = None
     is_scheduled: bool = False
     source: str = "manual"
+    project_id: str | None = None
+    project_name: str | None = None
     video_url: str | None = None
     video_status: str = "none"
     created_at: str
@@ -112,6 +117,7 @@ class SearchAdsScheduleCreate(CamelModel):
     no_proxy: bool = Field(True, description="Disable proxy")
     headful: bool = Field(False, description="Open browser UI in worker")
     proxy_id: str | None = Field(None, description="Saved proxy ID when no_proxy=False")
+    project_id: str | None = Field(None, description="Project ID when scheduling from a saved project")
     schedule_mode: Literal["once", "daily"] = Field("once", description="Schedule mode")
     run_at: list[datetime] = Field(default_factory=list, description="One-off run datetimes")
     daily_times: list[str] = Field(default_factory=list, description="Daily HH:mm run times")
@@ -143,6 +149,8 @@ class SearchAdsScheduleItem(CamelModel):
     headful: bool
     proxy_id: str | None = None
     proxy_name: str | None = None
+    project_id: str | None = None
+    project_name: str | None = None
     batch_id: str | None = None
     schedule_mode: str = "once"
     daily_time: str | None = None

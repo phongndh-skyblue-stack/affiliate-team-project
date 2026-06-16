@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -22,7 +22,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { affiliateProjectService } from "@/services/affiliateProject.service";
 import { manualSearchService } from "@/services/manualSearch.service";
+import type { AffiliateLinkModel } from "@/types/affiliateProject.types";
 import type {
   AdvertiserCandidate,
   CompetitorAdItem,
@@ -396,6 +398,14 @@ function SearchHistoryRow({ item }: { item: ManualCompetitorSearchHistoryItem })
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{item.keyword}</p>
           <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-2 py-0.5 font-medium",
+                item.projectId ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"
+              )}
+            >
+              {item.projectId ? `Dự án: ${item.projectName || "Project"}` : "Riêng lẻ"}
+            </span>
             <span className="inline-flex items-center gap-1"><MapPin size={11} />{item.location}</span>
             <span className="inline-flex items-center gap-1"><Globe size={11} />{item.gl.toUpperCase()} / {item.hl}</span>
             <span>{formatDateTime(item.createdAt)}</span>
@@ -675,6 +685,8 @@ export function ManualSearchTab() {
   const [history, setHistory] = useState<ManualCompetitorSearchHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [projects, setProjects] = useState<AffiliateLinkModel[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const hasFetched = useRef(false);
   const [form, setForm] = useState<ManualCompetitorSearchRequest>({
     keyword: "",
@@ -704,6 +716,17 @@ export function ManualSearchTab() {
     }));
   }
 
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+
+  function applySelectedProject() {
+    if (!selectedProject) return;
+    setForm((current) => ({
+      ...current,
+      keyword: selectedProject.search_query || selectedProject.name || selectedProject.domain,
+      projectId: selectedProject.id,
+    }));
+  }
+
   async function fetchHistory() {
     setLoading(true);
     try {
@@ -720,6 +743,10 @@ export function ManualSearchTab() {
     if (!hasFetched.current) {
       hasFetched.current = true;
       fetchHistory();
+      affiliateProjectService
+        .getAffiliateLinks()
+        .then(setProjects)
+        .catch(() => toast.error("Không tải được danh sách dự án"));
     }
   }, []);
 
@@ -773,14 +800,18 @@ export function ManualSearchTab() {
   }, [history]);
 
   const totalAds = history.reduce((sum, item) => sum + item.totalAdsFound, 0);
+  const projectSearches = history.filter((item) => item.projectId).length;
+  const standaloneSearches = history.length - projectSearches;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {[
           { label: "Lần search", value: history.length, icon: Search },
           { label: "Keyword", value: keywordGroups.length, icon: ListTree },
           { label: "Ads", value: totalAds, icon: SearchCheck },
+          { label: "Theo dự án", value: projectSearches, icon: Link2 },
+          { label: "Riêng lẻ", value: standaloneSearches, icon: Layers3 },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
             <div className="flex size-8 items-center justify-center rounded-lg bg-[#059669]/10">
@@ -825,6 +856,51 @@ export function ManualSearchTab() {
           </div>
 
 
+        </div>
+
+        <div className="rounded-lg border border-dashed border-border bg-muted/20 p-3">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+            <select
+              value={selectedProjectId}
+              onChange={(event) => setSelectedProjectId(event.target.value)}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+            >
+              <option value="">Chọn dự án để search theo project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name || project.domain} - {project.search_query || project.domain}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={applySelectedProject}
+              disabled={!selectedProject}
+              className={cn(
+                "inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium disabled:opacity-50",
+                selectedProjectId
+                  ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                  : "border-border text-muted-foreground hover:bg-muted"
+              )}
+            >
+              <Link2 size={14} /> Dùng search dự án
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedProjectId("");
+                set("projectId", null);
+              }}
+              className={cn(
+                "h-10 rounded-lg border px-3 text-sm font-medium",
+                !selectedProjectId
+                  ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                  : "border-border text-muted-foreground hover:bg-muted"
+              )}
+            >
+              Riêng lẻ
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-3">
