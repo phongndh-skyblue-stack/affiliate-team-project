@@ -89,6 +89,33 @@ class AdsTransparencyRepository:
         )
         return list(self.db.scalars(stmt))
 
+    def list_by_user_id_paginated(
+        self, user_id: str, page: int = 1, page_size: int = 10
+    ) -> tuple[int, int, list[AdTransparencySearch]]:
+        stmt = (
+            select(AdTransparencySearch)
+            .where(AdTransparencySearch.user_id == user_id)
+        )
+        total = self.db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+        total_pages = math.ceil(total / page_size) if total > 0 else 0
+
+        offset = (page - 1) * page_size
+        paginated_stmt = stmt.order_by(AdTransparencySearch.created_at.desc()).offset(offset).limit(page_size)
+        items = list(self.db.scalars(paginated_stmt))
+        return total, total_pages, items
+
+    def delete_search(self, user_id: str, search_id: str) -> bool:
+        stmt = select(AdTransparencySearch).where(
+            AdTransparencySearch.id == search_id,
+            AdTransparencySearch.user_id == user_id
+        )
+        search = self.db.scalar(stmt)
+        if not search:
+            return False
+        self.db.delete(search)
+        self.db.commit()
+        return True
+
     def list_competitors_paginated(
         self, user_id: str, page: int = 1, page_size: int = 10
     ) -> tuple[int, int, list[dict]]:

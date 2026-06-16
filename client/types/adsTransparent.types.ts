@@ -115,6 +115,9 @@ export interface AdSearchHistoryItem {
 
 export interface AdSearchHistoryResponse {
   total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
   items: AdSearchHistoryItem[];
 }
 

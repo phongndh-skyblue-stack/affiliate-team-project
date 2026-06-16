@@ -98,6 +98,15 @@ class ApiKeyListResponse(CamelModel):
     items: list[ApiKeyResponse]
 
 
+class CheckModelsRequest(CamelModel):
+    api_key: str | None = Field(None, min_length=10)
+    api_key_id: str | None = Field(None)
+
+
+class CheckModelsResponse(CamelModel):
+    models: list[str]
+
+
 class PromptCreate(CamelModel):
     name: str = Field(..., min_length=1, max_length=160)
     prompt_template: str = Field(..., min_length=20)

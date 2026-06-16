@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     APP_PORT: int = 4050
     API_PREFIX: str = "/api"
+    PAGE_SIZE: int = 10
 
     DATABASE_URL: str = "sqlite:///./micace.db"
     SQLALCHEMY_ECHO: bool = False

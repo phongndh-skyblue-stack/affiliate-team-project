@@ -148,6 +148,9 @@ class AdSearchHistoryItem(CamelModel):
 
 class AdSearchHistoryResponse(CamelModel):
     total: int
+    page: int
+    page_size: int
+    total_pages: int
     items: list[AdSearchHistoryItem]
 
 

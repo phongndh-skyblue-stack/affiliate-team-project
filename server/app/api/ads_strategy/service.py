@@ -15,6 +15,7 @@ from app.api.ads_strategy.repository import AdsStrategyRepository
 from app.api.ads_strategy.schema import (
     ApiKeyCreate,
     ApiKeyResponse,
+    CheckModelsRequest,
     DEFAULT_INPUT_FIELDS,
     DEFAULT_PROMPT_TEMPLATE,
     GenerateRequest,
@@ -308,3 +309,44 @@ class AdsStrategyService:
         if not item:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy kết quả.")
         self.repo.delete_result(item)
+
+    async def list_available_models(self, user_id: str, payload: CheckModelsRequest) -> list[str]:
+        api_key = None
+        if payload.api_key:
+            api_key = payload.api_key.strip()
+        elif payload.api_key_id:
+            key_item = self.repo.get_api_key(user_id, payload.api_key_id)
+            if not key_item:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy Gemini API key.")
+            api_key = _decrypt_api_key(key_item.encrypted_api_key)
+
+        if not api_key:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vui lòng cung cấp API key hoặc API key ID.")
+
+        url = "https://generativelanguage.googleapis.com/v1beta/models"
+        try:
+            async with httpx.AsyncClient(timeout=15.0, trust_env=False) as client:
+                response = await client.get(
+                    url,
+                    headers={"x-goog-api-key": api_key},
+                )
+        except httpx.RequestError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Không thể kết nối Gemini API để lấy danh sách model: {exc}",
+            ) from exc
+
+        if response.status_code >= 400:
+            detail = self._gemini_error_message(response)
+            raise HTTPException(status_code=response.status_code, detail=detail)
+
+        raw = response.json()
+        models = []
+        for model in raw.get("models") or []:
+            name = model.get("name") or ""
+            if name.startswith("models/"):
+                name = name[len("models/"):]
+            supported_methods = model.get("supportedGenerationMethods") or []
+            if "generateContent" in supported_methods:
+                models.append(name)
+        return sorted(models)

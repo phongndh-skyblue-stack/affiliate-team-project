@@ -17,6 +17,14 @@ class AdsTransparencyService:
     def list_by_user_id(self, user_id: str):
         return self.repository.list_by_user_id(user_id)
 
+    def list_by_user_id_paginated(
+        self, user_id: str, page: int = 1, page_size: int = 10
+    ) -> tuple[int, int, list]:
+        return self.repository.list_by_user_id_paginated(user_id, page, page_size)
+
+    def delete_search(self, user_id: str, search_id: str) -> bool:
+        return self.repository.delete_search(user_id, search_id)
+
     def get_competitors(
         self, user_id: str, page: int = 1, page_size: int = 10
     ) -> dict:

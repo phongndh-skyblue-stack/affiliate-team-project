@@ -9,6 +9,8 @@ from app.api.ads_strategy.schema import (
     ApiKeyCreate,
     ApiKeyListResponse,
     ApiKeyResponse,
+    CheckModelsRequest,
+    CheckModelsResponse,
     CountryResponse,
     GenerateRequest,
     GenerateResponse,
@@ -58,6 +60,16 @@ def delete_api_key(
     service: AdsStrategyService = Depends(get_service),
 ) -> None:
     service.delete_api_key(current_user.id, api_key_id)
+
+
+@router.post("/api-keys/check-models", response_model=CheckModelsResponse)
+async def check_models(
+    payload: CheckModelsRequest,
+    current_user: User = Depends(get_current_user),
+    service: AdsStrategyService = Depends(get_service),
+) -> CheckModelsResponse:
+    models = await service.list_available_models(current_user.id, payload)
+    return CheckModelsResponse(models=models)
 
 
 @router.get("/prompts", response_model=PromptListResponse)

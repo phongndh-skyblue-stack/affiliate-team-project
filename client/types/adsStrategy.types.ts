@@ -84,3 +84,12 @@ export interface Country {
   nameEn: string;
 }
 
+export interface AdsStrategyCheckModelsRequest {
+  apiKey?: string;
+  apiKeyId?: string;
+}
+
+export interface AdsStrategyCheckModelsResponse {
+  models: string[];
+}
+

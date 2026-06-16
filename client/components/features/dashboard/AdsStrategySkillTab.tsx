@@ -296,6 +296,132 @@ function StrategyResultView({ text }: { text: string }) {
   return <div className="space-y-4">{nodes}</div>;
 }
 
+interface CustomSelectOption {
+  value: string;
+  label: string;
+}
+
+interface CustomSelectProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: CustomSelectOption[];
+  placeholder?: string;
+  showSearch?: boolean;
+  searchPlaceholder?: string;
+  clearable?: boolean;
+  clearText?: string;
+}
+
+function CustomSelect({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder = "Chọn...",
+  showSearch = false,
+  searchPlaceholder = "Tìm kiếm...",
+  clearable = false,
+  clearText = "Xóa lựa chọn",
+}: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const filteredOptions = useMemo(() => {
+    if (!showSearch) return options;
+    const query = search.trim().toLowerCase();
+    if (!query) return options;
+    return options.filter((opt) => opt.label.toLowerCase().includes(query));
+  }, [options, search, showSearch]);
+
+  const selectedOption = options.find((opt) => opt.value === value);
+
+  return (
+    <div className="relative flex flex-col" ref={containerRef}>
+      {label && <span className="text-sm font-medium mb-1">{label}</span>}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none hover:border-[#059669]/50 focus-within:border-[#059669] transition min-h-[42px]"
+      >
+        <span className={value ? "text-foreground" : "text-muted-foreground"}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <span className="text-xs text-muted-foreground">▼</span>
+      </div>
+      {isOpen && (
+        <div className="absolute left-0 top-full z-50 mt-1.5 flex w-full flex-col rounded-lg border border-border bg-card p-2 shadow-lg max-h-[300px]">
+          {showSearch && (
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="mb-2 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-[#059669]"
+              autoFocus
+            />
+          )}
+          <div className="overflow-y-auto flex-1 space-y-0.5 max-h-[200px]">
+            {clearable && value && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange("");
+                  setIsOpen(false);
+                  setSearch("");
+                }}
+                className="flex w-full items-center px-3 py-2 text-left text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition"
+              >
+                {clearText}
+              </button>
+            )}
+            {filteredOptions.length === 0 ? (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                Không tìm thấy kết quả
+              </div>
+            ) : (
+              filteredOptions.map((opt) => {
+                const isSelected = opt.value === value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(opt.value);
+                      setIsOpen(false);
+                      setSearch("");
+                    }}
+                    className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted ${isSelected ? "bg-[#059669]/10 font-medium text-[#059669]" : "text-foreground"
+                      }`}
+                  >
+                    <span>{opt.label}</span>
+                    {isSelected && <Check size={14} className="text-[#059669]" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdsStrategySkillTab() {
   const [apiKeys, setApiKeys] = useState<AdsStrategyApiKey[]>([]);
   const [prompts, setPrompts] = useState<AdsStrategyPrompt[]>([]);
@@ -311,7 +437,18 @@ export function AdsStrategySkillTab() {
 
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyValue, setNewKeyValue] = useState("");
-  const [newKeyModel, setNewKeyModel] = useState("gemini-2.5-flash");
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [fetchedModels, setFetchedModels] = useState<string[]>([]);
+
+  const [runModelName, setRunModelName] = useState("gemini-2.5-flash");
+  const [runAvailableModels, setRunAvailableModels] = useState<string[]>([
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro"
+  ]);
+  const [isFetchingRunModels, setIsFetchingRunModels] = useState(false);
 
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [market, setMarket] = useState("Vietnam");
@@ -320,38 +457,20 @@ export function AdsStrategySkillTab() {
   const [notes, setNotes] = useState("");
 
   const [countries, setCountries] = useState<Country[]>([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const filteredCountries = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return countries;
-    return countries.filter(
-      (c) =>
-        c.nameVi.toLowerCase().includes(query) ||
-        c.nameEn.toLowerCase().includes(query) ||
-        c.code.toLowerCase().includes(query)
-    );
-  }, [countries, searchQuery]);
+  const marketOptions = useMemo(() => {
+    const opts = [{ value: "All", label: "Tất cả quốc gia (All)" }];
+    countries.forEach((c) => {
+      opts.push({ value: c.nameEn, label: `${c.nameVi} (${c.nameEn})` });
+    });
+    return opts;
+  }, [countries]);
 
   const [promptName, setPromptName] = useState("Prompt chiến lược ads");
   const [promptTemplate, setPromptTemplate] = useState(DEFAULT_PROMPT);
   const [lastResponse, setLastResponse] = useState<AdsStrategyGenerateResponse | null>(null);
 
-  const [promptMode, setPromptMode] = useState<"template" | "compiled">("compiled");
+  const [promptMode, setPromptMode] = useState<"template" | "compiled" | "manual">("compiled");
+  const [manualResultText, setManualResultText] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
 
   const compiledPrompt = useMemo(() => {
@@ -435,12 +554,84 @@ export function AdsStrategySkillTab() {
     void loadData();
   }, []);
 
+  useEffect(() => {
+    setFetchedModels([]);
+  }, [newKeyValue]);
+
+  useEffect(() => {
+    if (!selectedKeyId) {
+      setRunAvailableModels([
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro"
+      ]);
+      setRunModelName("gemini-2.5-flash");
+      return;
+    }
+
+    let active = true;
+    const fetchRunModels = async () => {
+      setIsFetchingRunModels(true);
+      try {
+        const res = await adsStrategyService.checkModels({ apiKeyId: selectedKeyId });
+        if (active && res.models && res.models.length > 0) {
+          setRunAvailableModels(res.models);
+          // Auto-select a default model if current runModelName is not in the list
+          const defaultOrder = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+          let bestModel = "";
+          for (const m of defaultOrder) {
+            if (res.models.includes(m)) {
+              bestModel = m;
+              break;
+            }
+          }
+          if (!bestModel) {
+            bestModel = res.models[0];
+          }
+          setRunModelName(bestModel);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải model cho key chạy:", err);
+      } finally {
+        if (active) {
+          setIsFetchingRunModels(false);
+        }
+      }
+    };
+
+    void fetchRunModels();
+    return () => {
+      active = false;
+    };
+  }, [selectedKeyId]);
+
   const handleSelectPrompt = (promptId: string) => {
     setSelectedPromptId(promptId);
     const prompt = prompts.find((item) => item.id === promptId);
     if (prompt) {
       setPromptName(prompt.name);
       setPromptTemplate(prompt.promptTemplate);
+    }
+  };
+
+  const handleFetchModels = async (keyToFetch: string) => {
+    if (!keyToFetch || keyToFetch.trim().length < 10) return;
+    setIsFetchingModels(true);
+    setFetchedModels([]);
+    try {
+      const res = await adsStrategyService.checkModels({ apiKey: keyToFetch.trim() });
+      if (res.models && res.models.length > 0) {
+        setFetchedModels(res.models);
+        toast.success(`Đã tải thành công ${res.models.length} model từ API key!`);
+      } else {
+        toast.warning("Không tìm thấy model nào hỗ trợ generateContent với API key này.");
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Không thể xác thực API key hoặc lấy danh sách model."));
+    } finally {
+      setIsFetchingModels(false);
     }
   };
 
@@ -453,12 +644,13 @@ export function AdsStrategySkillTab() {
       const created = await adsStrategyService.createApiKey({
         displayName: newKeyName.trim(),
         apiKey: newKeyValue.trim(),
-        modelName: newKeyModel.trim() || "gemini-2.5-flash",
+        modelName: "gemini-2.5-flash",
       });
       setApiKeys((items) => [created, ...items]);
       setSelectedKeyId(created.id);
       setNewKeyName("");
       setNewKeyValue("");
+      setFetchedModels([]);
       toast.success("Đã lưu Gemini API key.");
     } catch (error) {
       toast.error(getErrorMessage(error, "Không lưu được API key."));
@@ -547,7 +739,7 @@ export function AdsStrategySkillTab() {
         promptId: selectedPromptId || null,
         promptTemplate: applyLanguageInstruction(promptTemplate, responseLanguage),
         inputValues,
-        modelName: selectedKey?.modelName,
+        modelName: runModelName,
       });
       setLastResponse(response);
       setActiveInnerTab("run");
@@ -561,8 +753,64 @@ export function AdsStrategySkillTab() {
     }
   };
 
+  const validateInputs = () => {
+    if (!websiteUrl.trim()) {
+      toast.error("Vui lòng nhập Website hoặc Landing Page.");
+      return false;
+    }
+    if (!market.trim()) {
+      toast.error("Vui lòng chọn Thị trường ưu tiên.");
+      return false;
+    }
+    if (!budget.trim()) {
+      toast.error("Vui lòng nhập Ngân sách dự kiến.");
+      return false;
+    }
+    if (!responseLanguage.trim()) {
+      toast.error("Vui lòng chọn Ngôn ngữ kết quả.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSaveManualResult = async () => {
+    if (!validateInputs()) return;
+    if (!manualResultText.trim()) {
+      toast.error("Vui lòng nhập hoặc dán nội dung kết quả.");
+      return;
+    }
+    setSavingResult(true);
+    try {
+      const saved = await adsStrategyService.saveResult({
+        title: websiteUrl.trim() || "Chiến lược ads",
+        apiKeyId: selectedKeyId || null,
+        promptId: selectedPromptId || null,
+        websiteUrl: websiteUrl.trim(),
+        market: market.trim(),
+        budget: budget.trim(),
+        notes: notes.trim(),
+        modelName: selectedKeyId ? runModelName : "Manual Input",
+        promptText: compiledPrompt,
+        responseText: manualResultText.trim(),
+        rawResponse: null,
+        inputValues,
+        promptTokens: null,
+        responseTokens: null,
+        totalTokens: null,
+      });
+      setResults((items) => [saved, ...items]);
+      setManualResultText("");
+      toast.success("Đã lưu kết quả AI từ nguồn ngoài.");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Không lưu được kết quả."));
+    } finally {
+      setSavingResult(false);
+    }
+  };
+
   const handleSaveResult = async () => {
     if (!lastResponse) return;
+    if (!validateInputs()) return;
     setSavingResult(true);
     try {
       const saved = await adsStrategyService.saveResult({
@@ -649,11 +897,10 @@ export function AdsStrategySkillTab() {
             <button
               key={tab.id}
               onClick={() => setActiveInnerTab(tab.id)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${
-                isActive
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${isActive
                   ? "bg-[#059669] text-white shadow-sm shadow-[#059669]/30"
                   : "text-muted-foreground hover:bg-background hover:text-foreground"
-              }`}
+                }`}
             >
               <Icon size={15} />
               {tab.label}
@@ -667,147 +914,85 @@ export function AdsStrategySkillTab() {
           <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <h3 className="mb-4 font-semibold">Đầu vào phân tích</h3>
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="block md:col-span-2">
-                <span className="text-sm font-medium">Gemini API key</span>
-                <select value={selectedKeyId} onChange={(e) => setSelectedKeyId(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]">
-                  <option value="">Chọn API key</option>
-                  {apiKeys.map((key) => (
-                    <option key={key.id} value={key.id}>
-                      {key.displayName} · {key.modelName} · ****{key.apiKeyLast4}
-                    </option>
-                  ))}
-                </select>
+              <div className="block md:col-span-2">
+                <CustomSelect
+                  label="Gemini API key"
+                  value={selectedKeyId}
+                  onChange={setSelectedKeyId}
+                  placeholder="Chọn API key"
+                  options={apiKeys.map((key) => ({
+                    value: key.id,
+                    label: `${key.displayName} · ****${key.apiKeyLast4}`
+                  }))}
+                />
                 {apiKeys.length === 0 && (
                   <button onClick={() => setActiveInnerTab("keys")} className="mt-2 text-xs font-medium text-[#059669] hover:underline">
                     Chưa có key, bấm để thêm Gemini API key
                   </button>
                 )}
-              </label>
-              <label className="block md:col-span-2">
-                <span className="text-sm font-medium">Prompt sử dụng</span>
-                <select value={selectedPromptId} onChange={(e) => handleSelectPrompt(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]">
-                  {prompts.map((prompt) => (
-                    <option key={prompt.id} value={prompt.id}>
-                      {prompt.name}{prompt.isDefault ? " (mặc định)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              </div>
+              {selectedKeyId && (
+                <div className="block md:col-span-2">
+                  <div className="relative">
+                    <CustomSelect
+                      label="Model sử dụng"
+                      value={runModelName}
+                      onChange={setRunModelName}
+                      placeholder="Chọn model..."
+                      options={runAvailableModels.map((model) => ({
+                        value: model,
+                        label: model
+                      }))}
+                    />
+                    {isFetchingRunModels && (
+                      <div className="absolute right-3 top-9">
+                        <Loader2 className="size-4 animate-spin text-[#059669]" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <div className="block md:col-span-2">
+                <CustomSelect
+                  label="Prompt sử dụng"
+                  value={selectedPromptId}
+                  onChange={handleSelectPrompt}
+                  options={prompts.map((prompt) => ({
+                    value: prompt.id,
+                    label: `${prompt.name}${prompt.isDefault ? " (mặc định)" : ""}`
+                  }))}
+                />
+              </div>
               <label className="block md:col-span-2">
                 <span className="text-sm font-medium">Website hoặc Landing Page</span>
                 <input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
               </label>
-              <div className="relative flex flex-col" ref={dropdownRef}>
-                <span className="text-sm font-medium">Thị trường ưu tiên</span>
-                <div
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="mt-1 flex w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none hover:border-[#059669]/50 focus-within:border-[#059669]"
-                >
-                  <span className={market ? "text-foreground" : "text-muted-foreground"}>
-                    {(() => {
-                      if (market === "All") {
-                        return "Tất cả quốc gia (All)";
-                      }
-                      const matched = countries.find(
-                        (c) => c.nameEn === market || c.nameVi === market || c.code === market
-                      );
-                      if (matched) {
-                        return `${matched.nameVi} (${matched.nameEn})`;
-                      }
-                      return market || "Chọn quốc gia...";
-                    })()}
-                  </span>
-                  <span className="text-xs text-muted-foreground">▼</span>
-                </div>
-                {dropdownOpen && (
-                  <div className="absolute left-0 top-full z-50 mt-1.5 flex w-full flex-col rounded-lg border border-border bg-card p-2 shadow-lg max-h-[300px]">
-                    <input
-                      type="text"
-                      placeholder="Tìm kiếm quốc gia..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="mb-2 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-[#059669]"
-                      autoFocus
-                    />
-                    <div className="overflow-y-auto flex-1 space-y-0.5 max-h-[200px]">
-                      {market && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMarket("");
-                            setDropdownOpen(false);
-                            setSearchQuery("");
-                          }}
-                          className="flex w-full items-center px-3 py-2 text-left text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md"
-                        >
-                          Xóa lựa chọn (Bỏ chọn)
-                        </button>
-                      )}
-                      {(() => {
-                        const query = searchQuery.trim().toLowerCase();
-                        const showAllOption = !query || "tất cả".includes(query) || "all".includes(query);
-                        return showAllOption && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setMarket("All");
-                              setDropdownOpen(false);
-                              setSearchQuery("");
-                            }}
-                            className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted ${
-                              market === "All" ? "bg-[#059669]/10 font-medium text-[#059669]" : "text-foreground"
-                            }`}
-                          >
-                            <span>Tất cả quốc gia (All)</span>
-                            {market === "All" && <Check size={14} className="text-[#059669]" />}
-                          </button>
-                        );
-                      })()}
-                      {filteredCountries.length === 0 ? (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">
-                          Không tìm thấy quốc gia
-                        </div>
-                      ) : (
-                        filteredCountries.map((c) => {
-                          const isSelected = market === c.nameEn || market === c.nameVi || market === c.code;
-                          return (
-                            <button
-                              key={c.code}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setMarket(c.nameEn);
-                                setDropdownOpen(false);
-                                setSearchQuery("");
-                              }}
-                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted ${
-                                isSelected ? "bg-[#059669]/10 font-medium text-[#059669]" : "text-foreground"
-                              }`}
-                            >
-                              <span>{c.nameVi} ({c.nameEn})</span>
-                              {isSelected && <Check size={14} className="text-[#059669]" />}
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <CustomSelect
+                label="Thị trường ưu tiên"
+                value={market}
+                onChange={setMarket}
+                placeholder="Chọn quốc gia..."
+                showSearch={true}
+                searchPlaceholder="Tìm kiếm quốc gia..."
+                clearable={true}
+                clearText="Xóa lựa chọn (Bỏ chọn)"
+                options={marketOptions}
+              />
               <label className="block">
                 <span className="text-sm font-medium">Ngân sách dự kiến</span>
                 <input value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="VD: 500 USD/tháng" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
               </label>
-              <label className="block">
-                <span className="text-sm font-medium">Ngôn ngữ kết quả</span>
-                <select value={responseLanguage} onChange={(e) => handleResponseLanguageChange(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]">
-                  <option value="Tiếng Việt">Tiếng Việt</option>
-                  <option value="English">English</option>
-                </select>
-              </label>
+              <div>
+                <CustomSelect
+                  label="Ngôn ngữ kết quả"
+                  value={responseLanguage}
+                  onChange={handleResponseLanguageChange}
+                  options={[
+                    { value: "Tiếng Việt", label: "Tiếng Việt" },
+                    { value: "English", label: "English" }
+                  ]}
+                />
+              </div>
               <label className="block md:col-span-2">
                 <span className="text-sm font-medium">Ghi chú bổ sung</span>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Mục tiêu CPA, sản phẩm chủ lực, offer hiện có..." className="mt-1 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
@@ -823,28 +1008,36 @@ export function AdsStrategySkillTab() {
                   <button
                     type="button"
                     onClick={() => setPromptMode("template")}
-                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${
-                      promptMode === "template"
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${promptMode === "template"
                         ? "bg-[#059669] text-white shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
-                    }`}
+                      }`}
                   >
                     Mẫu (Template)
                   </button>
                   <button
                     type="button"
                     onClick={() => setPromptMode("compiled")}
-                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${
-                      promptMode === "compiled"
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${promptMode === "compiled"
                         ? "bg-[#059669] text-white shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
-                    }`}
+                      }`}
                   >
                     Xem trước (Compiled)
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setPromptMode("manual")}
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${promptMode === "manual"
+                        ? "bg-[#059669] text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    Nhập kết quả
+                  </button>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 {promptMode === "compiled" && (
                   <div className="flex items-center gap-1.5 border-r border-border pr-3">
@@ -875,20 +1068,22 @@ export function AdsStrategySkillTab() {
                     </a>
                   </div>
                 )}
-                
-                <Button
-                  onClick={handleCopyPrompt}
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 h-8 text-xs font-medium"
-                >
-                  {promptCopied ? <Check size={13} /> : <Clipboard size={13} />}
-                  {promptCopied ? "Đã copy" : "Copy prompt"}
-                </Button>
+
+                {promptMode !== "manual" && (
+                  <Button
+                    onClick={handleCopyPrompt}
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 h-8 text-xs font-medium"
+                  >
+                    {promptCopied ? <Check size={13} /> : <Clipboard size={13} />}
+                    {promptCopied ? "Đã copy" : "Copy prompt"}
+                  </Button>
+                )}
               </div>
             </div>
-            
-            {promptMode === "template" ? (
+
+            {promptMode === "template" && (
               <div>
                 <textarea
                   value={promptTemplate}
@@ -901,7 +1096,8 @@ export function AdsStrategySkillTab() {
                   Dùng các biến: {"{{website_url}}"}, {"{{market}}"}, {"{{budget}}"}, {"{{response_language}}"}, {"{{notes}}"} để tự động điền giá trị.
                 </span>
               </div>
-            ) : (
+            )}
+            {promptMode === "compiled" && (
               <div>
                 <textarea
                   value={compiledPrompt}
@@ -913,6 +1109,30 @@ export function AdsStrategySkillTab() {
                 <span className="mt-1 block text-xs text-muted-foreground">
                   Đây là prompt đã điền đầy đủ các thông tin bạn nhập ở trên. Bạn có thể copy để gửi sang các AI khác (ChatGPT, Gemini, Grok).
                 </span>
+              </div>
+            )}
+            {promptMode === "manual" && (
+              <div className="space-y-3">
+                <textarea
+                  value={manualResultText}
+                  onChange={(e) => setManualResultText(e.target.value)}
+                  rows={14}
+                  className="w-full resize-y rounded-lg border border-input bg-background p-3 text-sm leading-6 outline-none focus:border-[#059669]"
+                  placeholder="Dán (Paste) kết quả phân tích quảng cáo từ các AI khác (như ChatGPT, Grok, Claude,...) vào đây để lưu trữ..."
+                />
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <span className="text-xs text-muted-foreground">
+                    Nhập nội dung phân tích nhận được từ chatbot khác rồi bấm Lưu kết quả để lưu trữ vào hệ thống.
+                  </span>
+                  <Button
+                    onClick={handleSaveManualResult}
+                    disabled={savingResult}
+                    className="gap-2 bg-[#059669] text-white hover:bg-[#047857]"
+                  >
+                    {savingResult ? <Loader2 className="size-4 animate-spin" /> : <Save size={15} />}
+                    Lưu kết quả ngoài
+                  </Button>
+                </div>
               </div>
             )}
           </section>
@@ -953,14 +1173,49 @@ export function AdsStrategySkillTab() {
             <KeyRound size={18} className="text-[#059669]" />
             <h3 className="font-semibold">Quản lý Gemini API keys</h3>
           </div>
-          <div className="grid gap-3 md:grid-cols-[1fr_1.3fr_1fr_auto]">
+          <div className="grid gap-3 md:grid-cols-[1fr_1.3fr_auto]">
             <input value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} placeholder="Tên key, VD: Key chính" className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
-            <input value={newKeyValue} onChange={(e) => setNewKeyValue(e.target.value)} placeholder="AIza..." type="password" className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
-            <input value={newKeyModel} onChange={(e) => setNewKeyModel(e.target.value)} placeholder="gemini-2.5-flash" className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
+            <div className="relative flex items-center">
+              <input
+                value={newKeyValue}
+                onChange={(e) => setNewKeyValue(e.target.value)}
+                placeholder="AIza..."
+                type="password"
+                className="w-full rounded-lg border border-input bg-background pl-3 pr-20 py-2 text-sm outline-none focus:border-[#059669]"
+              />
+              {newKeyValue.trim().length >= 10 && (
+                <button
+                  type="button"
+                  onClick={() => handleFetchModels(newKeyValue)}
+                  disabled={isFetchingModels}
+                  className="absolute right-2 px-1.5 py-1 rounded text-xs font-semibold text-[#059669] hover:bg-[#059669]/10 disabled:opacity-50 transition cursor-pointer"
+                  title="Tự động lấy danh sách model hỗ trợ từ API key"
+                >
+                  {isFetchingModels ? (
+                    <Loader2 className="size-3.5 animate-spin text-[#059669]" />
+                  ) : (
+                    "Lấy model"
+                  )}
+                </button>
+              )}
+            </div>
             <Button onClick={handleCreateKey} className="gap-2 bg-[#059669] text-white hover:bg-[#047857]">
               <Plus size={15} /> Thêm key
             </Button>
           </div>
+
+          {fetchedModels.length > 0 && (
+            <div className="mt-3 rounded-lg border border-dashed border-[#059669]/30 bg-[#059669]/5 p-3.5">
+              <span className="text-xs font-semibold text-[#059669] block mb-2">Các model khả dụng cho API key này:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {fetchedModels.map((model) => (
+                  <span key={model} className="inline-flex items-center rounded bg-[#059669]/10 px-2 py-0.5 text-xs font-medium text-[#065f46]">
+                    {model}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-5 space-y-3">
             {apiKeys.length === 0 ? (
@@ -1007,11 +1262,10 @@ export function AdsStrategySkillTab() {
                 <button
                   key={prompt.id}
                   onClick={() => handleSelectPrompt(prompt.id)}
-                  className={`w-full rounded-lg border p-3 text-left transition ${
-                    selectedPromptId === prompt.id
+                  className={`w-full rounded-lg border p-3 text-left transition ${selectedPromptId === prompt.id
                       ? "border-[#059669] bg-[#059669]/10"
                       : "border-border bg-background hover:border-[#059669]/50"
-                  }`}
+                    }`}
                 >
                   <span className="block text-sm font-semibold">{prompt.name}</span>
                   <span className="text-xs text-muted-foreground">

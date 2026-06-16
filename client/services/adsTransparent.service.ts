@@ -27,9 +27,13 @@ export const adsTransparentService = {
     return response.data;
   },
 
-  getHistory: async (): Promise<AdSearchHistoryResponse> => {
+  getHistory: async (
+    page = 1,
+    pageSize = 10
+  ): Promise<AdSearchHistoryResponse> => {
     const response = await axiosInstance.get<AdSearchHistoryResponse>(
-      "/ads-transparent/history"
+      "/ads-transparent/history",
+      { params: { page, page_size: pageSize } }
     );
     return response.data;
   },
@@ -41,6 +45,13 @@ export const adsTransparentService = {
     const response = await axiosInstance.get<CompetitorListResponse>(
       "/ads-transparent/competitors",
       { params: { page, page_size: pageSize } }
+    );
+    return response.data;
+  },
+
+  deleteHistory: async (searchId: string): Promise<{ success: boolean }> => {
+    const response = await axiosInstance.delete<{ success: boolean }>(
+      `/ads-transparent/history/${searchId}`
     );
     return response.data;
   },

@@ -18,6 +18,7 @@ from app.api.ads_transparent.schema import (
 )
 from app.api.ads_transparent.service import AdsTransparencyService
 from app.api.auth.model import User
+from app.core.config import settings
 from app.core.database import get_db
 from app.shared.deps import get_current_user
 
@@ -105,13 +106,17 @@ async def get_ad_details(
 @router.get(
     "/history",
     response_model=AdSearchHistoryResponse,
-    summary="Lấy toàn bộ lịch sử tìm kiếm quảng cáo của user hiện tại",
+    summary="Lấy lịch sử tìm kiếm quảng cáo của user hiện tại có phân trang",
 )
 def get_user_history(
+    page: int = Query(1, ge=1, description="Số trang (bắt đầu từ 1)"),
+    page_size: int = Query(settings.PAGE_SIZE, ge=1, le=50, description="Số kết quả mỗi trang"),
     current_user: User = Depends(get_current_user),
     service: AdsTransparencyService = Depends(get_service),
 ) -> AdSearchHistoryResponse:
-    searches = service.list_by_user_id(current_user.id)
+    total, total_pages, searches = service.list_by_user_id_paginated(
+        current_user.id, page, page_size
+    )
 
     items: list[AdSearchHistoryItem] = []
     for s in searches:
@@ -179,7 +184,13 @@ def get_user_history(
             )
         )
 
-    return AdSearchHistoryResponse(total=len(items), items=items)
+    return AdSearchHistoryResponse(
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+        items=items,
+    )
 
 
 @router.get(
@@ -189,7 +200,7 @@ def get_user_history(
 )
 def get_competitors(
     page: int = Query(1, ge=1, description="Số trang (bắt đầu từ 1)"),
-    page_size: int = Query(10, ge=1, le=50, description="Số đối thủ mỗi trang"),
+    page_size: int = Query(settings.PAGE_SIZE, ge=1, le=50, description="Số đối thủ mỗi trang"),
     current_user: User = Depends(get_current_user),
     service: AdsTransparencyService = Depends(get_service),
 ) -> CompetitorListResponse:
@@ -254,3 +265,22 @@ def get_competitors(
         total_pages=data["total_pages"],
         items=items,
     )
+
+
+@router.delete(
+    "/history/{search_id}",
+    summary="Xoá một lịch sử tìm kiếm quảng cáo",
+)
+def delete_user_history(
+    search_id: str,
+    current_user: User = Depends(get_current_user),
+    service: AdsTransparencyService = Depends(get_service),
+) -> dict:
+    success = service.delete_search(current_user.id, search_id)
+    if not success:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy lịch sử quét hoặc không thuộc về bạn",
+        )
+    return {"success": True}
