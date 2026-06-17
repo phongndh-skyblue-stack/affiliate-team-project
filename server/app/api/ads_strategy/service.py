@@ -205,7 +205,7 @@ class AdsStrategyService:
             template = DEFAULT_PROMPT_TEMPLATE
 
         prompt_text = _render_template(template, payload.input_values)
-        model_name = (payload.model_name or key_item.model_name or "gemini-2.5-flash").strip()
+        model_name = (payload.model_name or key_item.model_name or "gemini-2.0-flash").strip()
         api_key = _decrypt_api_key(key_item.encrypted_api_key)
         try:
             data = await self._call_gemini(api_key=api_key, model_name=model_name, prompt_text=prompt_text)

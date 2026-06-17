@@ -419,14 +419,24 @@ class AffiliateDataService:
     def __init__(self, db: Session) -> None:
         self.repository = AffiliateDataRepository(db)
 
-    def create_affiliate_link(self, user_id: str, website: str) -> dict:
+    def create_affiliate_link(
+        self,
+        user_id: str,
+        website: str,
+        name: str | None = None,
+        search: str | None = None,
+    ) -> dict:
         normalized_url = normalize_affiliate_url(website)
         domain = extract_domain(normalized_url)
+        clean_name = (name or "").strip() or domain
+        clean_search = (search or "").strip() or clean_name or domain
 
         row = self.repository.get_or_create_affiliate_link(
             user_id=user_id,
             affiliate_url=normalized_url,
             domain=domain,
+            name=clean_name,
+            search_query=clean_search,
         )
         self.repository.commit()
 
@@ -435,6 +445,8 @@ class AffiliateDataService:
             "user_id": row.user_id,
             "affiliate_url": row.affiliate_url,
             "domain": row.domain,
+            "name": row.name,
+            "search_query": row.search_query,
             "raw_data": row.raw_data,
             "created_at": row.created_at,
             "updated_at": row.updated_at,

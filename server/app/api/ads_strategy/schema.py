@@ -77,7 +77,7 @@ Quy tắc bắt buộc:
 class ApiKeyCreate(CamelModel):
     display_name: str = Field(..., min_length=1, max_length=120)
     api_key: str = Field(..., min_length=10)
-    model_name: str = Field("gemini-2.5-flash", min_length=1, max_length=80)
+    model_name: str = Field("gemini-2.0-flash", min_length=1, max_length=80)
 
 
 class ApiKeyResponse(CamelModel):

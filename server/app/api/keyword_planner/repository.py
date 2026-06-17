@@ -36,7 +36,7 @@ class KeywordPlannerRepository:
             input_type=input_type,
             keywords=keywords,
             page_url=page_url,
-            use_entire_site=use_entire_site,
+            use_entire_site=1 if use_entire_site else 0,
             language_id=language_id,
             location_ids=location_ids,
             result_limit=result_limit,

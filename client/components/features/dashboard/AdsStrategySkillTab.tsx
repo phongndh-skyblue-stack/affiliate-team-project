@@ -440,11 +440,11 @@ export function AdsStrategySkillTab() {
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [fetchedModels, setFetchedModels] = useState<string[]>([]);
 
-  const [runModelName, setRunModelName] = useState("gemini-2.5-flash");
+  const [runModelName, setRunModelName] = useState("gemini-2.0-flash");
   const [runAvailableModels, setRunAvailableModels] = useState<string[]>([
+    "gemini-2.0-flash",
     "gemini-2.5-flash",
     "gemini-2.5-pro",
-    "gemini-2.0-flash",
     "gemini-1.5-flash",
     "gemini-1.5-pro"
   ]);
@@ -561,13 +561,13 @@ export function AdsStrategySkillTab() {
   useEffect(() => {
     if (!selectedKeyId) {
       setRunAvailableModels([
+        "gemini-2.0-flash",
         "gemini-2.5-flash",
         "gemini-2.5-pro",
-        "gemini-2.0-flash",
         "gemini-1.5-flash",
         "gemini-1.5-pro"
       ]);
-      setRunModelName("gemini-2.5-flash");
+      setRunModelName("gemini-2.0-flash");
       return;
     }
 
@@ -579,7 +579,7 @@ export function AdsStrategySkillTab() {
         if (active && res.models && res.models.length > 0) {
           setRunAvailableModels(res.models);
           // Auto-select a default model if current runModelName is not in the list
-          const defaultOrder = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+          const defaultOrder = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
           let bestModel = "";
           for (const m of defaultOrder) {
             if (res.models.includes(m)) {
@@ -644,7 +644,7 @@ export function AdsStrategySkillTab() {
       const created = await adsStrategyService.createApiKey({
         displayName: newKeyName.trim(),
         apiKey: newKeyValue.trim(),
-        modelName: "gemini-2.5-flash",
+        modelName: "gemini-2.0-flash",
       });
       setApiKeys((items) => [created, ...items]);
       setSelectedKeyId(created.id);

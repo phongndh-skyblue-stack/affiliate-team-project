@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Annotated
 from pydantic import Field
 
 from app.shared.responses import CamelModel
@@ -10,8 +11,8 @@ class ProxyCreate(CamelModel):
     protocol: str = Field("http", description="Giao thức: http, https, socks5")
     host: str = Field(..., description="Host hoặc IP")
     port: str = Field(..., description="Port")
-    username: str | None = Field(None, description="Tên đăng nhập (tuỳ chọn)")
-    password: str | None = Field(None, description="Mật khẩu (sẽ được mã hoá)")
+    username: Annotated[str | None, Field(description="Tên đăng nhập (tuỳ chọn)")] = None
+    password: Annotated[str | None, Field(description="Mật khẩu (sẽ được mã hoá)")] = None
 
 
 class ProxyUpdate(CamelModel):
