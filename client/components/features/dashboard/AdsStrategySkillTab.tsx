@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/common/CustomSelect";
 import { adsStrategyService } from "@/services/adsStrategy.service";
 import type {
   AdsStrategyApiKey,
@@ -296,131 +297,6 @@ function StrategyResultView({ text }: { text: string }) {
   return <div className="space-y-4">{nodes}</div>;
 }
 
-interface CustomSelectOption {
-  value: string;
-  label: string;
-}
-
-interface CustomSelectProps {
-  label?: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: CustomSelectOption[];
-  placeholder?: string;
-  showSearch?: boolean;
-  searchPlaceholder?: string;
-  clearable?: boolean;
-  clearText?: string;
-}
-
-function CustomSelect({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder = "Chọn...",
-  showSearch = false,
-  searchPlaceholder = "Tìm kiếm...",
-  clearable = false,
-  clearText = "Xóa lựa chọn",
-}: CustomSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const filteredOptions = useMemo(() => {
-    if (!showSearch) return options;
-    const query = search.trim().toLowerCase();
-    if (!query) return options;
-    return options.filter((opt) => opt.label.toLowerCase().includes(query));
-  }, [options, search, showSearch]);
-
-  const selectedOption = options.find((opt) => opt.value === value);
-
-  return (
-    <div className="relative flex flex-col" ref={containerRef}>
-      {label && <span className="text-sm font-medium mb-1">{label}</span>}
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none hover:border-[#059669]/50 focus-within:border-[#059669] transition min-h-[42px]"
-      >
-        <span className={value ? "text-foreground" : "text-muted-foreground"}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <span className="text-xs text-muted-foreground">▼</span>
-      </div>
-      {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 flex w-full flex-col rounded-lg border border-border bg-card p-2 shadow-lg max-h-[300px]">
-          {showSearch && (
-            <input
-              type="text"
-              placeholder={searchPlaceholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              className="mb-2 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-[#059669]"
-              autoFocus
-            />
-          )}
-          <div className="overflow-y-auto flex-1 space-y-0.5 max-h-[200px]">
-            {clearable && value && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange("");
-                  setIsOpen(false);
-                  setSearch("");
-                }}
-                className="flex w-full items-center px-3 py-2 text-left text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition"
-              >
-                {clearText}
-              </button>
-            )}
-            {filteredOptions.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-muted-foreground">
-                Không tìm thấy kết quả
-              </div>
-            ) : (
-              filteredOptions.map((opt) => {
-                const isSelected = opt.value === value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onChange(opt.value);
-                      setIsOpen(false);
-                      setSearch("");
-                    }}
-                    className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted ${isSelected ? "bg-[#059669]/10 font-medium text-[#059669]" : "text-foreground"
-                      }`}
-                  >
-                    <span>{opt.label}</span>
-                    {isSelected && <Check size={14} className="text-[#059669]" />}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function AdsStrategySkillTab() {
   const [apiKeys, setApiKeys] = useState<AdsStrategyApiKey[]>([]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   BarChart3,
@@ -21,6 +21,7 @@ import {
   Target,
   Trash2,
   XCircle,
+  Check,
 } from "lucide-react";
 import {
   Bar,
@@ -35,6 +36,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import { affiliateProjectService } from "@/services/affiliateProject.service";
+import { CustomSelect } from "@/components/common/CustomSelect";
 import type {
   AffiliateLinkDetailResponse,
   AffiliateLinkModel,
@@ -43,6 +45,10 @@ import type {
   ScanTrafficResponse,
   TopCountryInsight,
   TrafficCountryItem,
+  TrafficGlobalItem,
+  TrafficSourceItem,
+  TrafficSocialItem,
+  AffiliateLinkTrafficModel,
 } from "@/types/affiliateProject.types";
 
 type CheckStatus = "good" | "warn" | "missing";
@@ -147,11 +153,6 @@ function toChartNumber(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function toSharePercent(value: unknown): number {
-  const numeric = toChartNumber(value);
-  if (numeric <= 0) return 0;
-  return numeric <= 1 ? numeric * 100 : numeric;
-}
 
 function formatDuration(seconds: number): string {
   const safeSeconds = Math.max(0, Math.round(seconds || 0));
@@ -217,17 +218,121 @@ function resultString(result: Record<string, unknown>, key: string): string | nu
   return typeof value === "string" && value.trim() ? value : null;
 }
 
-function toTrafficResponse(detail: AffiliateLinkDetailResponse): ScanTrafficResponse | null {
-  const latest = detail.traffic_scans[0];
-  if (!latest) return null;
+function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeriods: string[]): ScanTrafficResponse | null {
+  const scans = detail.traffic_scans.filter(s => selectedPeriods.includes(s.period_month));
+  if (!scans.length) return null;
+
+  const base = scans[0];
+  const totalMonthlyVisits = scans.reduce((sum, s) => sum + (s.monthly_visits || 0), 0);
+
+  let totalUnique = 0;
+  let totalRepeat = 0;
+  let sumPages = 0;
+  let sumDuration = 0;
+  let sumBounce = 0;
+
+  const countryMap = new Map<string, TrafficCountryItem>();
+  const socialMap = new Map<string, number>();
+  
+  const sourceSum: TrafficSourceItem = {
+    period_month: selectedPeriods.join(", "),
+    organic_search: 0,
+    social: 0,
+    email: 0,
+    display_ads: 0,
+    direct: 0,
+    referrals: 0,
+    paid_search: 0,
+  };
+
+  for (const s of scans) {
+    const weight = s.monthly_visits || 0;
+    
+    const g = s.traffic_details?.global?.[0];
+    if (g) {
+      totalUnique += g.unique_visits_monthly || 0;
+      totalRepeat += g.repeat_visits_monthly || 0;
+      sumPages += (g.pages_per_visit || 0) * weight;
+      sumDuration += (g.avg_visit_duration || 0) * weight;
+      sumBounce += (g.bounce_rate_percentage || 0) * weight;
+    }
+    
+    for (const c of s.traffic_details?.country || []) {
+      const existing = countryMap.get(c.country_code) || {
+        country_code: c.country_code,
+        country_name: c.country_name,
+        traffic_share_percentage: 0,
+        total_visits_monthly: 0,
+        pages_per_visit: 0,
+        avg_visit_duration: 0,
+        bounce_rate_percentage: 0,
+      };
+      existing.total_visits_monthly = (existing.total_visits_monthly || 0) + (c.total_visits_monthly || 0);
+      countryMap.set(c.country_code, existing);
+    }
+    
+    const src = s.traffic_details?.source;
+    if (src) {
+      const srcWeight = weight / 100;
+      sourceSum.organic_search += (src.organic_search || 0) * srcWeight;
+      sourceSum.social += (src.social || 0) * srcWeight;
+      sourceSum.email += (src.email || 0) * srcWeight;
+      sourceSum.display_ads += (src.display_ads || 0) * srcWeight;
+      sourceSum.direct += (src.direct || 0) * srcWeight;
+      sourceSum.referrals += (src.referrals || 0) * srcWeight;
+      sourceSum.paid_search += (src.paid_search || 0) * srcWeight;
+    }
+
+    for (const soc of s.traffic_details?.social || []) {
+      const share = soc.share_percentage || 0;
+      const current = socialMap.get(soc.platform_name) || 0;
+      socialMap.set(soc.platform_name, current + share * weight);
+    }
+  }
+
+  const aggregatedCountries = Array.from(countryMap.values()).map(c => ({
+    ...c,
+    traffic_share_percentage: totalMonthlyVisits > 0 ? ((c.total_visits_monthly || 0) / totalMonthlyVisits) * 100 : 0
+  }));
+
+  if (totalMonthlyVisits > 0) {
+    sourceSum.organic_search = (sourceSum.organic_search / totalMonthlyVisits) * 100;
+    sourceSum.social = (sourceSum.social / totalMonthlyVisits) * 100;
+    sourceSum.email = (sourceSum.email / totalMonthlyVisits) * 100;
+    sourceSum.display_ads = (sourceSum.display_ads / totalMonthlyVisits) * 100;
+    sourceSum.direct = (sourceSum.direct / totalMonthlyVisits) * 100;
+    sourceSum.referrals = (sourceSum.referrals / totalMonthlyVisits) * 100;
+    sourceSum.paid_search = (sourceSum.paid_search / totalMonthlyVisits) * 100;
+  }
+
+  const globalItem: TrafficGlobalItem = {
+    period_month: selectedPeriods.join(", "),
+    total_visits_monthly: totalMonthlyVisits,
+    avg_visits_monthly: totalMonthlyVisits / scans.length,
+    unique_visits_monthly: totalUnique,
+    repeat_visits_monthly: totalRepeat,
+    pages_per_visit: totalMonthlyVisits > 0 ? sumPages / totalMonthlyVisits : 0,
+    avg_visit_duration: totalMonthlyVisits > 0 ? sumDuration / totalMonthlyVisits : 0,
+    bounce_rate_percentage: totalMonthlyVisits > 0 ? sumBounce / totalMonthlyVisits : 0,
+  };
+
+  const socialStats: TrafficSocialItem[] = Array.from(socialMap.entries()).map(([platform_name, totalWeightedShare]) => ({
+    platform_name,
+    share_percentage: totalMonthlyVisits > 0 ? totalWeightedShare / totalMonthlyVisits : 0
+  }));
 
   return {
     domain: detail.affiliate_link.domain,
     url: detail.affiliate_link.affiliate_url,
-    found: latest.found,
-    monthly_visits: latest.monthly_visits,
-    period_month: latest.period_month,
-    traffic_details: latest.traffic_details,
+    found: base.found,
+    monthly_visits: totalMonthlyVisits,
+    period_month: selectedPeriods.join(", "),
+    traffic_details: {
+      global: [globalItem],
+      country: aggregatedCountries,
+      source: sourceSum,
+      social: socialStats
+    }
   };
 }
 
@@ -276,13 +381,13 @@ function getTrafficSourceData(traffic: ScanTrafficResponse | null) {
   if (!source) return [];
 
   const rows = [
-    { name: "Truy cập trực tiếp", share: toSharePercent(source.direct) },
-    { name: "Tìm kiếm tự nhiên", share: toSharePercent(source.organic_search) },
-    { name: "Tìm kiếm trả phí", share: toSharePercent(source.paid_search) },
-    { name: "Giới thiệu", share: toSharePercent(source.referrals) },
-    { name: "Quảng cáo hiển thị", share: toSharePercent(source.display_ads) },
-    { name: "Mạng xã hội", share: toSharePercent(source.social) },
-    { name: "Email", share: toSharePercent(source.email) },
+    { name: "Truy cập trực tiếp", share: toChartNumber(source.direct) },
+    { name: "Tìm kiếm tự nhiên", share: toChartNumber(source.organic_search) },
+    { name: "Tìm kiếm trả phí", share: toChartNumber(source.paid_search) },
+    { name: "Giới thiệu", share: toChartNumber(source.referrals) },
+    { name: "Quảng cáo hiển thị", share: toChartNumber(source.display_ads) },
+    { name: "Mạng xã hội", share: toChartNumber(source.social) },
+    { name: "Email", share: toChartNumber(source.email) },
   ];
   const total = rows.reduce((sum, item) => sum + item.share, 0);
   if (total > 100.5) {
@@ -302,16 +407,12 @@ function getTrafficSocialData(traffic: ScanTrafficResponse | null) {
       const share = rawShare > 0 && rawShare <= 1 ? rawShare * 100 : rawShare;
       return {
         name: item.platform_name,
-        share: toSharePercent(share),
+        share: toChartNumber(share),
       };
     })
     .filter((item) => item.name && item.share > 0)
     .sort((a, b) => b.share - a.share);
-  const total = rows.reduce((sum, item) => sum + item.share, 0);
-  const normalized = total > 100.5
-    ? rows.map((item) => ({ ...item, share: total > 0 ? (item.share / total) * 100 : 0 }))
-    : rows;
-  return normalized.slice(0, 6);
+  return rows.slice(0, 6);
 }
 
 function isRestrictedCountry(countryName: string, restricted: RestrictedCountryInsight[]): boolean {
@@ -721,7 +822,20 @@ export function ProjectsTab() {
   const [editProjectSearch, setEditProjectSearch] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const trafficResult = useMemo(() => (detail ? toTrafficResponse(detail) : null), [detail]);
+  const [selectedPeriods, setSelectedPeriods] = useState<string[]>([]);
+  
+  useEffect(() => {
+    if (detail?.traffic_scans?.length) {
+      const latestPeriod = detail.traffic_scans[0].period_month;
+      setSelectedPeriods(prev => prev.length > 0 ? prev : [latestPeriod]);
+    } else {
+      setSelectedPeriods([]);
+    }
+  }, [detail]);
+
+  const trafficResult = useMemo(() => {
+    return detail && selectedPeriods.length > 0 ? aggregateTrafficScans(detail, selectedPeriods) : null;
+  }, [detail, selectedPeriods]);
   const projectResult = useMemo(() => (detail ? toProjectResponse(detail) : null), [detail]);
   const topTrafficCountries = useMemo(() => getTopTrafficCountries(trafficResult?.traffic_details?.country), [trafficResult]);
   const trafficCountryChartData = useMemo(() => getTrafficCountryChartData(topTrafficCountries), [topTrafficCountries]);
@@ -1066,9 +1180,8 @@ export function ProjectsTab() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") setSelectedLink(link);
                     }}
-                    className={`group flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${
-                      isActive ? "bg-emerald-50 ring-1 ring-emerald-200" : "hover:bg-muted"
-                    }`}
+                    className={`group flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${isActive ? "bg-emerald-50 ring-1 ring-emerald-200" : "hover:bg-muted"
+                      }`}
                   >
                     <div className="min-w-0 flex-1">
                       <p className={`truncate text-sm font-semibold ${isActive ? "text-emerald-700" : "text-foreground"}`}>
@@ -1143,16 +1256,17 @@ export function ProjectsTab() {
                   </a>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={trafficMonths}
-                    onChange={(event) => setTrafficMonths(Number(event.target.value))}
-                    disabled={isBusy}
-                    className="h-9 rounded-md border border-border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
-                  >
-                    {[1, 2, 3, 4, 6, 12].map((month) => (
-                      <option key={month} value={month}>{month} tháng</option>
-                    ))}
-                  </select>
+                  <div className="w-[130px]">
+                    <CustomSelect
+                      value={String(trafficMonths)}
+                      onChange={(val) => setTrafficMonths(Number(val))}
+                      disabled={isBusy}
+                      options={[1, 2, 3, 4].map((month) => ({
+                        value: String(month),
+                        label: `${month} tháng`,
+                      }))}
+                    />
+                  </div>
                   <button
                     onClick={() => void handleScanTraffic()}
                     disabled={isBusy || !detail}
@@ -1176,7 +1290,42 @@ export function ProjectsTab() {
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-4">
                 <section className="rounded-md border border-border bg-card p-4">
-                  <SectionTitle icon={Radar} title="Traffic summary" />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="mb-0">
+                      <SectionTitle icon={Radar} title="Traffic summary" />
+                    </div>
+                    {detail?.traffic_scans && detail.traffic_scans.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Kỳ dữ liệu:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {detail.traffic_scans.map(scan => {
+                            const isSelected = selectedPeriods.includes(scan.period_month);
+                            return (
+                              <button
+                                key={scan.period_month}
+                                onClick={() => {
+                                  setSelectedPeriods(prev => {
+                                    if (prev.includes(scan.period_month)) {
+                                      const next = prev.filter(p => p !== scan.period_month);
+                                      return next.length === 0 ? prev : next;
+                                    }
+                                    return [...prev, scan.period_month];
+                                  });
+                                }}
+                                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                                  isSelected
+                                    ? "bg-emerald-100 border-emerald-500 text-emerald-800 font-medium"
+                                    : "bg-background border-border text-muted-foreground hover:bg-muted"
+                                }`}
+                              >
+                                {scan.period_month}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {trafficResult ? (
                     <>
                       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -1438,11 +1587,10 @@ export function ProjectsTab() {
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                   <span className="font-semibold">{country.country}</span>
-                                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${
-                                    country.restriction_type === "banned"
-                                      ? "bg-red-50 text-red-700"
-                                      : "bg-amber-50 text-amber-700"
-                                  }`}>
+                                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${country.restriction_type === "banned"
+                                    ? "bg-red-50 text-red-700"
+                                    : "bg-amber-50 text-amber-700"
+                                    }`}>
                                     {country.restriction_type === "banned" ? "Cấm" : "Hạn chế"}
                                   </span>
                                   {country.confidence && (
