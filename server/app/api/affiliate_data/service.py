@@ -458,7 +458,7 @@ class AffiliateDataService:
         affiliate_link_id: str,
         months: int,
         start_period: str | None = None,
-    ) -> dict:
+    ) -> list[dict]:
         link = self.repository.get_affiliate_link_by_id_for_user(
             user_id=user_id,
             affiliate_link_id=affiliate_link_id,
@@ -466,20 +466,27 @@ class AffiliateDataService:
         if not link:
             raise ValueError("Affiliate link không tồn tại hoặc không thuộc user hiện tại")
 
-        traffic_result = await scan_traffic(
+        traffic_results = await scan_traffic(
             link.affiliate_url,
             months=months,
             start_period=start_period,
         )
-        traffic_result["url"] = link.affiliate_url
-        traffic_result["domain"] = link.domain
 
-        self.repository.create_traffic_scan(
-            affiliate_link_id=link.id,
-            traffic_result=traffic_result,
-        )
+        self.repository.delete_traffic_scans_by_affiliate_link(link.id)
+
+        saved_results = []
+        for traffic_result in traffic_results:
+            traffic_result["url"] = link.affiliate_url
+            traffic_result["domain"] = link.domain
+
+            self.repository.create_traffic_scan(
+                affiliate_link_id=link.id,
+                traffic_result=traffic_result,
+            )
+            saved_results.append(traffic_result)
+
         self.repository.commit()
-        return traffic_result
+        return saved_results
 
     async def create_project_scan(
         self,

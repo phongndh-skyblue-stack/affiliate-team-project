@@ -92,6 +92,14 @@ class AffiliateDataRepository:
     def commit(self) -> None:
         self.db.commit()
 
+    def delete_traffic_scans_by_affiliate_link(self, affiliate_link_id: str) -> None:
+        from sqlalchemy import delete
+        stmt = delete(AffiliateLinkTrafficScan).where(
+            AffiliateLinkTrafficScan.affiliate_link_id == affiliate_link_id
+        )
+        self.db.execute(stmt)
+        self.db.flush()
+
     def delete_affiliate_link_for_user(
         self,
         user_id: str,
