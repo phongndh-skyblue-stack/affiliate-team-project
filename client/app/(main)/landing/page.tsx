@@ -42,7 +42,7 @@ const STEPS = [
 ];
 
 const TESTIMONIALS = [
-  { name: "Nguyễn Minh Tuấn", role: "Content Creator", text: "Tôi kiếm được ₫15 triệu/tháng chỉ từ việc chia sẻ link trên blog. MIC ACE thực sự thay đổi cuộc sống của tôi!", stars: 5 },
+  { name: "Bùi Thế Anh (TonyThe)", role: "Content Creator", text: "Tôi kiếm được ₫15 triệu/tháng chỉ từ việc chia sẻ link trên blog. MIC ACE thực sự thay đổi cuộc sống của tôi!", stars: 5 },
   { name: "Trần Thị Hoa", role: "Marketing Manager", text: "Hệ thống báo cáo chi tiết giúp tôi tối ưu chiến dịch hiệu quả hơn 3x so với các nền tảng khác.", stars: 5 },
   { name: "Lê Văn Nam", role: "Freelancer", text: "Dashboard đẹp, dễ dùng, hoa hồng được thanh toán đúng hạn. Tôi đã giới thiệu cho 20 người bạn!", stars: 5 },
 ];
