@@ -392,10 +392,15 @@ def generate_ads_from_insights(
         {"role": "user", "content": user_prompt}
     ]
 
+    import time
+    start_time = time.time()
+    print("[llm_ad_generator] Generating Google Ads copy using MiniMax-M3...")
+    
     try:
         response = llm.invoke(messages)
         full_content = response.content
     except Exception as exc:
+        print(f"[llm_ad_generator] Error invoking LLM: {exc}")
         raise exc
 
     try:
@@ -413,7 +418,13 @@ def generate_ads_from_insights(
             clean_json = clean_json[first_brace:last_brace + 1]
 
         ads_copy_result = json.loads(clean_json)
-        return sanitize_ads_copy(ads_copy_result)
+        sanitized = sanitize_ads_copy(ads_copy_result)
+        
+        elapsed = time.time() - start_time
+        print(f"[llm_ad_generator] Ad copy generated and sanitized successfully in {elapsed:.2f}s.")
+        print(f"[llm_ad_generator] Sanitized Result:\n{json.dumps(sanitized, indent=2, ensure_ascii=False)}")
+        return sanitized
     except json.JSONDecodeError as e:
         print(f"\n[System Error] Failed to parse JSON from LLM: {e}")
+        print(f"Raw LLM response content: {full_content}")
         return {"raw_response": full_content}
