@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # --- Third-party API keys (comma-separated for key rotation) ---
     SERPAPI_KEYS: str = ""
     TAVILY_KEYS: str = ""
+    MINIMAX_API_KEY: str = ""
 
     # --- Redis ---
     REDIS_URL: str = "redis://127.0.0.1:6379/0"
@@ -75,6 +76,9 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_BOT_USERNAME: str = ""
     TELEGRAM_VERIFICATION_TTL_SECONDS: int = 600
+
+
+
 
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),

@@ -82,6 +82,8 @@ class AffiliateProjectScanResponse(BaseModel):
     top_countries: list[TopCountryInsight] = Field(default_factory=list)
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)
+    ad_copy: dict[str, Any] | None = None
+
 
 
 class AffiliateLinkModel(BaseModel):
@@ -133,6 +135,7 @@ class AffiliateLinkProjectDataModel(BaseModel):
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)
     raw_data: dict[str, Any] | None = None
+    ad_copy: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 

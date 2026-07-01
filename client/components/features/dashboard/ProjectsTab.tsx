@@ -352,6 +352,7 @@ function toProjectResponse(detail: AffiliateLinkDetailResponse): ScanAffiliatePr
     top_countries: latest.top_countries || [],
     answer: latest.answer,
     results: latest.results || [],
+    ad_copy: latest.ad_copy,
   };
 }
 
@@ -843,10 +844,23 @@ export function ProjectsTab() {
   const trafficSourceData = useMemo(() => getTrafficSourceData(trafficResult), [trafficResult]);
   const trafficSocialData = useMemo(() => getTrafficSocialData(trafficResult), [trafficResult]);
   const launchInsight = useMemo(() => buildLaunchInsight(trafficResult, projectResult), [trafficResult, projectResult]);
-  const adCopy = useMemo(
-    () => generateAdCopy(projectResult, detail?.affiliate_link.affiliate_url),
-    [detail?.affiliate_link.affiliate_url, projectResult]
-  );
+  const adCopy = useMemo(() => {
+    if (projectResult && projectResult.ad_copy) {
+      return {
+        finalUrl: detail?.affiliate_link.affiliate_url,
+        brandKeywords: projectResult.ad_copy.brandKeywords || [],
+        headlines: projectResult.ad_copy.headlines || [],
+        descriptions: projectResult.ad_copy.descriptions || [],
+        sitelinks: (projectResult.ad_copy.sitelinks || []).map((s) => ({
+          text: s.text || "",
+          url: s.url || detail?.affiliate_link.affiliate_url || "",
+          description1: s.description1 || "",
+          description2: s.description2 || "",
+        })),
+      };
+    }
+    return generateAdCopy(projectResult, detail?.affiliate_link.affiliate_url);
+  }, [detail?.affiliate_link.affiliate_url, projectResult]);
   const isBusy = scanningTraffic || scanningProject || savingLink || Boolean(deletingLinkId) || savingEdit;
 
   useEffect(() => {

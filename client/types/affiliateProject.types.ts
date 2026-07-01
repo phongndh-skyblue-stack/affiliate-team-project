@@ -76,6 +76,21 @@ export interface RestrictedCountryInsight {
   verification_note?: string | null;
 }
 
+export interface AdCopySitelink {
+  text: string;
+  url: string;
+  description1: string;
+  description2: string;
+}
+
+export interface AdCopy {
+  finalUrl?: string;
+  brandKeywords: string[];
+  headlines: string[];
+  descriptions: string[];
+  sitelinks: AdCopySitelink[];
+}
+
 export interface ScanAffiliateProjectRequest {
   affiliate_link_id: string;
   max_results?: number;
@@ -95,6 +110,7 @@ export interface ScanAffiliateProjectResponse {
   top_countries: TopCountryInsight[];
   answer?: string | null;
   results: Array<Record<string, unknown>>;
+  ad_copy?: AdCopy | null;
 }
 
 export interface AffiliateLinkCreateRequest {
@@ -146,6 +162,7 @@ export interface AffiliateLinkProjectDataModel {
   answer?: string | null;
   results: Array<Record<string, unknown>>;
   raw_data?: Record<string, unknown> | null;
+  ad_copy?: AdCopy | null;
   created_at: string;
   updated_at: string;
 }

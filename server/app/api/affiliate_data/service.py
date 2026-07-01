@@ -510,6 +510,36 @@ class AffiliateDataService:
             include_raw_content=include_raw_content,
         )
 
+        try:
+            from app.shared.agents.scan_project.llm_ad_generator import generate_ads_from_insights
+            from app.core.config import settings
+            ads_copy = generate_ads_from_insights(
+                project_data=project_result,
+                language="English",
+                api_key=settings.MINIMAX_API_KEY
+            )
+            if ads_copy and not ads_copy.get("raw_response"):
+                project_result["ad_copy"] = {
+                    "finalUrl": link.affiliate_url,
+                    "brandKeywords": ads_copy.get("brand_keywords") or [],
+                    "headlines": ads_copy.get("headlines") or [],
+                    "descriptions": ads_copy.get("descriptions") or [],
+                    "sitelinks": [
+                        {
+                            "text": s.get("title") or "",
+                            "url": link.affiliate_url,
+                            "description1": s.get("description1") or "",
+                            "description2": s.get("description2") or "",
+                        }
+                        for s in ads_copy.get("sitelinks") or []
+                    ]
+                }
+            else:
+                project_result["ad_copy"] = None
+        except Exception as e:
+            print(f"Failed to generate ad copy via LLM: {e}")
+            project_result["ad_copy"] = None
+
         self.repository.create_project_data_scan(
             affiliate_link_id=link.id,
             project_result=project_result,
@@ -657,6 +687,7 @@ class AffiliateDataService:
                     "answer": item.answer,
                     "results": item.results or [],
                     "raw_data": item.raw_data,
+                    "ad_copy": item.raw_data.get("ad_copy") if item.raw_data else None,
                     "created_at": item.created_at,
                     "updated_at": item.updated_at,
                 }
