@@ -21,6 +21,8 @@ class KeywordPlannerJob(Base):
     user_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    project_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    project_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # "keywords" | "url"
     input_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)

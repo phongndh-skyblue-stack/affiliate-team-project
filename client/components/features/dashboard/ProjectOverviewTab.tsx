@@ -40,7 +40,7 @@ import type {
   AdCreativeHistoryItem,
   AdSearchHistoryItem,
 } from "@/types/adsTransparent.types";
-import type { AdsAccountResponse, JobResponse, KeywordIdeaItem } from "@/types/keywordPlanner.types";
+import type { AdsAccountResponse, KeywordIdeaItem } from "@/types/keywordPlanner.types";
 import type {
   SearchAdItem,
   SearchAdsCompetitorItem,
@@ -60,6 +60,8 @@ interface KeywordSignal {
 
 interface ProjectKeywordIdea extends KeywordIdeaItem {
   jobId: string;
+  inputType: "keywords" | "url";
+  projectId?: string | null;
   pageUrl?: string | null;
   seedKeywords: string[];
 }
@@ -82,9 +84,14 @@ interface BudgetStrategy {
   durationDays: number;
   dailyBudget: number;
   currency: string;
+  verdictLabel: string;
+  verdictTone: "good" | "warning" | "danger";
   summary: string;
   cpcText: string;
   estimatedClicksText: string;
+  sampleSizeText: string;
+  testScopeText: string;
+  decisionRuleText: string;
   allocations: Array<{
     label: string;
     percent: number;
@@ -99,6 +106,15 @@ interface BudgetStrategy {
   warnings: string[];
 }
 
+interface OfferBrief {
+  mainOffer: string;
+  searchAngle: string;
+  targetIntent: string;
+  landingPageCheck: string;
+  headlineIdeas: string[];
+  missingItems: string[];
+}
+
 interface CpcEstimate {
   currency: string;
   keyword: string;
@@ -107,6 +123,23 @@ interface CpcEstimate {
   expected: number;
   recommendedBid: number;
   sourceCount: number;
+}
+
+interface ReadinessItem {
+  label: string;
+  ready: boolean;
+  detail: string;
+  action?: string;
+  targetTab?: string;
+}
+
+interface ProjectReadiness {
+  score: number;
+  label: string;
+  tone: "good" | "warning" | "danger";
+  summary: string;
+  items: ReadinessItem[];
+  nextActions: ReadinessItem[];
 }
 
 interface ProjectAdCompetitor extends SearchAdItem {
@@ -148,6 +181,10 @@ function formatMoney(value: number, currency: string): string {
   }).format(Number.isFinite(value) ? value : 0);
 }
 
+function formatOptionalMoney(value: number | null | undefined, currency: string): string {
+  return value != null ? formatMoney(value, currency) : "-";
+}
+
 function toPositiveNumber(value: string, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -187,21 +224,7 @@ function getBrandRoot(domain: string): string {
 
 function getBrandKeywordCandidates(domain: string): string[] {
   const brand = getBrandRoot(domain);
-  if (!brand) return [];
-
-  const suffixes = [
-    "",
-    "exchange",
-    "app",
-    "login",
-    "affiliate",
-    "referral",
-    "review",
-    "bonus",
-    "promo code",
-  ];
-
-  return suffixes.map((suffix) => (suffix ? `${brand} ${suffix}` : brand));
+  return brand ? [brand] : [];
 }
 
 function matchesProjectKeyword(value: string | null | undefined, domain: string): boolean {
@@ -213,83 +236,6 @@ function matchesProjectKeyword(value: string | null | undefined, domain: string)
 
 function latestByCreatedAt<T extends { created_at: string }>(items: T[]): T | null {
   return [...items].sort((a, b) => b.created_at.localeCompare(a.created_at))[0] || null;
-}
-
-function safeText(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
-function getProjectText(project: AffiliateLinkProjectDataModel | null): string {
-  if (!project) return "";
-  return [
-    project.project_name,
-    project.event_content,
-    project.sale_content,
-    project.answer,
-    ...project.results.flatMap((item) => [
-      safeText(item.title),
-      safeText(item.content),
-      safeText(item.snippet),
-    ]),
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-function extractKeywordSignals(
-  project: AffiliateLinkProjectDataModel | null,
-  competitors: SearchAdsCompetitorItem[],
-  jobs: JobResponse[],
-  domain: string
-): KeywordSignal[] {
-  const seen = new Set<string>();
-  const output: KeywordSignal[] = [];
-
-  function add(keyword: string, source: string, volume?: number | null) {
-    const cleaned = keyword.replace(/\s+/g, " ").trim();
-    const key = cleaned.toLowerCase();
-    if (!cleaned || cleaned.length < 3 || seen.has(key)) return;
-    seen.add(key);
-    output.push({ keyword: cleaned, source, volume });
-  }
-
-  for (const keyword of getBrandKeywordCandidates(domain)) {
-    add(keyword, "Brand keyword");
-  }
-
-  for (const item of competitors) {
-    const itemDomain = normalizeDomain(item.landingPage?.domain || item.advertiserDomain || item.displayUrl);
-    if (itemDomain && (itemDomain === domain || itemDomain.endsWith(`.${domain}`))) {
-      add(item.keyword, "Google Ads competitor");
-    }
-  }
-
-  for (const job of jobs) {
-    const pageDomain = normalizeDomain(job.pageUrl);
-    const matchesUrl = pageDomain && (pageDomain === domain || pageDomain.endsWith(`.${domain}`));
-    if (matchesUrl) {
-      for (const keyword of job.keywords || []) add(keyword, "Keyword Planner job");
-    }
-  }
-
-  const text = getProjectText(project);
-  const phraseMatches =
-    text.match(/\b[A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){1,3}\b/g) || [];
-  for (const phrase of phraseMatches) {
-    const cleaned = phrase.toLowerCase();
-    if (
-      cleaned.includes("privacy policy") ||
-      cleaned.includes("terms of") ||
-      cleaned.includes("cookie") ||
-      cleaned.length > 36
-    ) {
-      continue;
-    }
-    add(phrase, "Project content");
-    if (output.length >= 18) break;
-  }
-
-  return output.slice(0, 18);
 }
 
 function getDomainKeywordCandidates(domain: string): Set<string> {
@@ -373,22 +319,6 @@ function getCompetitorName(item: ProjectCompetitor): string {
   return item.advertiserName || item.advertiserDomain || item.title || item.keyword || "-";
 }
 
-function getCompetitorTitle(item: ProjectCompetitor): string | null {
-  const title = item.title?.trim();
-  if (!title || normalize(title) === normalize(getCompetitorName(item))) return null;
-  return title;
-}
-
-function getCompetitorMeta(item: ProjectCompetitor): string {
-  const source = item.source === "ttmb" ? "TTMB" : "Quét quảng cáo";
-  const parts = [source];
-  if (item.keyword) parts.push(`Từ khóa: ${item.keyword}`);
-  if ("totalDaysShown" in item && item.totalDaysShown != null) {
-    parts.push(`${item.totalDaysShown} ngày hiển thị`);
-  }
-  return parts.join(" · ");
-}
-
 function getTopTrafficCountries(traffic: AffiliateLinkTrafficModel | null): TrafficCountryItem[] {
   return [...(traffic?.traffic_details?.country || [])]
     .sort((a, b) => b.traffic_share_percentage - a.traffic_share_percentage)
@@ -440,27 +370,23 @@ function getTopTrafficSource(traffic: AffiliateLinkTrafficModel | null) {
 function getProjectKeywordIdeas(
   ideas: ProjectKeywordIdea[],
   domain: string,
-  keywordSignals: KeywordSignal[]
+  projectId?: string
 ): ProjectKeywordIdea[] {
   const domainRoot = getBrandRoot(domain) || getDomainRoot(domain);
-  const signalKeywords = new Set(keywordSignals.map((item) => normalize(item.keyword)));
 
   return ideas
     .filter((item) => {
-      const pageDomain = normalizeDomain(item.pageUrl);
-      const keyword = normalize(item.keyword);
-      const matchesUrl = pageDomain && (pageDomain === domain || pageDomain.endsWith(`.${domain}`));
-      const matchesSeed = item.seedKeywords.some((seed) => matchesProjectKeyword(seed, domain));
-      const matchesBrand = Boolean(domainRoot && keyword.includes(domainRoot));
-      return matchesUrl || matchesSeed || signalKeywords.has(keyword) || matchesBrand;
+      const belongsToProject = Boolean(projectId && item.projectId === projectId);
+      const usesBrandSeed = item.seedKeywords.some((seed) => normalize(seed) === domainRoot);
+      const isExactBrandKeyword = normalize(item.keyword) === domainRoot;
+      return item.inputType === "keywords" && usesBrandSeed && isExactBrandKeyword && (belongsToProject || !item.projectId);
     })
     .sort((a, b) => {
-      const aKeyword = normalize(a.keyword);
-      const bKeyword = normalize(b.keyword);
-      const aBrandScore = domainRoot && aKeyword.startsWith(domainRoot) ? 1 : 0;
-      const bBrandScore = domainRoot && bKeyword.startsWith(domainRoot) ? 1 : 0;
-      return bBrandScore - aBrandScore || (b.avgMonthlySearches || 0) - (a.avgMonthlySearches || 0);
-    });
+      const aProjectScore = projectId && a.projectId === projectId ? 1 : 0;
+      const bProjectScore = projectId && b.projectId === projectId ? 1 : 0;
+      return bProjectScore - aProjectScore || (b.avgMonthlySearches || 0) - (a.avgMonthlySearches || 0);
+    })
+    .slice(0, 1);
 }
 
 function getAdContentHint(project: AffiliateLinkProjectDataModel | null, topKeyword?: string): string {
@@ -472,6 +398,60 @@ function getAdContentHint(project: AffiliateLinkProjectDataModel | null, topKeyw
   if (offer) return `Có thể viết ads quanh offer chính: ${offer}`;
   if (topKeyword) return `Có thể bắt đầu bằng keyword "${topKeyword}", nhưng cần bổ sung offer/USP rõ hơn trước khi scale.`;
   return "Chưa thấy offer hoặc keyword đủ rõ để chạy Search Ads một cách tự tin.";
+}
+
+function cleanBriefText(value: string | null | undefined): string {
+  return (value || "")
+    .replace(/#{1,6}\s*/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function truncateText(value: string, maxLength: number): string {
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength - 1).trim()}…`;
+}
+
+function buildOfferBrief({
+  project,
+  brandKeyword,
+  priorityCountry,
+}: {
+  project: AffiliateLinkProjectDataModel | null;
+  brandKeyword: string;
+  priorityCountry?: string;
+}): OfferBrief {
+  const saleContent = cleanBriefText(project?.sale_content);
+  const eventContent = cleanBriefText(project?.event_content);
+  const webSummary = cleanBriefText(project?.answer);
+  const mainOffer = saleContent || eventContent || webSummary || "Chưa có offer rõ ràng từ dữ liệu đã quét.";
+  const keyword = brandKeyword || "brand keyword";
+  const country = priorityCountry || "thị trường ưu tiên";
+  const hasOffer = Boolean(saleContent || eventContent);
+  const hasWebSummary = Boolean(webSummary);
+  const headlineBase = truncateText(mainOffer, 58);
+
+  return {
+    mainOffer,
+    searchAngle: hasOffer
+      ? `Dùng "${keyword}" làm intent chính, headline/description bám vào lợi ích cụ thể: ${truncateText(mainOffer, 120)}`
+      : `Chưa nên viết ads mạnh tay; cần bổ sung offer/USP trước khi chạy keyword "${keyword}".`,
+    targetIntent: `Người tìm "${keyword}" có intent brand/direct. Ưu tiên exact match, tách riêng ad group brand và chỉ mở rộng khi đã có CPA/CVR.`,
+    landingPageCheck: hasWebSummary
+      ? `Landing page đã có thông tin để đối chiếu offer. Trước khi chạy, kiểm tra lại restriction, payout/CPA và thông điệp có khớp thị trường ${country}.`
+      : "Chưa có tóm tắt web đủ rõ; nên quét lại dữ liệu dự án hoặc kiểm tra landing page trước khi scale.",
+    headlineIdeas: [
+      headlineBase,
+      `${keyword.toUpperCase()} Partner Program`,
+      `Join ${keyword.toUpperCase()} in ${country}`,
+    ].filter(Boolean).slice(0, 3),
+    missingItems: [
+      ...(hasOffer ? [] : ["Thiếu offer/USP rõ ràng để viết headline chuyển đổi."]),
+      ...(brandKeyword ? [] : ["Chưa xác định được brand keyword từ domain."]),
+      ...(priorityCountry ? [] : ["Chưa có quốc gia ưu tiên từ traffic hợp lệ."]),
+      ...(hasWebSummary ? [] : ["Chưa có tóm tắt landing page để kiểm tra claim/restriction."]),
+    ],
+  };
 }
 
 function getCpcEstimate(keywordIdeas: ProjectKeywordIdea[], currency: string): CpcEstimate | null {
@@ -616,6 +596,35 @@ function buildBudgetStrategy({
   const hasStrongSignals = Boolean(traffic?.monthly_visits && priorityCountries.length && topKeywords.length && offer);
   const canEstimateClicks = Boolean(cpcEstimate && cpcEstimate.currency === currency && cpcEstimate.expected > 0);
   const estimatedDailyClicks = canEstimateClicks && cpcEstimate ? dailyBudget / cpcEstimate.expected : 0;
+  const totalEstimatedClicks = estimatedDailyClicks * safeDays;
+  const minimumUsefulDailyClicks = 10;
+  const recommendedDailyBudget = cpcEstimate ? cpcEstimate.expected * minimumUsefulDailyClicks : 0;
+  const dataScore =
+    (traffic?.monthly_visits ? 1 : 0) +
+    (priorityCountries.length ? 1 : 0) +
+    (topKeywords.length ? 1 : 0) +
+    (offer ? 1 : 0) +
+    (cpcEstimate ? 1 : 0);
+  const budgetIsUseful = !cpcEstimate || !canEstimateClicks || dailyBudget >= recommendedDailyBudget;
+  const verdictTone: BudgetStrategy["verdictTone"] =
+    dataScore >= 4 && budgetIsUseful ? "good" : dataScore >= 3 || safeBudget > 0 ? "warning" : "danger";
+  const verdictLabel =
+    verdictTone === "good"
+      ? "Đủ để test có kiểm soát"
+      : verdictTone === "warning"
+        ? "Chỉ nên test nhỏ"
+        : "Chưa nên chạy";
+  const testScopeText =
+    verdictTone === "good"
+      ? `Nên giữ 1 campaign Search, 1-2 ad group, tập trung brand keyword "${mainKeyword}" để lấy CPA/CVR sạch.`
+      : `Giảm phạm vi còn 1 ad group brand exact cho "${mainKeyword}", chưa mở rộng keyword/quốc gia cho tới khi đủ dữ liệu.`;
+  const sampleSizeText = canEstimateClicks
+    ? `Ước tính ${formatNumber(estimatedDailyClicks)} click/ngày, khoảng ${formatNumber(totalEstimatedClicks)} click trong ${safeDays} ngày. Mốc hữu ích tối thiểu: ~${minimumUsefulDailyClicks} click/ngày.`
+    : cpcEstimate
+      ? `Chưa ước tính click vì currency ngân sách (${currency}) khác currency CPC (${cpcEstimate.currency}).`
+      : "Chưa có CPC nên chưa biết ngân sách này mua được bao nhiêu click.";
+  const decisionRuleText =
+    "Sau 48-72h: giữ nếu CTR tốt và CPC thực trả không vượt biên cao; tắt nếu search term lệch intent hoặc không có lead/conversion.";
 
   const allocations = priorityCountries.length > 1
     ? [
@@ -664,6 +673,8 @@ function buildBudgetStrategy({
     durationDays: safeDays,
     dailyBudget,
     currency,
+    verdictLabel,
+    verdictTone,
     summary: hasStrongSignals
       ? `Chạy ${safeDays} ngày với ${formatMoney(dailyBudget, currency)}/ngày, ưu tiên ${mainCountry}, bắt đầu từ keyword "${mainKeyword}".`
       : `Chạy thận trọng ${safeDays} ngày với ${formatMoney(dailyBudget, currency)}/ngày vì dữ liệu traffic/keyword/offer chưa đủ mạnh.`,
@@ -675,6 +686,9 @@ function buildBudgetStrategy({
         ? `Với daily budget hiện tại có thể mua khoảng ${formatNumber(estimatedDailyClicks)} click/ngày.`
         : `Ngân sách đang là ${currency}, còn CPC từ Ads account là ${cpcEstimate.currency}; đổi cùng currency để ước tính click.`
       : "Chưa đủ dữ liệu để ước tính số click/ngày.",
+    sampleSizeText,
+    testScopeText,
+    decisionRuleText,
     allocations,
     timeline: [
       {
@@ -706,6 +720,114 @@ function buildBudgetStrategy({
       ...(cpcEstimate ? [] : ["Chưa có CPC từ Keyword Planner, chưa nên chốt max CPC/bid trước khi quét brand keyword."]),
       ...(traffic?.monthly_visits ? [] : ["Chưa có traffic scan, chiến lược hiện chỉ là khung test ban đầu."]),
     ],
+  };
+}
+
+function buildProjectReadiness({
+  traffic,
+  project,
+  topCountries,
+  keywordSignals,
+  keywordIdeas,
+  competitors,
+  cpcEstimate,
+}: {
+  traffic: AffiliateLinkTrafficModel | null;
+  project: AffiliateLinkProjectDataModel | null;
+  topCountries: TrafficCountryItem[];
+  keywordSignals: KeywordSignal[];
+  keywordIdeas: ProjectKeywordIdea[];
+  competitors: ProjectCompetitor[];
+  cpcEstimate: CpcEstimate | null;
+}): ProjectReadiness {
+  const hasOffer = Boolean(project?.sale_content || project?.event_content || project?.answer);
+  const hasRestrictions = Boolean(project?.restricted_countries.length);
+  const hasSafeCountry = topCountries.some((country) => !isCountryRestricted(country.country_name, project));
+  const items: ReadinessItem[] = [
+    {
+      label: "Traffic",
+      ready: Boolean(traffic?.monthly_visits),
+      detail: traffic?.monthly_visits ? `${formatCompact(traffic.monthly_visits)} visits/tháng` : "Chưa có scan traffic",
+      action: "Quét traffic trong tab Dự án",
+      targetTab: "projects",
+    },
+    {
+      label: "Country traffic",
+      ready: topCountries.length > 0,
+      detail: topCountries[0] ? `Top: ${topCountries[0].country_name}` : "Chưa biết quốc gia có traffic",
+      action: "Quét traffic để lấy country split",
+      targetTab: "projects",
+    },
+    {
+      label: "Safe market",
+      ready: hasSafeCountry,
+      detail: hasSafeCountry ? "Có ít nhất 1 quốc gia chưa bị restriction" : "Chưa xác định quốc gia an toàn",
+      action: "Kiểm tra country restriction trước khi chạy",
+      targetTab: "projects",
+    },
+    {
+      label: "Content/offer",
+      ready: hasOffer,
+      detail: hasOffer ? "Có offer/content để viết ads" : "Thiếu offer/USP rõ ràng",
+      action: "Quét dữ liệu dự án hoặc bổ sung offer",
+      targetTab: "projects",
+    },
+    {
+      label: "Restriction",
+      ready: Boolean(project),
+      detail: hasRestrictions ? `${project?.restricted_countries.length} restriction/rule` : project ? "Đã scan, chưa thấy restriction" : "Chưa scan restriction",
+      action: "Quét dữ liệu dự án để kiểm tra quốc gia bị cấm",
+      targetTab: "projects",
+    },
+    {
+      label: "Keyword volume",
+      ready: keywordIdeas.length > 0,
+      detail: keywordIdeas[0] ? `${keywordIdeas[0].keyword}: ${formatCompact(keywordIdeas[0].avgMonthlySearches)}` : `${keywordSignals.length} keyword signal, chưa có volume`,
+      action: "Quét volume brand keyword",
+      targetTab: "keyword-planner",
+    },
+    {
+      label: "CPC",
+      ready: Boolean(cpcEstimate),
+      detail: cpcEstimate ? `Bid gợi ý ${formatMoney(cpcEstimate.recommendedBid, cpcEstimate.currency)}` : "Chưa có low/high top page bid",
+      action: "Quét Keyword Planner trước khi chốt ngân sách",
+      targetTab: "keyword-planner",
+    },
+    {
+      label: "Competitors",
+      ready: competitors.length > 0,
+      detail: competitors.length ? `${competitors.length} đối thủ/tín hiệu ads` : "Chưa có đối thủ khớp dự án",
+      action: "Quét quảng cáo hoặc TTMB theo brand keyword",
+      targetTab: "search-ads",
+    },
+  ];
+
+  const weights = [16, 12, 12, 14, 10, 14, 10, 12];
+  const score = Math.min(
+    100,
+    items.reduce((sum, item, index) => sum + (item.ready ? weights[index] || 0 : 0), 0)
+  );
+  const tone = score >= 76 ? "good" : score >= 46 ? "warning" : "danger";
+  const label =
+    score >= 76
+      ? "Sẵn sàng tạo chiến lược"
+      : score >= 46
+        ? "Có thể test nhỏ"
+        : "Thiếu dữ liệu";
+  const summary =
+    score >= 76
+      ? "Dữ liệu đủ tốt để chuyển sang tab Chiến lược chạy và tạo plan AI có context đầy đủ."
+      : score >= 46
+        ? "Có vài tín hiệu dùng được, nhưng nên hoàn thiện keyword/CPC/restriction trước khi bỏ ngân sách lớn."
+        : "Chưa nên chốt campaign. Cần gom thêm traffic, keyword, country hoặc đối thủ trước.";
+
+  return {
+    score,
+    label,
+    tone,
+    summary,
+    items,
+    nextActions: items.filter((item) => !item.ready).slice(0, 5),
   };
 }
 
@@ -770,7 +892,6 @@ export function ProjectOverviewTab() {
   const [competitors, setCompetitors] = useState<SearchAdsCompetitorItem[]>([]);
   const [searchHistories, setSearchHistories] = useState<SearchAdsHistoryItem[]>([]);
   const [transparencyHistories, setTransparencyHistories] = useState<AdSearchHistoryItem[]>([]);
-  const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [keywordIdeas, setKeywordIdeas] = useState<ProjectKeywordIdea[]>([]);
   const [adsAccounts, setAdsAccounts] = useState<AdsAccountResponse[]>([]);
   const [selectedAdsId, setSelectedAdsId] = useState("");
@@ -811,6 +932,8 @@ export function ProjectOverviewTab() {
                 response.results.map((idea) => ({
                   ...idea,
                   jobId: job.id,
+                  inputType: job.inputType,
+                  projectId: job.projectId,
                   pageUrl: job.pageUrl,
                   seedKeywords: job.keywords || [],
                 }))
@@ -825,7 +948,6 @@ export function ProjectOverviewTab() {
       setCompetitors(competitorRows.items);
       setSearchHistories(historyRows.items);
       setTransparencyHistories(transparencyRows.items);
-      setJobs(jobRows.items);
       setKeywordIdeas(ideaRows.flat());
       setAdsAccounts(accountRows.items);
       setSelectedAdsId((current) => current || accountRows.items[0]?.adsId || "");
@@ -860,13 +982,22 @@ export function ProjectOverviewTab() {
   const domain = normalizeDomain(selected?.link.domain);
   const topCountries = useMemo(() => getTopTrafficCountries(latestTraffic), [latestTraffic]);
   const brandKeywordCandidates = useMemo(() => getBrandKeywordCandidates(domain), [domain]);
-  const keywordSignals = useMemo(
-    () => extractKeywordSignals(latestProject, competitors, jobs, domain),
-    [latestProject, competitors, jobs, domain]
-  );
   const projectKeywordIdeas = useMemo(
-    () => getProjectKeywordIdeas(keywordIdeas, domain, keywordSignals),
-    [domain, keywordIdeas, keywordSignals]
+    () => getProjectKeywordIdeas(keywordIdeas, domain, selected?.link.id),
+    [domain, keywordIdeas, selected?.link.id]
+  );
+  const primaryBrandKeyword = brandKeywordCandidates[0] || "";
+  const primaryBrandIdea = useMemo(
+    () => projectKeywordIdeas.find((item) => normalize(item.keyword) === primaryBrandKeyword) || null,
+    [primaryBrandKeyword, projectKeywordIdeas]
+  );
+  const keywordSignals = useMemo<KeywordSignal[]>(
+    () => projectKeywordIdeas.map((item) => ({
+      keyword: item.keyword,
+      source: "Google Ads Keyword Planner",
+      volume: item.avgMonthlySearches,
+    })),
+    [projectKeywordIdeas]
   );
   const searchAdCompetitors = useMemo(
     () => getProjectAdCompetitors(searchHistories, domain, selected?.link.id),
@@ -881,6 +1012,7 @@ export function ProjectOverviewTab() {
     [searchAdCompetitors, transparencyCompetitors]
   );
   const visibleKeywordSignals = keywordSignals.slice(0, 6);
+  const visibleKeywordIdeas = projectKeywordIdeas.slice(0, 25);
   const visibleCompetitors = relevantCompetitors.slice(0, 6);
   const selectedAdsAccount = useMemo(
     () => adsAccounts.find((account) => account.adsId === selectedAdsId) || null,
@@ -918,6 +1050,28 @@ export function ProjectOverviewTab() {
       }),
     [budgetInput, cpcEstimate, currency, durationInput, keywordSignals, latestProject, latestTraffic, projectKeywordIdeas, topCountries]
   );
+  const readiness = useMemo(
+    () =>
+      buildProjectReadiness({
+        traffic: latestTraffic,
+        project: latestProject,
+        topCountries,
+        keywordSignals,
+        keywordIdeas: projectKeywordIdeas,
+        competitors: relevantCompetitors,
+        cpcEstimate,
+      }),
+    [cpcEstimate, keywordSignals, latestProject, latestTraffic, projectKeywordIdeas, relevantCompetitors, topCountries]
+  );
+  const offerBrief = useMemo(
+    () =>
+      buildOfferBrief({
+        project: latestProject,
+        brandKeyword: primaryBrandKeyword,
+        priorityCountry: topCountries.find((country) => !isCountryRestricted(country.country_name, latestProject))?.country_name,
+      }),
+    [latestProject, primaryBrandKeyword, topCountries]
+  );
 
   const summaryText = useMemo(() => {
     if (!selected) return "";
@@ -932,7 +1086,7 @@ export function ProjectOverviewTab() {
       `Top keyword: ${decisionBrief.topKeywordText}`,
       `CPC estimate: ${budgetStrategy.cpcText}`,
       `Budget plan: ${budgetStrategy.summary}`,
-      `Keywords: ${keywordSignals.map((item) => item.keyword).join(", ") || "-"}`,
+      `Google Ads Keyword Planner: ${keywordSignals.map((item) => `${item.keyword} (${formatNumber(item.volume || 0)} searches/month)`).join(", ") || "chưa có dữ liệu"}`,
       `Competitors from ad scans: ${relevantCompetitors.map((item) => item.advertiserName || item.advertiserDomain).filter(Boolean).join(", ") || "-"}`,
     ].join("\n");
   }, [budgetStrategy, decisionBrief, keywordSignals, latestProject, latestTraffic, relevantCompetitors, selected, topCountries]);
@@ -959,14 +1113,16 @@ export function ProjectOverviewTab() {
       const result = await keywordPlannerService.scanByKeywords({
         adsId: selectedAdsId,
         keywords: brandKeywordCandidates,
-        pageUrl: selected.link.affiliate_url,
         languageId: 1000,
         resultLimit: 100,
+        projectId: selected.link.id,
       });
 
       const rows = result.results.map((idea) => ({
         ...idea,
         jobId: result.job.id,
+        inputType: result.job.inputType,
+        projectId: result.job.projectId,
         pageUrl: result.job.pageUrl,
         seedKeywords: result.job.keywords || brandKeywordCandidates,
       }));
@@ -976,13 +1132,22 @@ export function ProjectOverviewTab() {
         for (const row of rows) existing.set(`${normalize(row.keyword)}-${row.jobId}`, row);
         return Array.from(existing.values());
       });
-      setJobs((current) => [result.job, ...current.filter((job) => job.id !== result.job.id)]);
-      toast.success(`Đã quét ${brandKeywordCandidates.length} brand keyword, nhận ${result.results.length} keyword ideas`);
+      toast.success(`Đã lấy search volume Google Ads cho brand "${brandKeywordCandidates[0]}", nhận ${result.results.length} keyword ideas`);
     } catch {
       toast.error("Quét Keyword Planner thất bại, kiểm tra tài khoản Google Ads hoặc quyền truy cập");
     } finally {
       setScanningBrandKeywords(false);
     }
+  }
+
+  function openStrategyTab() {
+    if (!selected) return;
+    window.location.assign(`/dashboard?tab=ads-strategy-skill&projectId=${encodeURIComponent(selected.link.id)}`);
+  }
+
+  function openActionTarget(item: ReadinessItem) {
+    if (!selected || !item.targetTab) return;
+    window.location.assign(`/dashboard?tab=${item.targetTab}&projectId=${encodeURIComponent(selected.link.id)}`);
   }
 
   if (loading) {
@@ -1042,6 +1207,111 @@ export function ProjectOverviewTab() {
 
       {selected && (
         <>
+          <section className="rounded-lg border border-border bg-card p-4">
+            <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_260px]">
+              <div
+                className={`rounded-lg border p-4 ${
+                  readiness.tone === "good"
+                    ? "border-[#059669]/30 bg-[#059669]/5"
+                    : readiness.tone === "warning"
+                      ? "border-amber-300/60 bg-amber-50 dark:bg-amber-950/20"
+                      : "border-red-300/60 bg-red-50 dark:bg-red-950/20"
+                }`}
+              >
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Readiness score</p>
+                <div className="mt-3 flex items-end gap-2">
+                  <span className="text-4xl font-semibold leading-none">{readiness.score}</span>
+                  <span className="pb-1 text-sm text-muted-foreground">/100</span>
+                </div>
+                <p className="mt-2 text-sm font-semibold">{readiness.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{readiness.summary}</p>
+                <Button
+                  type="button"
+                  onClick={openStrategyTab}
+                  className="mt-4 w-full gap-2 bg-[#059669] text-white hover:bg-[#047857]"
+                >
+                  <Target size={14} />
+                  Tạo chiến lược từ dự án này
+                </Button>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold">Checklist dữ liệu trước khi chạy</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Tổng hợp nhanh dữ liệu nào đã đủ và dữ liệu nào cần bổ sung trước khi tạo campaign.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                  {readiness.items.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        if (!item.ready) openActionTarget(item);
+                      }}
+                      disabled={item.ready || !item.targetTab}
+                      className={`rounded-md border border-border bg-background px-3 py-2 text-left transition ${
+                        item.ready || !item.targetTab
+                          ? "cursor-default"
+                          : "cursor-pointer hover:border-[#059669]/60 hover:bg-[#059669]/5"
+                      }`}
+                      title={!item.ready && item.action ? item.action : undefined}
+                    >
+                      <div className="flex items-center gap-2">
+                        {item.ready ? (
+                          <CheckCircle2 size={14} className="text-[#059669]" />
+                        ) : (
+                          <AlertTriangle size={14} className="text-amber-600" />
+                        )}
+                        <span className="truncate text-xs font-semibold">{item.label}</span>
+                      </div>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{item.detail}</p>
+                      {!item.ready && item.action && (
+                        <p className="mt-1 text-[11px] font-medium text-[#059669]">{item.action}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Next actions</p>
+                {readiness.nextActions.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {readiness.nextActions.map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => openActionTarget(item)}
+                        disabled={!item.targetTab}
+                        className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-[#059669]/5 disabled:cursor-default disabled:hover:bg-transparent"
+                      >
+                        <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />
+                        <div className="min-w-0">
+                          <p className="font-medium">{item.label}</p>
+                          <p className="text-xs text-muted-foreground">{item.action}</p>
+                          {item.targetTab && (
+                            <p className="mt-0.5 text-[11px] font-medium text-[#059669]">Bấm để mở tab cần xử lý</p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-3 flex items-start gap-2 text-sm">
+                    <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#059669]" />
+                    <p className="text-muted-foreground">
+                      Dữ liệu chính đã đủ. Chuyển sang Chiến lược chạy để Gemini tạo plan chi tiết.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <StatCard
               icon={BarChart3}
@@ -1058,8 +1328,8 @@ export function ProjectOverviewTab() {
             <StatCard
               icon={Hash}
               label="Keyword"
-              value={`${keywordSignals.length}`}
-              detail="Gom từ content, competitor và Keyword Planner"
+              value={`${projectKeywordIdeas.length}`}
+              detail="100% từ Google Ads Keyword Planner"
             />
             <StatCard
               icon={Users}
@@ -1132,9 +1402,9 @@ export function ProjectOverviewTab() {
           <section className="rounded-lg border border-border bg-card p-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0">
-                <SectionHeader icon={DollarSign} title="Chiến lược theo ngân sách" />
+                <SectionHeader icon={DollarSign} title="Kiểm tra nhanh ngân sách" />
                 <p className="text-sm text-muted-foreground">
-                  Nhập số tiền và thời gian muốn chạy, hệ thống sẽ ghép với traffic, quốc gia, keyword, offer và restriction đã thu thập để gợi ý cách test.
+                  Nhập số tiền và thời gian muốn chạy để kiểm tra daily budget, CPC và rủi ro dữ liệu trước khi tạo chiến lược chi tiết bằng AI.
                 </p>
               </div>
               <div className="grid gap-2 sm:grid-cols-[minmax(140px,1fr)_100px_minmax(110px,0.8fr)] xl:min-w-[460px]">
@@ -1169,6 +1439,30 @@ export function ProjectOverviewTab() {
                     className="mt-1 h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-[#059669]/30"
                   />
                 </label>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
+              <div
+                className={`rounded-md border p-3 ${
+                  budgetStrategy.verdictTone === "good"
+                    ? "border-[#059669]/30 bg-[#059669]/5"
+                    : budgetStrategy.verdictTone === "warning"
+                      ? "border-amber-300/60 bg-amber-50 dark:bg-amber-950/20"
+                      : "border-red-300/60 bg-red-50 dark:bg-red-950/20"
+                }`}
+              >
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Kết luận ngân sách</p>
+                <p className="mt-1 text-lg font-semibold">{budgetStrategy.verdictLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{budgetStrategy.sampleSizeText}</p>
+              </div>
+              <div className="rounded-md border border-border p-3">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Phạm vi test nên chạy</p>
+                <p className="mt-1 text-sm text-muted-foreground">{budgetStrategy.testScopeText}</p>
+              </div>
+              <div className="rounded-md border border-border p-3">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Luật quyết định</p>
+                <p className="mt-1 text-sm text-muted-foreground">{budgetStrategy.decisionRuleText}</p>
               </div>
             </div>
 
@@ -1303,7 +1597,55 @@ export function ProjectOverviewTab() {
               <section className="rounded-lg border border-border bg-card p-4">
                 <SectionHeader icon={FileText} title="Content & offer" />
                 {latestProject ? (
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <div className="rounded-md border border-[#059669]/30 bg-[#059669]/5 p-3">
+                      <p className="text-xs font-semibold uppercase text-muted-foreground">Offer chính để viết ads</p>
+                      <p className="mt-2 text-sm font-medium">{offerBrief.mainOffer}</p>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-md border border-border p-3">
+                        <p className="text-xs font-semibold uppercase text-muted-foreground">Góc chạy Google Search</p>
+                        <p className="mt-2 text-sm text-muted-foreground">{offerBrief.searchAngle}</p>
+                      </div>
+                      <div className="rounded-md border border-border p-3">
+                        <p className="text-xs font-semibold uppercase text-muted-foreground">Intent & match type</p>
+                        <p className="mt-2 text-sm text-muted-foreground">{offerBrief.targetIntent}</p>
+                      </div>
+                      <div className="rounded-md border border-border p-3">
+                        <p className="text-xs font-semibold uppercase text-muted-foreground">Headline gợi ý</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {offerBrief.headlineIdeas.map((item) => (
+                            <span key={item} className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="rounded-md border border-border p-3">
+                        <p className="text-xs font-semibold uppercase text-muted-foreground">Kiểm tra landing page</p>
+                        <p className="mt-2 text-sm text-muted-foreground">{offerBrief.landingPageCheck}</p>
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border p-3">
+                      <p className="text-xs font-semibold uppercase text-muted-foreground">Còn thiếu trước khi chạy</p>
+                      {offerBrief.missingItems.length > 0 ? (
+                        <div className="mt-2 space-y-2">
+                          {offerBrief.missingItems.map((item) => (
+                            <div key={item} className="flex items-start gap-2 text-sm">
+                              <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />
+                              <p className="text-muted-foreground">{item}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex items-start gap-2 text-sm">
+                          <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#059669]" />
+                          <p className="text-muted-foreground">Đã đủ offer, brand keyword, country ưu tiên và landing summary để viết ads test.</p>
+                        </div>
+                      )}
+                    </div>
+                    <ExpandableDetails label="Xem dữ liệu content gốc">
+                      <div className="grid gap-3 md:grid-cols-2">
                     <div className="rounded-md border border-border p-3">
                       <p className="text-xs font-semibold uppercase text-muted-foreground">Event content</p>
                       <p className="mt-2 text-sm">{latestProject.event_content || "-"}</p>
@@ -1318,6 +1660,8 @@ export function ProjectOverviewTab() {
                         <p className="mt-2 line-clamp-5 text-sm text-muted-foreground">{latestProject.answer}</p>
                       </div>
                     )}
+                      </div>
+                    </ExpandableDetails>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">Chưa có dữ liệu content. Quét Dữ liệu dự án trong tab Dự án.</p>
@@ -1341,7 +1685,7 @@ export function ProjectOverviewTab() {
                         ))}
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">
-                        Các seed này được lấy từ domain chính rồi gửi sang Keyword Planner để lấy avg monthly searches.
+                        Domain <strong>{domain || "-"}</strong> được rút về brand <strong>{primaryBrandKeyword || "-"}</strong>. Chỉ seed brand này được gửi sang Google Ads Keyword Planner.
                       </p>
                     </div>
                     <div className="grid gap-2 sm:grid-cols-[minmax(180px,1fr)_auto] lg:min-w-[420px]">
@@ -1373,28 +1717,94 @@ export function ProjectOverviewTab() {
                         ) : (
                           <ScanLine size={13} />
                         )}
-                        Quét volume brand keyword
+                        Lấy search volume Google Ads
                       </Button>
                     </div>
                   </div>
                   {projectKeywordIdeas.length > 0 && (
-                    <div className="mt-3 grid gap-2 md:grid-cols-3">
-                      {projectKeywordIdeas.slice(0, 6).map((item) => (
-                        <div key={`${item.jobId}-${item.id}`} className="rounded-md border border-border bg-background px-3 py-2">
-                          <p className="truncate text-sm font-semibold">{item.keyword}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {formatCompact(item.avgMonthlySearches)} searches/tháng · {item.competition}
+                    <>
+                      <div className="mt-3 rounded-md border border-[#059669]/30 bg-[#059669]/5 px-3 py-2 text-sm">
+                        {primaryBrandIdea ? (
+                          <p>
+                            Kết luận theo Google Search: <strong>“{primaryBrandIdea.keyword}”</strong> có trung bình <strong>{formatNumber(primaryBrandIdea.avgMonthlySearches)} lượt tìm kiếm/tháng</strong>. Không sử dụng traffic keyword từ Similarweb cho kết luận này.
                           </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            CPC {item.lowTopPageBid != null ? formatMoney(item.lowTopPageBid, keywordPlannerCurrency) : "-"}
-                            {" - "}
-                            {item.highTopPageBid != null ? formatMoney(item.highTopPageBid, keywordPlannerCurrency) : "-"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                        ) : (
+                        <p>Keyword Planner chưa trả về đúng brand “{primaryBrandKeyword}”. Phần này chỉ hiển thị dữ liệu của brand keyword, không lấy keyword ideas liên quan.</p>
+                        )}
+                      </div>
+                      <div className="mt-3 grid gap-2 md:grid-cols-3">
+                        {projectKeywordIdeas.slice(0, 6).map((item) => (
+                          <div key={`${item.jobId}-${item.id}`} className="rounded-md border border-border bg-background px-3 py-2">
+                            <p className="truncate text-sm font-semibold">{item.keyword}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {formatCompact(item.avgMonthlySearches)} searches/tháng · {item.competition}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              CPC {item.lowTopPageBid != null ? formatMoney(item.lowTopPageBid, keywordPlannerCurrency) : "-"}
+                              {" - "}
+                              {item.highTopPageBid != null ? formatMoney(item.highTopPageBid, keywordPlannerCurrency) : "-"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
+                {projectKeywordIdeas.length > 0 && (
+                  <div className="mb-4">
+                    <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">Dữ liệu brand keyword từ Google Ads Keyword Planner</p>
+                        <p className="text-xs text-muted-foreground">
+                          Chỉ hiển thị từ khóa thương hiệu của dự án và các chỉ số Google Search của chính từ khóa đó.
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        Brand keyword: {primaryBrandKeyword || "-"}
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto rounded-md border border-border">
+                      <table className="w-full min-w-[760px] border-collapse text-sm">
+                        <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                          <tr>
+                            <th className="border-b border-border px-3 py-2 text-left font-semibold">Từ khóa</th>
+                            <th className="border-b border-border px-3 py-2 text-right font-semibold">Số lần tìm kiếm TB/tháng</th>
+                            <th className="border-b border-border px-3 py-2 text-left font-semibold">Cạnh tranh</th>
+                            <th className="border-b border-border px-3 py-2 text-right font-semibold">Giá thầu đầu trang thấp</th>
+                            <th className="border-b border-border px-3 py-2 text-right font-semibold">Giá thầu đầu trang cao</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {visibleKeywordIdeas.map((item) => {
+                            const isSeedKeyword = normalize(item.keyword) === primaryBrandKeyword;
+                            return (
+                              <tr key={`${item.jobId}-${item.id}-metrics`} className="border-b border-border last:border-0">
+                                <td className="px-3 py-2">
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{item.keyword}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {isSeedKeyword ? "Từ khóa thương hiệu của dự án" : "Không dùng keyword idea liên quan"}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2 text-right font-medium">
+                                  {formatNumber(item.avgMonthlySearches)}
+                                </td>
+                                <td className="px-3 py-2 text-muted-foreground">{item.competition || "-"}</td>
+                                <td className="px-3 py-2 text-right text-muted-foreground">
+                                  {formatOptionalMoney(item.lowTopPageBid, keywordPlannerCurrency)}
+                                </td>
+                                <td className="px-3 py-2 text-right text-muted-foreground">
+                                  {formatOptionalMoney(item.highTopPageBid, keywordPlannerCurrency)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
                 {keywordSignals.length > 0 ? (
                   <>
                     <div className="flex flex-wrap gap-2">
@@ -1408,7 +1818,7 @@ export function ProjectOverviewTab() {
                       ))}
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Hiển thị {visibleKeywordSignals.length}/{keywordSignals.length} keyword chính. Mở chi tiết để xem nguồn từng keyword.
+                      Chỉ hiển thị brand keyword của dự án từ Google Ads Keyword Planner. Mở chi tiết để xem volume.
                     </p>
                     <ExpandableDetails label="Xem chi tiết keyword">
                       <div className="grid gap-2 md:grid-cols-2">
@@ -1426,7 +1836,7 @@ export function ProjectOverviewTab() {
                   </>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Chưa có keyword khớp dự án. Chạy Keyword Planner theo URL hoặc lưu competitor theo keyword để bổ sung dữ liệu.
+                    Chưa có dữ liệu Google Search cho brand này. Chọn tài khoản Google Ads và bấm “Lấy search volume Google Ads”.
                   </p>
                 )}
               </section>
@@ -1591,7 +2001,7 @@ export function ProjectOverviewTab() {
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Keyword jobs</span>
-                    <span className="font-semibold">{jobs.length}</span>
+                    <span className="font-semibold">{new Set(keywordIdeas.map((item) => item.jobId)).size}</span>
                   </div>
                 </div>
               </section>

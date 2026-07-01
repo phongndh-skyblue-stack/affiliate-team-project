@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.auth.model import User
+from app.api.affiliate_data.repository import AffiliateDataRepository
 from app.api.keyword_planner.model import AdsAccount, AuthorGmail, KeywordPlannerJob
 from app.api.keyword_planner.repository import (
     AdsAccountRepository,
@@ -54,6 +55,8 @@ def _job_to_response(job: KeywordPlannerJob, result_count: int = 0) -> JobRespon
         status=job.status,
         error_message=job.error_message,
         result_count=result_count,
+        project_id=job.project_id,
+        project_name=job.project_name,
         created_at=job.created_at.isoformat(),
         updated_at=job.updated_at.isoformat(),
     )
@@ -65,6 +68,16 @@ class KeywordPlannerService:
         self.account_repo = AdsAccountRepository(db)
         self.author_repo = AuthorGmailRepository(db)
         self.db = db
+
+    def _get_project_name(self, user_id: str, project_id: str | None) -> str | None:
+        if not project_id:
+            return None
+        project = AffiliateDataRepository(self.db).get_project_label_by_id_for_user(
+            user_id, project_id
+        )
+        if not project:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        return project[1]
 
     def _get_refresh_token_for_account(self, ads_id: str, user_id: str) -> tuple[str, str | None]:
         """Return (refresh_token, login_customer_id) for the given ads_id.
@@ -99,6 +112,7 @@ class KeywordPlannerService:
         refresh_token, login_customer_id = self._get_refresh_token_for_account(
             payload.ads_id, user_id
         )
+        project_name = self._get_project_name(user_id, payload.project_id)
         job = self.repo.create_job(
             user_id=user_id,
             ads_id=payload.ads_id,
@@ -109,6 +123,8 @@ class KeywordPlannerService:
             language_id=payload.language_id,
             location_ids=payload.location_ids or [],
             result_limit=payload.result_limit,
+            project_id=payload.project_id,
+            project_name=project_name,
         )
 
         try:
@@ -147,6 +163,7 @@ class KeywordPlannerService:
         refresh_token, login_customer_id = self._get_refresh_token_for_account(
             payload.ads_id, user_id
         )
+        project_name = self._get_project_name(user_id, payload.project_id)
         job = self.repo.create_job(
             user_id=user_id,
             ads_id=payload.ads_id,
@@ -157,6 +174,8 @@ class KeywordPlannerService:
             language_id=payload.language_id,
             location_ids=payload.location_ids or [],
             result_limit=payload.result_limit,
+            project_id=payload.project_id,
+            project_name=project_name,
         )
 
         try:

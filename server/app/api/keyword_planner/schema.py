@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import EmailStr, Field, field_validator
+from urllib.parse import urlsplit
 
 from app.shared.responses import CamelModel
 
@@ -20,6 +21,12 @@ class ScanByKeywordsRequest(CamelModel):
     language_id: int = Field(1000, description="Language criterion ID (1000=English, 1019=Vietnamese)")
     location_ids: list[int] = Field(default_factory=list, description="Geo-target IDs (empty = all)")
     result_limit: int = Field(500, ge=1, le=2000, description="Max keyword ideas to return")
+    project_id: Optional[str] = Field(None, description="Project ID used by project aggregation")
+
+    @field_validator("page_url")
+    @classmethod
+    def normalize_optional_url(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_web_url(value) if value else None
 
     @field_validator("keywords")
     @classmethod
@@ -43,6 +50,24 @@ class ScanByUrlRequest(CamelModel):
     language_id: int = Field(1000, description="Language criterion ID")
     location_ids: list[int] = Field(default_factory=list, description="Geo-target IDs (empty = all)")
     result_limit: int = Field(500, ge=1, le=2000, description="Max keyword ideas to return")
+    project_id: Optional[str] = Field(None, description="Project ID used by project aggregation")
+
+    @field_validator("page_url")
+    @classmethod
+    def normalize_page_url(cls, value: str) -> str:
+        return _normalize_web_url(value)
+
+
+def _normalize_web_url(value: str) -> str:
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError("URL must not be empty")
+    if "://" not in normalized:
+        normalized = f"https://{normalized}"
+    parsed = urlsplit(normalized)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("Enter a valid domain or full http(s) URL")
+    return normalized
 
 
 # ---------------------------------------------------------------------------
@@ -80,6 +105,8 @@ class JobResponse(CamelModel):
     status: str
     error_message: Optional[str]
     result_count: int
+    project_id: Optional[str]
+    project_name: Optional[str]
     created_at: str
     updated_at: str
 

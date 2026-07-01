@@ -19,6 +19,8 @@ import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { keywordPlannerService } from "@/services/keywordPlanner.service";
+import { affiliateProjectService } from "@/services/affiliateProject.service";
+import type { AffiliateLinkModel } from "@/types/affiliateProject.types";
 import type {
   AdsAccountResponse,
   JobResponse,
@@ -49,6 +51,12 @@ function fmtSearches(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return n.toLocaleString("vi-VN");
+}
+
+function normalizeWebUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 // ── Competition badge with fixed width ────────────────────────────────────────
@@ -329,6 +337,7 @@ function JobHistoryRow({
           <span>{formatDate(job.createdAt)}</span>
           <span>{job.resultCount} từ khóa</span>
           {job.pageUrl && isKeyword && <span>{job.pageUrl}</span>}
+          {job.projectName && <span>{"D\u1ef1 \u00e1n"}: {job.projectName}</span>}
         </div>
       </div>
       <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", statusColor)}>
@@ -487,15 +496,21 @@ function ScanForm({ onDone }: { onDone: (result: JobResultsResponse) => void }) 
   // Account selector
   const [accounts, setAccounts] = useState<AdsAccountResponse[]>([]);
   const [selectedAdsId, setSelectedAdsId] = useState("");
+  const [projects, setProjects] = useState<AffiliateLinkModel[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
 
   useEffect(() => {
     if (open && accounts.length === 0) {
-      keywordPlannerService.listAccounts().then((res) => {
-        setAccounts(res.items);
-        if (res.items.length > 0 && !selectedAdsId) {
-          setSelectedAdsId(res.items[0].adsId);
+      Promise.all([
+        keywordPlannerService.listAccounts(),
+        affiliateProjectService.getAffiliateLinks(),
+      ]).then(([accountResponse, projectResponse]) => {
+        setAccounts(accountResponse.items);
+        setProjects(projectResponse);
+        if (accountResponse.items.length > 0 && !selectedAdsId) {
+          setSelectedAdsId(accountResponse.items[0].adsId);
         }
-      }).catch(() => {});
+      }).catch(() => toast.error("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c t\u00e0i kho\u1ea3n ho\u1eb7c danh s\u00e1ch d\u1ef1 \u00e1n"));
     }
   }, [open]);
 
@@ -532,9 +547,10 @@ function ScanForm({ onDone }: { onDone: (result: JobResultsResponse) => void }) 
         result = await keywordPlannerService.scanByKeywords({
           adsId: selectedAdsId,
           keywords: kws,
-          pageUrl: pageUrlKw.trim() || undefined,
+          pageUrl: normalizeWebUrl(pageUrlKw) || undefined,
           languageId,
           resultLimit: limitVal,
+          projectId: selectedProjectId || undefined,
         });
       } else {
         if (!pageUrl.trim()) {
@@ -543,10 +559,11 @@ function ScanForm({ onDone }: { onDone: (result: JobResultsResponse) => void }) 
         }
         result = await keywordPlannerService.scanByUrl({
           adsId: selectedAdsId,
-          pageUrl: pageUrl.trim(),
+          pageUrl: normalizeWebUrl(pageUrl),
           useEntireSite,
           languageId,
           resultLimit: limitVal,
+          projectId: selectedProjectId || undefined,
         });
       }
       toast.success(`Quét xong — ${result.results.length} keyword ideas`);
@@ -597,6 +614,34 @@ function ScanForm({ onDone }: { onDone: (result: JobResultsResponse) => void }) 
               }))}
               placeholder={accounts.length === 0 ? "Không có tài khoản nào — hãy import trước" : "Chọn tài khoản..."}
             />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-foreground/90">
+              {"D\u1ef1 \u00e1n t\u1ed5ng h\u1ee3p"} <span className="font-normal text-muted-foreground">{"(tu\u1ef3 ch\u1ecdn)"}</span>
+            </label>
+            <CustomSelect
+              value={selectedProjectId}
+              onChange={(value) => {
+                const projectId = String(value || "");
+                setSelectedProjectId(projectId);
+                const project = projects.find((item) => item.id === projectId);
+                if (project) {
+                  setPageUrlKw(project.affiliate_url);
+                  setPageUrl(project.affiliate_url);
+                }
+              }}
+              options={projects.map((project) => ({
+                value: project.id,
+                label: `${project.name || project.domain} - ${project.affiliate_url}`,
+              }))}
+              placeholder={"Kh\u00f4ng g\u1eafn d\u1ef1 \u00e1n (qu\u00e9t ri\u00eang l\u1ebb)"}
+              clearable
+              clearText={"Qu\u00e9t ri\u00eang l\u1ebb"}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {"K\u1ebft qu\u1ea3 s\u1ebd \u0111\u01b0\u1ee3c g\u1eafn v\u00e0o d\u1ef1 \u00e1n \u0111\u1ec3 tab T\u1ed5ng h\u1ee3p d\u1ef1 \u00e1n s\u1eed d\u1ee5ng."}
+            </p>
           </div>
 
           {/* Mode toggle */}
@@ -650,8 +695,9 @@ function ScanForm({ onDone }: { onDone: (result: JobResultsResponse) => void }) 
                   <span className="font-normal text-muted-foreground">(tuỳ chọn)</span>
                 </label>
                 <input
-                  type="url"
-                  placeholder="https://example.com/product"
+                  type="text"
+                  inputMode="url"
+                  placeholder={"example.com ho\u1eb7c https://example.com/product"}
                   value={pageUrlKw}
                   onChange={(e) => setPageUrlKw(e.target.value)}
                   className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"

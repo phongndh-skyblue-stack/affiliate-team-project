@@ -33,25 +33,11 @@ export const DASHBOARD_TABS = [
     description: "Quản lý các dự án affiliate của bạn",
   },
   {
-    id: "project-overview",
-    label: "Tổng hợp dự án",
-    shortLabel: "Tổng hợp",
-    icon: LayoutDashboard,
-    description: "Xem content, keyword, traffic, quốc gia và đối thủ trong một màn hình",
-  },
-  {
     id: "transparency",
     label: "Đối thủ (TTMB)",
     shortLabel: "TTMB",
     icon: Eye,
     description: "Phân tích đối thủ từ Trung tâm minh bạch",
-  },
-  {
-    id: "manual",
-    label: "Đối thủ (SerpAPI)",
-    shortLabel: "SerpAPI",
-    icon: Search,
-    description: "Nghiên cứu đối thủ qua SerpAPI",
   },
   {
     id: "search-ads",
@@ -61,8 +47,15 @@ export const DASHBOARD_TABS = [
     description: "Tìm nhà quảng cáo Google Ads theo từ khóa",
   },
   {
+    id: "manual",
+    label: "Đối thủ (SerpAPI)",
+    shortLabel: "SerpAPI",
+    icon: Search,
+    description: "Nghiên cứu đối thủ qua SerpAPI",
+  },
+  {
     id: "search-ads-schedule",
-    label: "Đặt lịch Quét quảng cáo",
+    label: "Đặt lịch",
     shortLabel: "Lịch quét",
     icon: CalendarClock,
     description: "Đặt lịch quét quảng cáo Google Ads theo từ khóa và proxy",
@@ -75,11 +68,11 @@ export const DASHBOARD_TABS = [
     description: "Danh sách đối thủ Google Ads đã lưu theo từ khóa",
   },
   {
-    id: "proxy",
-    label: "Proxy",
-    shortLabel: "Proxy",
-    icon: Server,
-    description: "Quản lý proxy dùng cho tìm kiếm Google Ads",
+    id: "keyword-planner",
+    label: "Google Ads",
+    shortLabel: "Google Ads",
+    icon: TrendingUp,
+    description: "Keyword Planner & ủy quyền Gmail",
   },
   {
     id: "telegram-link",
@@ -89,11 +82,11 @@ export const DASHBOARD_TABS = [
     description: "Xác thực và liên kết Telegram để nhận thông báo qua bot",
   },
   {
-    id: "keyword-planner",
-    label: "Google Ads",
-    shortLabel: "Google Ads",
-    icon: TrendingUp,
-    description: "Keyword Planner & ủy quyền Gmail",
+    id: "proxy",
+    label: "Proxy",
+    shortLabel: "Proxy",
+    icon: Server,
+    description: "Quản lý proxy dùng cho tìm kiếm Google Ads",
   },
   {
     id: "ads-strategy-skill",
@@ -101,6 +94,13 @@ export const DASHBOARD_TABS = [
     shortLabel: "Skill Ads",
     icon: ClipboardList,
     description: "Tạo prompt phân tích website và lập chiến lược Google Search Ads",
+  },
+  {
+    id: "project-overview",
+    label: "Tổng hợp dự án",
+    shortLabel: "Tổng hợp",
+    icon: LayoutDashboard,
+    description: "Xem content, keyword, traffic, quốc gia và đối thủ trong một màn hình",
   },
 ] as const;
 

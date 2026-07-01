@@ -9,24 +9,38 @@ from app.shared.responses import CamelModel
 
 DEFAULT_INPUT_FIELDS = [
     {"key": "website_url", "label": "Website hoặc Landing Page", "type": "url", "required": True},
+    {"key": "project_context", "label": "Dữ liệu dự án tự động", "type": "textarea", "required": False},
+    {"key": "brand_or_offer", "label": "Tên brand/offer", "type": "text", "required": False},
+    {"key": "industry", "label": "Ngành hàng", "type": "text", "required": False},
     {"key": "market", "label": "Thị trường ưu tiên", "type": "text", "required": False},
+    {"key": "restricted_countries", "label": "Quốc gia cấm/hạn chế", "type": "text", "required": False},
     {"key": "budget", "label": "Ngân sách dự kiến", "type": "text", "required": False},
+    {"key": "payout", "label": "Payout/commission", "type": "text", "required": False},
     {"key": "response_language", "label": "Ngôn ngữ kết quả", "type": "select", "required": False},
     {"key": "notes", "label": "Ghi chú bổ sung", "type": "textarea", "required": False},
 ]
 
 
-DEFAULT_PROMPT_TEMPLATE = """Hãy đóng vai Chuyên gia Phân tích Thị trường & Lập kế hoạch chiến dịch Google Ads Search.
+DEFAULT_PROMPT_TEMPLATE = """Hãy đóng vai một Media Buyer chuyên chạy Google Ads Search cho các dự án affiliate.
+
+Mục tiêu của bạn là phân tích link affiliate/landing page, đọc dữ liệu hệ thống đã thu thập, kiểm soát rủi ro chính sách và tạo chiến lược test có thể triển khai thật.
 
 Website/Landing page: {{website_url}}
+Tên brand/offer: {{brand_or_offer}}
+Ngành hàng: {{industry}}
 Thị trường ưu tiên: {{market}}
+Quốc gia bị cấm/hạn chế đã biết: {{restricted_countries}}
 Ngân sách dự kiến: {{budget}}
+Payout/commission: {{payout}}
 Ngôn ngữ kết quả mong muốn: {{response_language}}
 Ghi chú bổ sung: {{notes}}
 
+Dữ liệu hệ thống đã thu thập:
+{{project_context}}
+
 Nhiệm vụ:
-1. Đọc và phân tích website để xác định sản phẩm/dịch vụ, ngành hàng, ưu thế cốt lõi và khuyến mãi hiện có nếu có.
-2. Kiểm tra cảnh báo chính sách Google Ads liên quan trực tiếp đến ngành hàng.
+1. Đọc và phân tích website/dữ liệu hệ thống để xác định sản phẩm/dịch vụ, ngành hàng, ưu thế cốt lõi, khuyến mãi và tracking affiliate hiện có nếu có.
+2. Kiểm tra cảnh báo chính sách Google Ads liên quan trực tiếp đến ngành hàng, quốc gia, brand bidding và affiliate tracking.
 3. Xuất toàn bộ báo cáo trong một câu trả lời theo đúng cấu trúc dưới đây.
 
 ## 1. Phân tích sản phẩm, đối thủ và thị trường

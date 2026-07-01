@@ -29,6 +29,8 @@ class KeywordPlannerRepository:
         language_id: int,
         location_ids: Optional[list[int]],
         result_limit: int,
+        project_id: Optional[str] = None,
+        project_name: Optional[str] = None,
     ) -> KeywordPlannerJob:
         job = KeywordPlannerJob(
             user_id=user_id,
@@ -41,6 +43,8 @@ class KeywordPlannerRepository:
             location_ids=location_ids,
             result_limit=result_limit,
             status="pending",
+            project_id=project_id,
+            project_name=project_name,
         )
         self.db.add(job)
         self.db.flush()

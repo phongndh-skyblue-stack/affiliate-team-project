@@ -7,6 +7,7 @@ export interface ScanByKeywordsRequest {
   languageId?: number;
   locationIds?: number[];
   resultLimit?: number;
+  projectId?: string;
 }
 
 export interface ScanByUrlRequest {
@@ -16,6 +17,7 @@ export interface ScanByUrlRequest {
   languageId?: number;
   locationIds?: number[];
   resultLimit?: number;
+  projectId?: string;
 }
 
 // ─── Responses ───────────────────────────────────────────────────────────────
@@ -50,6 +52,8 @@ export interface JobResponse {
   status: "pending" | "done" | "error";
   errorMessage: string | null;
   resultCount: number;
+  projectId: string | null;
+  projectName: string | null;
   createdAt: string;
   updatedAt: string;
 }
