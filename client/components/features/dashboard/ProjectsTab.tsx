@@ -233,7 +233,7 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
 
   const countryMap = new Map<string, TrafficCountryItem>();
   const socialMap = new Map<string, number>();
-  
+
   const sourceSum: TrafficSourceItem = {
     period_month: selectedPeriods.join(", "),
     organic_search: 0,
@@ -247,7 +247,7 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
 
   for (const s of scans) {
     const weight = s.monthly_visits || 0;
-    
+
     const g = s.traffic_details?.global?.[0];
     if (g) {
       totalUnique += g.unique_visits_monthly || 0;
@@ -256,7 +256,7 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
       sumDuration += (g.avg_visit_duration || 0) * weight;
       sumBounce += (g.bounce_rate_percentage || 0) * weight;
     }
-    
+
     for (const c of s.traffic_details?.country || []) {
       const existing = countryMap.get(c.country_code) || {
         country_code: c.country_code,
@@ -270,7 +270,7 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
       existing.total_visits_monthly = (existing.total_visits_monthly || 0) + (c.total_visits_monthly || 0);
       countryMap.set(c.country_code, existing);
     }
-    
+
     const src = s.traffic_details?.source;
     if (src) {
       const srcWeight = weight / 100;
@@ -824,7 +824,7 @@ export function ProjectsTab() {
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>([]);
-  
+
   useEffect(() => {
     if (detail?.traffic_scans?.length) {
       const latestPeriod = detail.traffic_scans[0].period_month;
@@ -1326,11 +1326,10 @@ export function ProjectsTab() {
                                     return [...prev, scan.period_month];
                                   });
                                 }}
-                                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
-                                  isSelected
-                                    ? "bg-emerald-100 border-emerald-500 text-emerald-800 font-medium"
-                                    : "bg-background border-border text-muted-foreground hover:bg-muted"
-                                }`}
+                                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${isSelected
+                                  ? "bg-emerald-100 border-emerald-500 text-emerald-800 font-medium"
+                                  : "bg-background border-border text-muted-foreground hover:bg-muted"
+                                  }`}
                               >
                                 {scan.period_month}
                               </button>
@@ -1715,7 +1714,7 @@ export function ProjectsTab() {
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">15 headlines</p>
+                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{adCopy.headlines.length} headlines</p>
                         <div className="space-y-1.5">
                           {adCopy.headlines.map((headline) => (
                             <button
@@ -1730,7 +1729,7 @@ export function ProjectsTab() {
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">4 descriptions</p>
+                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{adCopy.descriptions.length} descriptions</p>
                         <div className="space-y-1.5">
                           {adCopy.descriptions.map((description) => (
                             <button
@@ -1778,8 +1777,18 @@ export function ProjectsTab() {
                                 <span className="mt-1 block truncate text-muted-foreground">
                                   {sitelink.url}
                                 </span>
-                                <span className="mt-1 block">{sitelink.description1}</span>
-                                <span className="block">{sitelink.description2}</span>
+                                <span className="mt-1 block">
+                                  {sitelink.description1}{" "}
+                                  <span className="text-muted-foreground">
+                                    ({(sitelink.description1 || "").length}/35)
+                                  </span>
+                                </span>
+                                <span className="block">
+                                  {sitelink.description2}{" "}
+                                  <span className="text-muted-foreground">
+                                    ({(sitelink.description2 || "").length}/35)
+                                  </span>
+                                </span>
                               </button>
                             ))}
                           </div>

@@ -174,6 +174,7 @@ Compliance Rules
   - Discount
   - Promotion
 unless the user explicitly provides those facts.
+- Do not use exaggerated claims or words (such as "guaranteed", "100% success", "best ever") unless the website content clearly proves it.
 
 Sensitive Industries
 
@@ -187,12 +188,15 @@ For industries including but not limited to:
 - Medical
 - Legal
 - Insurance
+- Investment
+- Trading
+- Loan
 
-Use neutral, policy-compliant language.
+Use neutral, policy-compliant language. Avoid promising guaranteed results, profits, or certain effectiveness/outcomes.
 
 Avoid:
 - Unrealistic promises
-- Guaranteed outcomes
+- Guaranteed outcomes or profits
 - Misleading financial claims
 - Misleading medical claims
 - Aggressive marketing language
