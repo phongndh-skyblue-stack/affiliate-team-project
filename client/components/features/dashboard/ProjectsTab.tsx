@@ -91,6 +91,7 @@ const RESTRICTION_TOKENS = [
 const SCAN_SLOW_WARNING_MS = 30_000;
 const TRAFFIC_SCAN_TIMEOUT_MS = 75_000;
 const PROJECT_SCAN_TIMEOUT_MS = 90_000;
+const TOP_TRAFFIC_COUNTRY_LIMIT = 10;
 const MAINTENANCE_MESSAGE = "Tính năng đang bảo trì, vui lòng thử lại sau.";
 
 function isCanceledRequest(error: unknown): boolean {
@@ -232,6 +233,12 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
   let sumBounce = 0;
 
   const countryMap = new Map<string, TrafficCountryItem>();
+  const countryMetricMap = new Map<string, {
+    visits: number;
+    pages: number;
+    duration: number;
+    bounce: number;
+  }>();
   const socialMap = new Map<string, number>();
 
   const sourceSum: TrafficSourceItem = {
@@ -258,6 +265,8 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
     }
 
     for (const c of s.traffic_details?.country || []) {
+      const countryVisits =
+        c.total_visits_monthly || (weight > 0 ? weight * ((c.traffic_share_percentage || 0) / 100) : 0);
       const existing = countryMap.get(c.country_code) || {
         country_code: c.country_code,
         country_name: c.country_name,
@@ -267,8 +276,20 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
         avg_visit_duration: 0,
         bounce_rate_percentage: 0,
       };
-      existing.total_visits_monthly = (existing.total_visits_monthly || 0) + (c.total_visits_monthly || 0);
+      existing.total_visits_monthly = (existing.total_visits_monthly || 0) + countryVisits;
       countryMap.set(c.country_code, existing);
+
+      const metrics = countryMetricMap.get(c.country_code) || {
+        visits: 0,
+        pages: 0,
+        duration: 0,
+        bounce: 0,
+      };
+      metrics.visits += countryVisits;
+      metrics.pages += (c.pages_per_visit || 0) * countryVisits;
+      metrics.duration += (c.avg_visit_duration || 0) * countryVisits;
+      metrics.bounce += (c.bounce_rate_percentage || 0) * countryVisits;
+      countryMetricMap.set(c.country_code, metrics);
     }
 
     const src = s.traffic_details?.source;
@@ -290,10 +311,18 @@ function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeri
     }
   }
 
-  const aggregatedCountries = Array.from(countryMap.values()).map(c => ({
-    ...c,
-    traffic_share_percentage: totalMonthlyVisits > 0 ? ((c.total_visits_monthly || 0) / totalMonthlyVisits) * 100 : 0
-  }));
+  const aggregatedCountries = Array.from(countryMap.values()).map(c => {
+    const metrics = countryMetricMap.get(c.country_code);
+    const visits = metrics?.visits || 0;
+
+    return {
+      ...c,
+      traffic_share_percentage: totalMonthlyVisits > 0 ? ((c.total_visits_monthly || 0) / totalMonthlyVisits) * 100 : 0,
+      pages_per_visit: visits > 0 ? (metrics?.pages || 0) / visits : c.pages_per_visit,
+      avg_visit_duration: visits > 0 ? (metrics?.duration || 0) / visits : c.avg_visit_duration,
+      bounce_rate_percentage: visits > 0 ? (metrics?.bounce || 0) / visits : c.bounce_rate_percentage,
+    };
+  });
 
   if (totalMonthlyVisits > 0) {
     sourceSum.organic_search = (sourceSum.organic_search / totalMonthlyVisits) * 100;
@@ -359,7 +388,7 @@ function toProjectResponse(detail: AffiliateLinkDetailResponse): ScanAffiliatePr
 function getTopTrafficCountries(countries?: TrafficCountryItem[]): TrafficCountryItem[] {
   return [...(countries || [])]
     .sort((a, b) => b.traffic_share_percentage - a.traffic_share_percentage)
-    .slice(0, 5);
+    .slice(0, TOP_TRAFFIC_COUNTRY_LIMIT);
 }
 
 function getTrafficCountryChartData(countries: TrafficCountryItem[]) {
@@ -368,6 +397,7 @@ function getTrafficCountryChartData(countries: TrafficCountryItem[]) {
     share: country.traffic_share_percentage,
     visits: country.total_visits_monthly || 0,
     pages: country.pages_per_visit || 0,
+    duration: country.avg_visit_duration || 0,
     bounce: country.bounce_rate_percentage || 0,
   }));
 }
@@ -1375,11 +1405,11 @@ export function ProjectsTab() {
                           <div className="mb-3 flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <BarChart3 size={14} className="text-sky-600" />
-                              <p className="text-xs font-semibold uppercase text-muted-foreground">Top 5 quốc gia traffic</p>
+                              <p className="text-xs font-semibold uppercase text-muted-foreground">Top 10 quốc gia traffic</p>
                             </div>
                             <p className="text-xs text-muted-foreground">{trafficCountryChartData.length} markets</p>
                           </div>
-                          <div className="h-56">
+                          <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
                               <BarChart data={trafficCountryChartData} layout="vertical" margin={{ top: 4, right: 18, left: 8, bottom: 0 }}>
                                 <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" horizontal={false} />
@@ -1420,9 +1450,10 @@ export function ProjectsTab() {
                           </div>
                           <div className="mt-3 space-y-1.5">
                             {trafficCountryChartData.map((country) => (
-                              <div key={country.name} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 text-xs">
+                              <div key={country.name} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2 text-xs">
                                 <span className="truncate font-medium">{country.name}</span>
                                 <span className="tabular-nums text-muted-foreground">{formatCompact(country.visits)} lượt</span>
+                                <span className="tabular-nums text-muted-foreground">{formatDuration(country.duration)} ở lại</span>
                                 <span className="tabular-nums text-muted-foreground">{formatPercent(country.bounce, 1)} thoát</span>
                               </div>
                             ))}
