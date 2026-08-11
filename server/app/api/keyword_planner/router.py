@@ -13,6 +13,11 @@ from app.api.keyword_planner.schema import (
     AdsAccountListResponse,
     AddMailRequest,
     CallbackResponse,
+    CandidateCreateRequest,
+    CandidateListResponse,
+    CandidatePromoteRequest,
+    CandidateResponse,
+    CandidateUpdateRequest,
     DelegationCallbackRequest,
     ImportAccountsRequest,
     ImportAccountsResponse,
@@ -24,7 +29,11 @@ from app.api.keyword_planner.schema import (
     ScanByUrlRequest,
     SendAuthResponse,
 )
-from app.api.keyword_planner.service import KeywordPlannerService, MailDelegationService
+from app.api.keyword_planner.service import (
+    KeywordCandidateService,
+    KeywordPlannerService,
+    MailDelegationService,
+)
 from app.api.notifications.service import NotificationService
 from app.core.database import get_db
 from app.shared.deps import get_current_user
@@ -90,7 +99,72 @@ def get_job_results(
     current_user: User = Depends(get_current_user),
     service: KeywordPlannerService = Depends(get_kp_service),
 ) -> JobResultsResponse:
-    return service.get_job_results(job_id)
+    return service.get_job_results(job_id, current_user.id)
+
+
+def get_candidate_service(db: Session = Depends(get_db)) -> KeywordCandidateService:
+    return KeywordCandidateService(db)
+
+
+@router.post("/candidates", response_model=CandidateResponse, status_code=201)
+def create_candidate(
+    body: CandidateCreateRequest,
+    current_user: User = Depends(get_current_user),
+    service: KeywordCandidateService = Depends(get_candidate_service),
+) -> CandidateResponse:
+    return service.create_candidate(current_user.id, body)
+
+
+@router.get("/candidates", response_model=CandidateListResponse)
+def list_candidates(
+    candidate_status: Optional[str] = Query(None, alias="status"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    current_user: User = Depends(get_current_user),
+    service: KeywordCandidateService = Depends(get_candidate_service),
+) -> CandidateListResponse:
+    return service.list_candidates(
+        current_user.id, status_filter=candidate_status, skip=skip, limit=limit
+    )
+
+
+@router.get("/candidates/{candidate_id}", response_model=CandidateResponse)
+def get_candidate(
+    candidate_id: str,
+    current_user: User = Depends(get_current_user),
+    service: KeywordCandidateService = Depends(get_candidate_service),
+) -> CandidateResponse:
+    return service.get_candidate(candidate_id, current_user.id)
+
+
+@router.patch("/candidates/{candidate_id}", response_model=CandidateResponse)
+def update_candidate(
+    candidate_id: str,
+    body: CandidateUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    service: KeywordCandidateService = Depends(get_candidate_service),
+) -> CandidateResponse:
+    return service.update_candidate(candidate_id, current_user.id, body)
+
+
+@router.delete("/candidates/{candidate_id}", response_model=MessageResponse)
+def delete_candidate(
+    candidate_id: str,
+    current_user: User = Depends(get_current_user),
+    service: KeywordCandidateService = Depends(get_candidate_service),
+) -> MessageResponse:
+    service.delete_candidate(candidate_id, current_user.id)
+    return MessageResponse(message="Đã xóa dự án tiềm năng.")
+
+
+@router.post("/candidates/{candidate_id}/promote", response_model=CandidateResponse)
+def promote_candidate(
+    candidate_id: str,
+    body: CandidatePromoteRequest,
+    current_user: User = Depends(get_current_user),
+    service: KeywordCandidateService = Depends(get_candidate_service),
+) -> CandidateResponse:
+    return service.promote_candidate(candidate_id, current_user.id, body)
 
 
 # ---------------------------------------------------------------------------

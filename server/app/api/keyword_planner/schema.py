@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import EmailStr, Field, field_validator
 from urllib.parse import urlsplit
@@ -90,6 +90,11 @@ class KeywordIdeaItem(CamelModel):
     low_top_page_bid: Optional[float]
     high_top_page_bid: Optional[float]
     monthly_searches: list[MonthlySearchVolumeItem]
+    intent: Optional[str] = None
+    opportunity_score: Optional[int] = None
+    opportunity_tier: Optional[str] = None
+    trend_percentage: Optional[float] = None
+    score_explanation: Optional[str] = None
 
 
 class JobResponse(CamelModel):
@@ -205,6 +210,162 @@ class AdsAccountResponse(CamelModel):
 class AdsAccountListResponse(CamelModel):
     total: int
     items: list[AdsAccountResponse]
+
+
+# ===========================================================================
+# Candidate project schemas
+# ===========================================================================
+
+CandidateStatus = Literal["new", "researching", "promising", "rejected", "promoted"]
+KeywordIntent = Literal["informational", "commercial", "transactional", "navigational", "unknown"]
+OpportunityTier = Literal["high", "medium", "low"]
+
+
+def _clean_tags(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    cleaned: list[str] = []
+    for value in values[:20]:
+        tag = value.strip()
+        key = tag.casefold()
+        if tag and key not in seen:
+            seen.add(key)
+            cleaned.append(tag)
+    return cleaned
+
+
+class CandidateKeywordInput(CamelModel):
+    source_result_id: Optional[str] = None
+    keyword: str = Field(..., min_length=1, max_length=500)
+    avg_monthly_searches: int = Field(0, ge=0)
+    competition: str = ""
+    competition_index: Optional[int] = Field(None, ge=0, le=100)
+    low_top_page_bid: Optional[float] = Field(None, ge=0)
+    high_top_page_bid: Optional[float] = Field(None, ge=0)
+    monthly_searches: list[MonthlySearchVolumeItem] = Field(default_factory=list)
+    inferred_intent: KeywordIntent = "unknown"
+    manual_intent: Optional[KeywordIntent] = None
+    opportunity_score: int = Field(0, ge=0, le=100)
+    opportunity_tier: OpportunityTier = "low"
+    score_explanation: str = ""
+    notes: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+
+    @field_validator("keyword")
+    @classmethod
+    def clean_keyword(cls, value: str) -> str:
+        cleaned = " ".join(value.split())
+        if not cleaned:
+            raise ValueError("Keyword is required")
+        return cleaned
+
+    @field_validator("tags")
+    @classmethod
+    def clean_keyword_tags(cls, value: list[str]) -> list[str]:
+        return _clean_tags(value)
+
+
+class CandidateCreateRequest(CamelModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    status: CandidateStatus = "new"
+    notes: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    language_id: int = 1000
+    location_ids: list[int] = Field(default_factory=list)
+    source_ads_id: Optional[str] = None
+    source_job_id: Optional[str] = None
+    website_url: Optional[str] = None
+    keywords: list[CandidateKeywordInput] = Field(..., min_length=1, max_length=500)
+
+    @field_validator("name")
+    @classmethod
+    def clean_name(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Candidate name is required")
+        return cleaned
+
+    @field_validator("tags")
+    @classmethod
+    def clean_candidate_tags(cls, value: list[str]) -> list[str]:
+        return _clean_tags(value)
+
+    @field_validator("website_url")
+    @classmethod
+    def normalize_candidate_url(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_web_url(value) if value else None
+
+
+class CandidateUpdateRequest(CamelModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    status: Optional[CandidateStatus] = None
+    notes: Optional[str] = None
+    tags: Optional[list[str]] = None
+    language_id: Optional[int] = None
+    location_ids: Optional[list[int]] = None
+    website_url: Optional[str] = None
+    keywords: Optional[list[CandidateKeywordInput]] = Field(None, min_length=1, max_length=500)
+
+    @field_validator("name")
+    @classmethod
+    def clean_optional_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Candidate name is required")
+        return cleaned
+
+    @field_validator("tags")
+    @classmethod
+    def clean_optional_tags(cls, value: Optional[list[str]]) -> Optional[list[str]]:
+        return _clean_tags(value) if value is not None else None
+
+    @field_validator("website_url")
+    @classmethod
+    def normalize_optional_candidate_url(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_web_url(value) if value else None
+
+
+class CandidatePromoteRequest(CamelModel):
+    website_url: Optional[str] = None
+
+    @field_validator("website_url")
+    @classmethod
+    def normalize_promotion_url(cls, value: Optional[str]) -> Optional[str]:
+        return _normalize_web_url(value) if value else None
+
+
+class CandidateKeywordResponse(CandidateKeywordInput):
+    id: str
+    effective_intent: KeywordIntent
+    created_at: datetime
+    updated_at: datetime
+
+
+class CandidateResponse(CamelModel):
+    id: str
+    user_id: str
+    affiliate_project_id: Optional[str]
+    source_job_id: Optional[str]
+    source_ads_id: Optional[str]
+    name: str
+    description: Optional[str]
+    status: CandidateStatus
+    notes: Optional[str]
+    tags: list[str]
+    language_id: int
+    location_ids: list[int]
+    website_url: Optional[str]
+    keywords: list[CandidateKeywordResponse]
+    created_at: datetime
+    updated_at: datetime
+
+
+class CandidateListResponse(CamelModel):
+    total: int
+    items: list[CandidateResponse]
 
 
 class ImportAccountsResponse(CamelModel):
