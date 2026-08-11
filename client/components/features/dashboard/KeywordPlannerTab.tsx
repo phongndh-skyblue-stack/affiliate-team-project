@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { keywordPlannerService } from "@/services/keywordPlanner.service";
 import type { JobResponse, JobResultsResponse, KeywordIdeaItem } from "@/types/keywordPlanner.types";
 import { KeywordResearchForm } from "./keyword-planner/KeywordResearchForm";
+import { CandidateProjectsView } from "./keyword-planner/CandidateProjectsView";
 import {
   KeywordResultsWorkspace,
   type CandidateDraft,
@@ -70,12 +71,19 @@ export function KeywordPlannerTab() {
   const [result, setResult] = useState<JobResultsResponse | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [view, setView] = useState<"research" | "candidates">("research");
+  const [candidateCount, setCandidateCount] = useState(0);
 
   useEffect(() => {
     let active = true;
-    keywordPlannerService.listJobs(0, 100)
-      .then((response) => {
-        if (active) setJobs(response.items);
+    Promise.all([
+      keywordPlannerService.listJobs(0, 100),
+      keywordPlannerService.listCandidates(),
+    ])
+      .then(([jobResponse, candidateResponse]) => {
+        if (!active) return;
+        setJobs(jobResponse.items);
+        setCandidateCount(candidateResponse.total);
       })
       .catch(() => active && toast.error("Không tải được lịch sử Keyword Planner"))
       .finally(() => active && setHistoryLoading(false));
@@ -116,6 +124,8 @@ export function KeywordPlannerTab() {
         keywords: items.map(candidateKeywordFromIdea),
       });
       setSelectedIds(new Set());
+      setCandidateCount((count) => count + 1);
+      setView("candidates");
       toast.success("Đã lưu dự án tiềm năng cùng snapshot keyword");
       window.dispatchEvent(new CustomEvent("keyword-candidate-created"));
     } catch {
@@ -146,7 +156,19 @@ export function KeywordPlannerTab() {
         </div>
       </header>
 
-      <div className="grid items-start gap-5 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]">
+      <nav className="flex w-fit rounded-xl border border-border bg-card p-1 shadow-sm" aria-label="Keyword Planner views">
+        <button onClick={() => setView("research")} className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${view === "research" ? "bg-emerald-600 text-white shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
+          Khám phá từ khóa
+        </button>
+        <button onClick={() => setView("candidates")} className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${view === "candidates" ? "bg-emerald-600 text-white shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
+          Dự án tiềm năng
+          <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${view === "candidates" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"}`}>{candidateCount}</span>
+        </button>
+      </nav>
+
+      {view === "candidates" ? (
+        <CandidateProjectsView onCountChange={setCandidateCount} />
+      ) : <><div className="grid items-start gap-5 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]">
         <KeywordResearchForm onDone={acceptResult} />
 
         {result ? (
@@ -174,6 +196,7 @@ export function KeywordPlannerTab() {
           <HistoryList jobs={jobs} loading={historyLoading} onOpen={openJob} />
         </section>
       )}
+      </>}
     </div>
   );
 }
