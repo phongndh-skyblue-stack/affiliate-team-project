@@ -1,786 +1,179 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Globe,
-  Hash,
-  Layers3,
-  Link2,
-  Loader2,
-  RefreshCw,
-  ScanLine,
-  TrendingUp,
-  X,
-} from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
+import { useEffect, useState } from "react";
+import { ArrowRight, Clock3, Database, History, Loader2, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { CustomSelect } from "@/components/common/CustomSelect";
 import { keywordPlannerService } from "@/services/keywordPlanner.service";
-import { affiliateProjectService } from "@/services/affiliateProject.service";
-import type { AffiliateLinkModel } from "@/types/affiliateProject.types";
-import type {
-  AdsAccountResponse,
-  JobResponse,
-  JobResultsResponse,
-  KeywordIdeaItem,
-} from "@/types/keywordPlanner.types";
+import type { JobResponse, JobResultsResponse, KeywordIdeaItem } from "@/types/keywordPlanner.types";
+import { KeywordResearchForm } from "./keyword-planner/KeywordResearchForm";
+import {
+  KeywordResultsWorkspace,
+  type CandidateDraft,
+} from "./keyword-planner/KeywordResultsWorkspace";
+import { candidateKeywordFromIdea } from "./keyword-planner/keywordPlanner.utils";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const LANGUAGE_OPTIONS = [
-  { value: 1000, label: "English" },
-  { value: 1019, label: "Tiếng Việt" },
-  { value: 1023, label: "日本語" },
-  { value: 1012, label: "한국어" },
-  { value: 1002, label: "中文 (简体)" },
-];
-
-const MONTH_LABELS = ["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"];
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("vi-VN", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
-function fmtSearches(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
-  return n.toLocaleString("vi-VN");
-}
-
-function normalizeWebUrl(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  return /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-}
-
-// ── Competition badge with fixed width ────────────────────────────────────────
-const COMPETITION_STYLE: Record<string, { bar: string; badge: string }> = {
-  "Thấp":            { bar: "bg-emerald-500", badge: "bg-emerald-500/10 text-emerald-700" },
-  "Trung bình":      { bar: "bg-amber-500",   badge: "bg-amber-500/10 text-amber-700" },
-  "Cao":             { bar: "bg-red-500",      badge: "bg-red-500/10 text-red-700" },
-  "Không xác định":  { bar: "bg-muted",        badge: "bg-muted text-muted-foreground" },
-};
-
-function CompetitionCell({ competition, index }: { competition: string; index?: number | null }) {
-  const style = COMPETITION_STYLE[competition] ?? COMPETITION_STYLE["Không xác định"];
-  const pct = index != null ? Math.round(index) : null;
-  return (
-    <div className="shrink-0 w-28 flex flex-col gap-1">
-      <div className="flex items-center justify-between gap-1">
-        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap", style.badge)}>
-          {competition}
-        </span>
-        {pct != null && <span className="text-[10px] tabular-nums text-muted-foreground">{pct}</span>}
-      </div>
-      {pct != null && (
-        <div className="h-1 w-full rounded-full bg-border overflow-hidden">
-          <div className={cn("h-full rounded-full", style.bar)} style={{ width: `${pct}%` }} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Sparkline chart using recharts ────────────────────────────────────────────
-function Sparkline({ data }: { data: { year: number; month: number; searches: number }[] }) {
-  const chartData = data.map((d) => ({
-    name: `${MONTH_LABELS[(d.month - 1) % 12]} ${d.year}`,
-    v: d.searches,
-  }));
-
-  return (
-    <div className="h-16 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#059669" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="#059669" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <Tooltip
-            contentStyle={{ fontSize: 11, padding: "4px 8px", borderRadius: 6 }}
-            formatter={(v) => [Number(v || 0).toLocaleString("vi-VN"), "Lượt"]}
-            labelStyle={{ fontWeight: 600, fontSize: 11 }}
-          />
-          <Area
-            type="monotone"
-            dataKey="v"
-            stroke="#059669"
-            strokeWidth={1.5}
-            fill="url(#spark-grad)"
-            dot={false}
-            activeDot={{ r: 3, fill: "#059669" }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-// ─── Keyword row ──────────────────────────────────────────────────────────────
-function KeywordRow({ item }: { item: KeywordIdeaItem }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors text-left"
-      >
-        {/* Keyword */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{item.keyword}</p>
-        </div>
-
-        {/* Avg monthly */}
-        <div className="shrink-0 w-24 text-right">
-          <p className="text-sm font-bold tabular-nums">
-            {fmtSearches(item.avgMonthlySearches)}
-          </p>
-          <p className="text-[10px] text-muted-foreground">lượt / tháng</p>
-        </div>
-
-        {/* Competition (fixed width) */}
-        <CompetitionCell competition={item.competition} index={item.competitionIndex} />
-
-        {/* CPC */}
-        <div className="shrink-0 w-28 text-right hidden sm:block">
-          <p className="text-xs font-medium">
-            {item.lowTopPageBid != null
-              ? `$${item.lowTopPageBid.toFixed(2)} – $${(item.highTopPageBid ?? 0).toFixed(2)}`
-              : "—"}
-          </p>
-          <p className="text-[10px] text-muted-foreground">CPC top page</p>
-        </div>
-
-        {/* Sparkline preview */}
-        {item.monthlySearches && item.monthlySearches.length > 0 && (
-          <div className="shrink-0 w-24 hidden lg:block opacity-70">
-            <Sparkline data={item.monthlySearches} />
-          </div>
-        )}
-
-        {open ? (
-          <ChevronUp size={14} className="shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
-        )}
-      </button>
-
-      {open && (
-        <div className="border-t border-border px-4 py-4 space-y-4">
-          {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Lượt TB / tháng</p>
-              <p className="text-base font-bold tabular-nums">{item.avgMonthlySearches.toLocaleString("vi-VN")}</p>
-            </div>
-            <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Cạnh tranh</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={cn("text-sm font-semibold",
-                  (COMPETITION_STYLE[item.competition] ?? COMPETITION_STYLE["Không xác định"]).badge.replace("bg-", "text-").replace("/10", "")
-                )}>{item.competition}</span>
-                {item.competitionIndex != null && (
-                  <span className="text-xs text-muted-foreground">({item.competitionIndex})</span>
-                )}
-              </div>
-            </div>
-            <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">CPC thấp nhất</p>
-              <p className="text-sm font-semibold">
-                {item.lowTopPageBid != null ? `$${item.lowTopPageBid.toFixed(3)}` : "—"}
-              </p>
-            </div>
-            <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">CPC cao nhất</p>
-              <p className="text-sm font-semibold">
-                {item.highTopPageBid != null ? `$${item.highTopPageBid.toFixed(3)}` : "—"}
-              </p>
-            </div>
-          </div>
-
-          {/* Chart */}
-          {item.monthlySearches && item.monthlySearches.length > 0 && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                Xu hướng 12 tháng gần nhất
-              </p>
-              <Sparkline data={item.monthlySearches} />
-              <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
-                <span>{MONTH_LABELS[(item.monthlySearches[0].month - 1) % 12]} {item.monthlySearches[0].year}</span>
-                <span>{MONTH_LABELS[(item.monthlySearches[item.monthlySearches.length - 1].month - 1) % 12]} {item.monthlySearches[item.monthlySearches.length - 1].year}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-// ─── Job result panel ─────────────────────────────────────────────────────────
-
-function JobResultPanel({
-  result,
-  onClose,
+function HistoryList({
+  jobs,
+  loading,
+  onOpen,
 }: {
-  result: JobResultsResponse;
-  onClose: () => void;
+  jobs: JobResponse[];
+  loading: boolean;
+  onOpen: (job: JobResponse) => void;
 }) {
-  const { job, results } = result;
-  const [search, setSearch] = useState("");
-
-  const filtered = search.trim()
-    ? results.filter((r) =>
-        r.keyword.toLowerCase().includes(search.trim().toLowerCase())
-      )
-    : results;
-
-  return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-full max-w-3xl bg-background border-l border-border flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-4 shrink-0">
-          <div>
-            <h3 className="text-sm font-semibold">Kết quả Keyword Ideas</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {job.inputType === "keywords"
-                ? `Keywords: ${(job.keywords ?? []).join(", ")}`
-                : `URL: ${job.pageUrl}`}
-              {" · "}
-              {results.length} từ khóa
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 hover:bg-muted transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Search */}
-        <div className="px-5 py-3 border-b border-border shrink-0">
-          <input
-            type="text"
-            placeholder="Lọc theo tên keyword..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full rounded-lg border border-border bg-muted/40 px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-          />
-        </div>
-
-        {/* Table header */}
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-muted/30 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
-          <span className="flex-1">Keyword</span>
-          <span className="w-24 text-right">Avg / tháng</span>
-          <span className="w-28">Cạnh tranh</span>
-          <span className="w-28 hidden sm:block text-right">CPC top page</span>
-          <span className="w-24 hidden lg:block">Xu hướng</span>
-          <span className="w-4" />
-        </div>
-
-        {/* Results */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
-          {filtered.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              Không có kết quả
-            </div>
-          ) : (
-            filtered.map((item) => <KeywordRow key={item.id} item={item} />)
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Job history row ──────────────────────────────────────────────────────────
-
-function JobHistoryRow({
-  job,
-  onView,
-}: {
-  job: JobResponse;
-  onView: (job: JobResponse) => void;
-}) {
-  const isKeyword = job.inputType === "keywords";
-  const statusColor =
-    job.status === "done"
-      ? "border border-emerald-500 bg-emerald-50 text-emerald-700"
-      : job.status === "error"
-      ? "border border-red-500 bg-red-50 text-red-700"
-      : "border border-amber-500 bg-amber-50 text-amber-700";
-  const statusLabel =
-    job.status === "done" ? "Xong" : job.status === "error" ? "Lỗi" : "Đang chạy";
-
-  return (
-    <div className="rounded-xl border border-border bg-card flex items-center gap-3 px-4 py-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#059669]/10 text-[#059669]">
-        {isKeyword ? <Hash size={16} /> : <Globe size={16} />}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">
-          {isKeyword
-            ? (job.keywords ?? []).join(", ") || "(keywords)"
-            : job.pageUrl ?? "(url)"}
-        </p>
-        <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-          <span>{formatDate(job.createdAt)}</span>
-          <span>{job.resultCount} từ khóa</span>
-          {job.pageUrl && isKeyword && <span>{job.pageUrl}</span>}
-          {job.projectName && <span>{"D\u1ef1 \u00e1n"}: {job.projectName}</span>}
-        </div>
-      </div>
-      <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", statusColor)}>
-        {statusLabel}
-      </span>
-      {job.status === "done" && (
-        <button
-          onClick={() => onView(job)}
-          className="shrink-0 rounded-lg bg-[#059669]/10 px-3 py-1.5 text-xs font-medium text-[#059669] hover:bg-[#059669]/20 transition-colors"
-        >
-          Xem kết quả
-        </button>
-      )}
-    </div>
-  );
-}
-
-
-// ─── Scan form ────────────────────────────────────────────────────────────────
-
-function ScanForm({ onDone }: { onDone: (result: JobResultsResponse) => void }) {
-  const [mode, setMode] = useState<"keywords" | "url">("keywords");
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Account selector
-  const [accounts, setAccounts] = useState<AdsAccountResponse[]>([]);
-  const [selectedAdsId, setSelectedAdsId] = useState("");
-  const [projects, setProjects] = useState<AffiliateLinkModel[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
-
-  useEffect(() => {
-    if (open && accounts.length === 0) {
-      Promise.all([
-        keywordPlannerService.listAccounts(),
-        affiliateProjectService.getAffiliateLinks(),
-      ]).then(([accountResponse, projectResponse]) => {
-        setAccounts(accountResponse.items);
-        setProjects(projectResponse);
-        if (accountResponse.items.length > 0 && !selectedAdsId) {
-          setSelectedAdsId(accountResponse.items[0].adsId);
-        }
-      }).catch(() => toast.error("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c t\u00e0i kho\u1ea3n ho\u1eb7c danh s\u00e1ch d\u1ef1 \u00e1n"));
-    }
-  }, [open]);
-
-  // Keyword mode
-  const [keywordsRaw, setKeywordsRaw] = useState("");
-  const [pageUrlKw, setPageUrlKw] = useState("");
-
-  // URL mode
-  const [pageUrl, setPageUrl] = useState("");
-  const [useEntireSite, setUseEntireSite] = useState(true);
-
-  // Common
-  const [languageId, setLanguageId] = useState(1000);
-  const [limitVal, setLimitVal] = useState(500);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedAdsId) {
-      toast.error("Chọn tài khoản Google Ads trước");
-      return;
-    }
-    setLoading(true);
-    try {
-      let result: JobResultsResponse;
-      if (mode === "keywords") {
-        const kws = keywordsRaw
-          .split(/[\n,]+/)
-          .map((k) => k.trim())
-          .filter(Boolean);
-        if (!kws.length) {
-          toast.error("Nhập ít nhất 1 keyword");
-          return;
-        }
-        result = await keywordPlannerService.scanByKeywords({
-          adsId: selectedAdsId,
-          keywords: kws,
-          pageUrl: normalizeWebUrl(pageUrlKw) || undefined,
-          languageId,
-          resultLimit: limitVal,
-          projectId: selectedProjectId || undefined,
-        });
-      } else {
-        if (!pageUrl.trim()) {
-          toast.error("Nhập URL trước khi quét");
-          return;
-        }
-        result = await keywordPlannerService.scanByUrl({
-          adsId: selectedAdsId,
-          pageUrl: normalizeWebUrl(pageUrl),
-          useEntireSite,
-          languageId,
-          resultLimit: limitVal,
-          projectId: selectedProjectId || undefined,
-        });
-      }
-      toast.success(`Quét xong — ${result.results.length} keyword ideas`);
-      setOpen(false);
-      onDone(result);
-    } catch {
-      toast.error("Quét thất bại, kiểm tra Google Ads credentials trong .env");
-    } finally {
-      setLoading(false);
-    }
+  if (loading) {
+    return <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-emerald-600" /></div>;
   }
-
+  if (!jobs.length) {
+    return (
+      <div className="py-12 text-center">
+        <History size={28} className="mx-auto text-muted-foreground/35" />
+        <p className="mt-3 text-sm font-medium">Chưa có lịch sử nghiên cứu</p>
+        <p className="mt-1 text-xs text-muted-foreground">Bắt đầu với keyword hoặc website ở bảng bên trái.</p>
+      </div>
+    );
+  }
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border bg-card",
-        open ? "z-30 overflow-visible" : "overflow-hidden"
-      )}
-    >
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors"
-      >
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#059669]/10">
-          <ScanLine size={15} className="text-[#059669]" />
-        </div>
-        <span className="flex-1 text-left text-sm font-medium">Quét Keyword Ideas mới</span>
-        {open ? (
-          <ChevronUp size={15} className="text-muted-foreground" />
-        ) : (
-          <ChevronDown size={15} className="text-muted-foreground" />
-        )}
-      </button>
-
-      {open && (
-        <form onSubmit={handleSubmit} className="border-t border-border px-4 py-5 space-y-4">
-          {/* Account selector */}
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground/90">
-              Tài khoản Google Ads <span className="text-red-500">*</span>
-            </label>
-            <CustomSelect
-              value={selectedAdsId}
-              onChange={setSelectedAdsId}
-              options={accounts.map((a) => ({
-                value: a.adsId,
-                label: `${a.adsName} (${a.adsId})`,
-              }))}
-              placeholder={accounts.length === 0 ? "Không có tài khoản nào — hãy import trước" : "Chọn tài khoản..."}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground/90">
-              {"D\u1ef1 \u00e1n t\u1ed5ng h\u1ee3p"} <span className="font-normal text-muted-foreground">{"(tu\u1ef3 ch\u1ecdn)"}</span>
-            </label>
-            <CustomSelect
-              value={selectedProjectId}
-              onChange={(value) => {
-                const projectId = String(value || "");
-                setSelectedProjectId(projectId);
-                const project = projects.find((item) => item.id === projectId);
-                if (project) {
-                  setPageUrlKw(project.affiliate_url);
-                  setPageUrl(project.affiliate_url);
-                }
-              }}
-              options={projects.map((project) => ({
-                value: project.id,
-                label: `${project.name || project.domain} - ${project.affiliate_url}`,
-              }))}
-              placeholder={"Kh\u00f4ng g\u1eafn d\u1ef1 \u00e1n (qu\u00e9t ri\u00eang l\u1ebb)"}
-              clearable
-              clearText={"Qu\u00e9t ri\u00eang l\u1ebb"}
-            />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {"K\u1ebft qu\u1ea3 s\u1ebd \u0111\u01b0\u1ee3c g\u1eafn v\u00e0o d\u1ef1 \u00e1n \u0111\u1ec3 tab T\u1ed5ng h\u1ee3p d\u1ef1 \u00e1n s\u1eed d\u1ee5ng."}
-            </p>
-          </div>
-
-          {/* Mode toggle */}
-          <div className="flex rounded-xl border border-border overflow-hidden text-sm">
-            <button
-              type="button"
-              onClick={() => setMode("keywords")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2.5 font-medium transition-colors",
-                mode === "keywords"
-                  ? "bg-[#059669] text-white"
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              <Hash size={14} /> Từ khóa
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("url")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2.5 font-medium transition-colors",
-                mode === "url"
-                  ? "bg-[#059669] text-white"
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              <Link2 size={14} /> URL / Domain
-            </button>
-          </div>
-
-          {mode === "keywords" ? (
-            <>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-foreground/90">
-                  Keywords <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder={"mua laptop\ngaming chair\ntai nghe bluetooth"}
-                  value={keywordsRaw}
-                  onChange={(e) => setKeywordsRaw(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25 resize-none"
-                />
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Mỗi dòng hoặc cách nhau bằng dấu phẩy
-                </p>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-foreground/90">
-                  URL kết hợp{" "}
-                  <span className="font-normal text-muted-foreground">(tuỳ chọn)</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="url"
-                  placeholder={"example.com ho\u1eb7c https://example.com/product"}
-                  value={pageUrlKw}
-                  onChange={(e) => setPageUrlKw(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-foreground/90">
-                  URL / Domain <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://shopee.vn hoặc shopee.vn"
-                  value={pageUrl}
-                  onChange={(e) => setPageUrl(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="useEntireSite"
-                  checked={useEntireSite}
-                  onChange={(e) => setUseEntireSite(e.target.checked)}
-                  className="size-4 rounded border-border accent-[#059669]"
-                />
-                <label htmlFor="useEntireSite" className="text-sm text-foreground cursor-pointer">
-                  Quét toàn bộ domain{" "}
-                  <span className="text-muted-foreground text-xs">(bỏ check = quét 1 trang)</span>
-                </label>
-              </div>
-            </>
-          )}
-
-          {/* Common options */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/90">
-                Ngôn ngữ
-              </label>
-              <CustomSelect
-                value={languageId}
-                onChange={(val) => setLanguageId(Number(val))}
-                options={LANGUAGE_OPTIONS}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/90">
-                Giới hạn kết quả
-              </label>
-              <input
-                type="number"
-                min={10}
-                max={2000}
-                value={limitVal}
-                onChange={(e) => setLimitVal(Number(e.target.value) || 500)}
-                className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 border-t border-border pt-1">
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#059669] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#047857] disabled:opacity-60"
-            >
-              {loading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <ScanLine size={14} />
-              )}
-              {loading ? "Đang quét..." : "Bắt đầu quét"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="inline-flex h-10 items-center rounded-xl border border-border px-4 text-sm text-muted-foreground hover:bg-muted"
-            >
-              Huỷ
-            </button>
-          </div>
-        </form>
-      )}
+    <div className="divide-y divide-border">
+      {jobs.slice(0, 12).map((job) => (
+        <button
+          key={job.id}
+          onClick={() => onOpen(job)}
+          disabled={job.status !== "done"}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+            {job.inputType === "keywords" ? <Search size={15} /> : <Database size={15} />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium">
+              {job.inputType === "keywords" ? job.keywords?.join(", ") : job.pageUrl}
+            </span>
+            <span className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <Clock3 size={11} /> {new Date(job.createdAt).toLocaleString("vi-VN")}
+              <span>·</span> {job.resultCount.toLocaleString("vi-VN")} keyword
+            </span>
+          </span>
+          <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground">
+            {job.status === "done" ? "Sẵn sàng" : job.status === "error" ? "Lỗi" : "Đang chạy"}
+          </span>
+          {job.status === "done" && <ArrowRight size={14} className="text-muted-foreground" />}
+        </button>
+      ))}
     </div>
   );
 }
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export function KeywordPlannerTab() {
   const [jobs, setJobs] = useState<JobResponse[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [viewResult, setViewResult] = useState<JobResultsResponse | null>(null);
-  const hasFetched = useRef(false);
-
-  async function fetchJobs() {
-    setLoading(true);
-    try {
-      const res = await keywordPlannerService.listJobs();
-      setJobs(res.items);
-      setTotal(res.total);
-    } catch {
-      toast.error("Không tải được danh sách jobs");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [result, setResult] = useState<JobResultsResponse | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!hasFetched.current) {
-      hasFetched.current = true;
-      fetchJobs();
-    }
+    let active = true;
+    keywordPlannerService.listJobs(0, 100)
+      .then((response) => {
+        if (active) setJobs(response.items);
+      })
+      .catch(() => active && toast.error("Không tải được lịch sử Keyword Planner"))
+      .finally(() => active && setHistoryLoading(false));
+    return () => {
+      active = false;
+    };
   }, []);
 
-  async function handleViewJob(job: JobResponse) {
+  function acceptResult(next: JobResultsResponse) {
+    setResult(next);
+    setSelectedIds(new Set());
+    setJobs((current) => [next.job, ...current.filter((job) => job.id !== next.job.id)]);
+  }
+
+  async function openJob(job: JobResponse) {
     try {
-      const res = await keywordPlannerService.getJobResults(job.id);
-      setViewResult(res);
+      acceptResult(await keywordPlannerService.getJobResults(job.id));
     } catch {
-      toast.error("Không lấy được kết quả job");
+      toast.error("Không thể mở snapshot keyword này");
     }
   }
 
-  function handleScanDone(result: JobResultsResponse) {
-    setJobs((prev) => [result.job, ...prev]);
-    setTotal((prev) => prev + 1);
-    setViewResult(result);
+  async function saveCandidate(items: KeywordIdeaItem[], draft: CandidateDraft) {
+    if (!result) return;
+    setSaving(true);
+    try {
+      await keywordPlannerService.createCandidate({
+        name: draft.name,
+        description: draft.description || undefined,
+        notes: draft.notes || undefined,
+        tags: draft.tags,
+        status: draft.status,
+        websiteUrl: draft.websiteUrl || undefined,
+        languageId: result.job.languageId,
+        locationIds: result.job.locationIds ?? [],
+        sourceAdsId: result.job.adsId ?? undefined,
+        sourceJobId: result.job.id,
+        keywords: items.map(candidateKeywordFromIdea),
+      });
+      setSelectedIds(new Set());
+      toast.success("Đã lưu dự án tiềm năng cùng snapshot keyword");
+      window.dispatchEvent(new CustomEvent("keyword-candidate-created"));
+    } catch {
+      toast.error("Không thể lưu dự án tiềm năng");
+      throw new Error("candidate-save-failed");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  const totalKeywords = jobs.reduce((s, j) => s + j.resultCount, 0);
-
   return (
-    <>
-      <div className="space-y-4">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Lần quét", value: total, icon: Layers3 },
-            { label: "Keyword ideas", value: totalKeywords.toLocaleString("vi-VN"), icon: TrendingUp },
-            {
-              label: "Thành công",
-              value: jobs.filter((j) => j.status === "done").length,
-              icon: ScanLine,
-            },
-          ].map(({ label, value, icon: Icon }) => (
-            <div
-              key={label}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
-            >
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#059669]/10">
-                <Icon size={17} className="text-[#059669]" />
-              </div>
-              <div>
-                <p className="text-lg font-bold leading-tight">{value}</p>
-                <p className="text-[11px] text-muted-foreground">{label}</p>
-              </div>
+    <div className="space-y-5">
+      <header className="overflow-hidden rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-emerald-500/[0.08] via-background to-sky-500/[0.06] px-5 py-5 sm:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              <Sparkles size={14} /> Google Ads intelligence
             </div>
-          ))}
-        </div>
-
-        {/* Scan form */}
-        <ScanForm onDone={handleScanDone} />
-
-        {/* Jobs list */}
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">
-            Lịch sử quét{" "}
-            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
-              {total}
-            </span>
-          </p>
-          <button
-            onClick={fetchJobs}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            <RefreshCw size={12} className={cn(loading && "animate-spin")} />
-            Làm mới
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="animate-spin text-[#059669]" />
-          </div>
-        ) : jobs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
-            <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#059669]/10">
-              <TrendingUp size={26} className="text-[#059669]/60" />
-            </div>
-            <p className="text-sm font-medium">Chưa có lịch sử quét</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Dùng form phía trên để quét keyword ideas từ Google Ads.
+            <h2 className="text-xl font-bold tracking-tight sm:text-2xl">Khám phá cơ hội từ khóa</h2>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Phân tích nhu cầu, cạnh tranh, CPC và xu hướng để tìm dự án affiliate mới đáng nghiên cứu.
             </p>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {jobs.map((job) => (
-              <JobHistoryRow key={job.id} job={job} onView={handleViewJob} />
-            ))}
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-background/80 px-3 py-2 text-xs text-muted-foreground shadow-sm">
+            <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+            Dữ liệu Google Ads đã ủy quyền
           </div>
+        </div>
+      </header>
+
+      <div className="grid items-start gap-5 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]">
+        <KeywordResearchForm onDone={acceptResult} />
+
+        {result ? (
+          <KeywordResultsWorkspace
+            result={result}
+            selectedIds={selectedIds}
+            onSelectedChange={setSelectedIds}
+            onSave={saveCandidate}
+            saving={saving}
+          />
+        ) : (
+          <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="border-b border-border bg-gradient-to-r from-muted/50 to-transparent px-5 py-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold"><History size={15} className="text-emerald-600" /> Nghiên cứu gần đây</h3>
+              <p className="mt-1 text-xs text-muted-foreground">Mở lại snapshot hoặc bắt đầu một nghiên cứu mới.</p>
+            </div>
+            <HistoryList jobs={jobs} loading={historyLoading} onOpen={openJob} />
+          </section>
         )}
       </div>
 
-      {viewResult && (
-        <JobResultPanel result={viewResult} onClose={() => setViewResult(null)} />
+      {result && (
+        <section className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="border-b border-border px-4 py-3"><h3 className="flex items-center gap-2 text-sm font-semibold"><History size={14} className="text-emerald-600" /> Lịch sử nghiên cứu</h3></div>
+          <HistoryList jobs={jobs} loading={historyLoading} onOpen={openJob} />
+        </section>
       )}
-    </>
+    </div>
   );
 }
