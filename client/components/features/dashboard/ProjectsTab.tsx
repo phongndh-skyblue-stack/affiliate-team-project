@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   BarChart3,
@@ -12,6 +12,7 @@ import {
   ExternalLink,
   FolderOpen,
   Loader2,
+  Pencil,
   Plus,
   Radar,
   SearchCheck,
@@ -20,6 +21,7 @@ import {
   Target,
   Trash2,
   XCircle,
+  Check,
 } from "lucide-react";
 import {
   Bar,
@@ -34,6 +36,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import { affiliateProjectService } from "@/services/affiliateProject.service";
+import { CustomSelect } from "@/components/common/CustomSelect";
 import type {
   AffiliateLinkDetailResponse,
   AffiliateLinkModel,
@@ -42,6 +45,10 @@ import type {
   ScanTrafficResponse,
   TopCountryInsight,
   TrafficCountryItem,
+  TrafficGlobalItem,
+  TrafficSourceItem,
+  TrafficSocialItem,
+  AffiliateLinkTrafficModel,
 } from "@/types/affiliateProject.types";
 
 type CheckStatus = "good" | "warn" | "missing";
@@ -84,6 +91,7 @@ const RESTRICTION_TOKENS = [
 const SCAN_SLOW_WARNING_MS = 30_000;
 const TRAFFIC_SCAN_TIMEOUT_MS = 75_000;
 const PROJECT_SCAN_TIMEOUT_MS = 90_000;
+const TOP_TRAFFIC_COUNTRY_LIMIT = 10;
 const MAINTENANCE_MESSAGE = "Tính năng đang bảo trì, vui lòng thử lại sau.";
 
 function isCanceledRequest(error: unknown): boolean {
@@ -146,11 +154,6 @@ function toChartNumber(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function toSharePercent(value: unknown): number {
-  const numeric = toChartNumber(value);
-  if (numeric <= 0) return 0;
-  return numeric <= 1 ? numeric * 100 : numeric;
-}
 
 function formatDuration(seconds: number): string {
   const safeSeconds = Math.max(0, Math.round(seconds || 0));
@@ -216,17 +219,149 @@ function resultString(result: Record<string, unknown>, key: string): string | nu
   return typeof value === "string" && value.trim() ? value : null;
 }
 
-function toTrafficResponse(detail: AffiliateLinkDetailResponse): ScanTrafficResponse | null {
-  const latest = detail.traffic_scans[0];
-  if (!latest) return null;
+function aggregateTrafficScans(detail: AffiliateLinkDetailResponse, selectedPeriods: string[]): ScanTrafficResponse | null {
+  const scans = detail.traffic_scans.filter(s => selectedPeriods.includes(s.period_month));
+  if (!scans.length) return null;
+
+  const base = scans[0];
+  const totalMonthlyVisits = scans.reduce((sum, s) => sum + (s.monthly_visits || 0), 0);
+
+  let totalUnique = 0;
+  let totalRepeat = 0;
+  let sumPages = 0;
+  let sumDuration = 0;
+  let sumBounce = 0;
+
+  const countryMap = new Map<string, TrafficCountryItem>();
+  const countryMetricMap = new Map<string, {
+    visits: number;
+    pages: number;
+    duration: number;
+    bounce: number;
+  }>();
+  const socialMap = new Map<string, number>();
+
+  const sourceSum: TrafficSourceItem = {
+    period_month: selectedPeriods.join(", "),
+    organic_search: 0,
+    social: 0,
+    email: 0,
+    display_ads: 0,
+    direct: 0,
+    referrals: 0,
+    paid_search: 0,
+  };
+
+  for (const s of scans) {
+    const weight = s.monthly_visits || 0;
+
+    const g = s.traffic_details?.global?.[0];
+    if (g) {
+      totalUnique += g.unique_visits_monthly || 0;
+      totalRepeat += g.repeat_visits_monthly || 0;
+      sumPages += (g.pages_per_visit || 0) * weight;
+      sumDuration += (g.avg_visit_duration || 0) * weight;
+      sumBounce += (g.bounce_rate_percentage || 0) * weight;
+    }
+
+    for (const c of s.traffic_details?.country || []) {
+      const countryVisits =
+        c.total_visits_monthly || (weight > 0 ? weight * ((c.traffic_share_percentage || 0) / 100) : 0);
+      const existing = countryMap.get(c.country_code) || {
+        country_code: c.country_code,
+        country_name: c.country_name,
+        traffic_share_percentage: 0,
+        total_visits_monthly: 0,
+        pages_per_visit: 0,
+        avg_visit_duration: 0,
+        bounce_rate_percentage: 0,
+      };
+      existing.total_visits_monthly = (existing.total_visits_monthly || 0) + countryVisits;
+      countryMap.set(c.country_code, existing);
+
+      const metrics = countryMetricMap.get(c.country_code) || {
+        visits: 0,
+        pages: 0,
+        duration: 0,
+        bounce: 0,
+      };
+      metrics.visits += countryVisits;
+      metrics.pages += (c.pages_per_visit || 0) * countryVisits;
+      metrics.duration += (c.avg_visit_duration || 0) * countryVisits;
+      metrics.bounce += (c.bounce_rate_percentage || 0) * countryVisits;
+      countryMetricMap.set(c.country_code, metrics);
+    }
+
+    const src = s.traffic_details?.source;
+    if (src) {
+      const srcWeight = weight / 100;
+      sourceSum.organic_search += (src.organic_search || 0) * srcWeight;
+      sourceSum.social += (src.social || 0) * srcWeight;
+      sourceSum.email += (src.email || 0) * srcWeight;
+      sourceSum.display_ads += (src.display_ads || 0) * srcWeight;
+      sourceSum.direct += (src.direct || 0) * srcWeight;
+      sourceSum.referrals += (src.referrals || 0) * srcWeight;
+      sourceSum.paid_search += (src.paid_search || 0) * srcWeight;
+    }
+
+    for (const soc of s.traffic_details?.social || []) {
+      const share = soc.share_percentage || 0;
+      const current = socialMap.get(soc.platform_name) || 0;
+      socialMap.set(soc.platform_name, current + share * weight);
+    }
+  }
+
+  const aggregatedCountries = Array.from(countryMap.values()).map(c => {
+    const metrics = countryMetricMap.get(c.country_code);
+    const visits = metrics?.visits || 0;
+
+    return {
+      ...c,
+      traffic_share_percentage: totalMonthlyVisits > 0 ? ((c.total_visits_monthly || 0) / totalMonthlyVisits) * 100 : 0,
+      pages_per_visit: visits > 0 ? (metrics?.pages || 0) / visits : c.pages_per_visit,
+      avg_visit_duration: visits > 0 ? (metrics?.duration || 0) / visits : c.avg_visit_duration,
+      bounce_rate_percentage: visits > 0 ? (metrics?.bounce || 0) / visits : c.bounce_rate_percentage,
+    };
+  });
+
+  if (totalMonthlyVisits > 0) {
+    sourceSum.organic_search = (sourceSum.organic_search / totalMonthlyVisits) * 100;
+    sourceSum.social = (sourceSum.social / totalMonthlyVisits) * 100;
+    sourceSum.email = (sourceSum.email / totalMonthlyVisits) * 100;
+    sourceSum.display_ads = (sourceSum.display_ads / totalMonthlyVisits) * 100;
+    sourceSum.direct = (sourceSum.direct / totalMonthlyVisits) * 100;
+    sourceSum.referrals = (sourceSum.referrals / totalMonthlyVisits) * 100;
+    sourceSum.paid_search = (sourceSum.paid_search / totalMonthlyVisits) * 100;
+  }
+
+  const globalItem: TrafficGlobalItem = {
+    period_month: selectedPeriods.join(", "),
+    total_visits_monthly: totalMonthlyVisits,
+    avg_visits_monthly: totalMonthlyVisits / scans.length,
+    unique_visits_monthly: totalUnique,
+    repeat_visits_monthly: totalRepeat,
+    pages_per_visit: totalMonthlyVisits > 0 ? sumPages / totalMonthlyVisits : 0,
+    avg_visit_duration: totalMonthlyVisits > 0 ? sumDuration / totalMonthlyVisits : 0,
+    bounce_rate_percentage: totalMonthlyVisits > 0 ? sumBounce / totalMonthlyVisits : 0,
+  };
+
+  const socialStats: TrafficSocialItem[] = Array.from(socialMap.entries()).map(([platform_name, totalWeightedShare]) => ({
+    platform_name,
+    share_percentage: totalMonthlyVisits > 0 ? totalWeightedShare / totalMonthlyVisits : 0
+  }));
 
   return {
     domain: detail.affiliate_link.domain,
     url: detail.affiliate_link.affiliate_url,
-    found: latest.found,
-    monthly_visits: latest.monthly_visits,
-    period_month: latest.period_month,
-    traffic_details: latest.traffic_details,
+    found: base.found,
+    monthly_visits: totalMonthlyVisits,
+    period_month: selectedPeriods.join(", "),
+    traffic_details: {
+      global: [globalItem],
+      country: aggregatedCountries,
+      source: sourceSum,
+      social: socialStats
+    }
   };
 }
 
@@ -246,13 +381,14 @@ function toProjectResponse(detail: AffiliateLinkDetailResponse): ScanAffiliatePr
     top_countries: latest.top_countries || [],
     answer: latest.answer,
     results: latest.results || [],
+    ad_copy: latest.ad_copy,
   };
 }
 
 function getTopTrafficCountries(countries?: TrafficCountryItem[]): TrafficCountryItem[] {
   return [...(countries || [])]
     .sort((a, b) => b.traffic_share_percentage - a.traffic_share_percentage)
-    .slice(0, 5);
+    .slice(0, TOP_TRAFFIC_COUNTRY_LIMIT);
 }
 
 function getTrafficCountryChartData(countries: TrafficCountryItem[]) {
@@ -261,6 +397,7 @@ function getTrafficCountryChartData(countries: TrafficCountryItem[]) {
     share: country.traffic_share_percentage,
     visits: country.total_visits_monthly || 0,
     pages: country.pages_per_visit || 0,
+    duration: country.avg_visit_duration || 0,
     bounce: country.bounce_rate_percentage || 0,
   }));
 }
@@ -275,13 +412,13 @@ function getTrafficSourceData(traffic: ScanTrafficResponse | null) {
   if (!source) return [];
 
   const rows = [
-    { name: "Truy cập trực tiếp", share: toSharePercent(source.direct) },
-    { name: "Tìm kiếm tự nhiên", share: toSharePercent(source.organic_search) },
-    { name: "Tìm kiếm trả phí", share: toSharePercent(source.paid_search) },
-    { name: "Giới thiệu", share: toSharePercent(source.referrals) },
-    { name: "Quảng cáo hiển thị", share: toSharePercent(source.display_ads) },
-    { name: "Mạng xã hội", share: toSharePercent(source.social) },
-    { name: "Email", share: toSharePercent(source.email) },
+    { name: "Truy cập trực tiếp", share: toChartNumber(source.direct) },
+    { name: "Tìm kiếm tự nhiên", share: toChartNumber(source.organic_search) },
+    { name: "Tìm kiếm trả phí", share: toChartNumber(source.paid_search) },
+    { name: "Giới thiệu", share: toChartNumber(source.referrals) },
+    { name: "Quảng cáo hiển thị", share: toChartNumber(source.display_ads) },
+    { name: "Mạng xã hội", share: toChartNumber(source.social) },
+    { name: "Email", share: toChartNumber(source.email) },
   ];
   const total = rows.reduce((sum, item) => sum + item.share, 0);
   if (total > 100.5) {
@@ -301,16 +438,12 @@ function getTrafficSocialData(traffic: ScanTrafficResponse | null) {
       const share = rawShare > 0 && rawShare <= 1 ? rawShare * 100 : rawShare;
       return {
         name: item.platform_name,
-        share: toSharePercent(share),
+        share: toChartNumber(share),
       };
     })
     .filter((item) => item.name && item.share > 0)
     .sort((a, b) => b.share - a.share);
-  const total = rows.reduce((sum, item) => sum + item.share, 0);
-  const normalized = total > 100.5
-    ? rows.map((item) => ({ ...item, share: total > 0 ? (item.share / total) * 100 : 0 }))
-    : rows;
-  return normalized.slice(0, 6);
+  return rows.slice(0, 6);
 }
 
 function isRestrictedCountry(countryName: string, restricted: RestrictedCountryInsight[]): boolean {
@@ -707,12 +840,33 @@ export function ProjectsTab() {
   const [scanningProject, setScanningProject] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLinkInput, setNewLinkInput] = useState("");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectSearch, setNewProjectSearch] = useState("");
   const [savingLink, setSavingLink] = useState(false);
   const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const [openEvidenceKey, setOpenEvidenceKey] = useState<string | null>(null);
   const [trafficMonths, setTrafficMonths] = useState(4);
 
-  const trafficResult = useMemo(() => (detail ? toTrafficResponse(detail) : null), [detail]);
+  const [editingLink, setEditingLink] = useState<AffiliateLinkModel | null>(null);
+  const [editLinkInput, setEditLinkInput] = useState("");
+  const [editProjectName, setEditProjectName] = useState("");
+  const [editProjectSearch, setEditProjectSearch] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const [selectedPeriods, setSelectedPeriods] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (detail?.traffic_scans?.length) {
+      const latestPeriod = detail.traffic_scans[0].period_month;
+      setSelectedPeriods(prev => prev.length > 0 ? prev : [latestPeriod]);
+    } else {
+      setSelectedPeriods([]);
+    }
+  }, [detail]);
+
+  const trafficResult = useMemo(() => {
+    return detail && selectedPeriods.length > 0 ? aggregateTrafficScans(detail, selectedPeriods) : null;
+  }, [detail, selectedPeriods]);
   const projectResult = useMemo(() => (detail ? toProjectResponse(detail) : null), [detail]);
   const topTrafficCountries = useMemo(() => getTopTrafficCountries(trafficResult?.traffic_details?.country), [trafficResult]);
   const trafficCountryChartData = useMemo(() => getTrafficCountryChartData(topTrafficCountries), [topTrafficCountries]);
@@ -720,11 +874,76 @@ export function ProjectsTab() {
   const trafficSourceData = useMemo(() => getTrafficSourceData(trafficResult), [trafficResult]);
   const trafficSocialData = useMemo(() => getTrafficSocialData(trafficResult), [trafficResult]);
   const launchInsight = useMemo(() => buildLaunchInsight(trafficResult, projectResult), [trafficResult, projectResult]);
-  const adCopy = useMemo(
-    () => generateAdCopy(projectResult, detail?.affiliate_link.affiliate_url),
-    [detail?.affiliate_link.affiliate_url, projectResult]
-  );
-  const isBusy = scanningTraffic || scanningProject || savingLink || Boolean(deletingLinkId);
+  const adCopy = useMemo(() => {
+    if (projectResult && projectResult.ad_copy) {
+      return {
+        finalUrl: detail?.affiliate_link.affiliate_url,
+        brandKeywords: projectResult.ad_copy.brandKeywords || [],
+        headlines: projectResult.ad_copy.headlines || [],
+        descriptions: projectResult.ad_copy.descriptions || [],
+        sitelinks: (projectResult.ad_copy.sitelinks || []).map((s) => ({
+          text: s.text || "",
+          url: s.url || detail?.affiliate_link.affiliate_url || "",
+          description1: s.description1 || "",
+          description2: s.description2 || "",
+        })),
+      };
+    }
+    return generateAdCopy(projectResult, detail?.affiliate_link.affiliate_url);
+  }, [detail?.affiliate_link.affiliate_url, projectResult]);
+  const isBusy = scanningTraffic || scanningProject || savingLink || Boolean(deletingLinkId) || savingEdit;
+
+  useEffect(() => {
+    if (editingLink) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [editingLink]);
+
+  function openEditModal(link: AffiliateLinkModel) {
+    setEditingLink(link);
+    setEditLinkInput(link.affiliate_url);
+    setEditProjectName(link.name || "");
+    setEditProjectSearch(link.search_query || "");
+  }
+
+  async function handleSaveEdit() {
+    if (!editingLink) return;
+    const trimmedLink = editLinkInput.trim();
+    if (!trimmedLink) {
+      toast.error("Vui lòng nhập affiliate URL");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const updated = await affiliateProjectService.updateAffiliateLink(editingLink.id, {
+        website: trimmedLink,
+        name: editProjectName.trim() || null,
+        search: editProjectSearch.trim() || null,
+      });
+
+      const updatedLinks = links.map((link) => (link.id === updated.id ? updated : link));
+      setLinks(updatedLinks);
+
+      if (selectedLink?.id === updated.id) {
+        setSelectedLink(updated);
+        const refreshed = await affiliateProjectService.getAffiliateLinkDetail(updated.affiliate_url);
+        setDetail(refreshed);
+      }
+
+      setEditingLink(null);
+      toast.success("Đã cập nhật dự án");
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || "Cập nhật dự án thất bại";
+      toast.error(errorMsg);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -781,11 +1000,17 @@ export function ProjectsTab() {
     if (!trimmed) return;
     setSavingLink(true);
     try {
-      const created = await affiliateProjectService.createAffiliateLink({ website: trimmed });
+      const created = await affiliateProjectService.createAffiliateLink({
+        website: trimmed,
+        name: newProjectName.trim() || null,
+        search: newProjectSearch.trim() || null,
+      });
       const updatedLinks = await affiliateProjectService.getAffiliateLinks();
       setLinks(updatedLinks);
       setSelectedLink(updatedLinks.find((link) => link.id === created.id) ?? created);
       setNewLinkInput("");
+      setNewProjectName("");
+      setNewProjectSearch("");
       setShowAddForm(false);
       toast.success("Đã thêm affiliate link");
     } catch {
@@ -938,6 +1163,21 @@ export function ProjectsTab() {
               disabled={savingLink}
               autoFocus
             />
+            <input
+              value={newProjectName}
+              onChange={(event) => setNewProjectName(event.target.value)}
+              placeholder="Tên dự án"
+              className="mt-2 h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+              disabled={savingLink}
+            />
+            <input
+              value={newProjectSearch}
+              onChange={(event) => setNewProjectSearch(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && void handleAddLink()}
+              placeholder="Search dùng chung, ví dụ: xm trading"
+              className="mt-2 h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+              disabled={savingLink}
+            />
             <div className="mt-2 grid grid-cols-2 gap-2">
               <button
                 onClick={() => void handleAddLink()}
@@ -950,6 +1190,8 @@ export function ProjectsTab() {
                 onClick={() => {
                   setShowAddForm(false);
                   setNewLinkInput("");
+                  setNewProjectName("");
+                  setNewProjectSearch("");
                 }}
                 className="h-8 rounded-md border border-border text-xs text-muted-foreground hover:bg-muted"
               >
@@ -982,9 +1224,8 @@ export function ProjectsTab() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") setSelectedLink(link);
                     }}
-                    className={`group flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${
-                      isActive ? "bg-emerald-50 ring-1 ring-emerald-200" : "hover:bg-muted"
-                    }`}
+                    className={`group flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${isActive ? "bg-emerald-50 ring-1 ring-emerald-200" : "hover:bg-muted"
+                      }`}
                   >
                     <div className="min-w-0 flex-1">
                       <p className={`truncate text-sm font-semibold ${isActive ? "text-emerald-700" : "text-foreground"}`}>
@@ -992,6 +1233,18 @@ export function ProjectsTab() {
                       </p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">{link.affiliate_url}</p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openEditModal(link);
+                      }}
+                      disabled={isBusy}
+                      title={`Sửa ${link.domain}`}
+                      className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 transition hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-40 group-hover:opacity-100 group-focus-within:opacity-100 mr-1"
+                    >
+                      <Pencil size={14} />
+                    </button>
                     <button
                       type="button"
                       onClick={(event) => {
@@ -1047,16 +1300,17 @@ export function ProjectsTab() {
                   </a>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={trafficMonths}
-                    onChange={(event) => setTrafficMonths(Number(event.target.value))}
-                    disabled={isBusy}
-                    className="h-9 rounded-md border border-border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
-                  >
-                    {[1, 2, 3, 4, 6, 12].map((month) => (
-                      <option key={month} value={month}>{month} tháng</option>
-                    ))}
-                  </select>
+                  <div className="w-[130px]">
+                    <CustomSelect
+                      value={String(trafficMonths)}
+                      onChange={(val) => setTrafficMonths(Number(val))}
+                      disabled={isBusy}
+                      options={[1, 2, 3, 4].map((month) => ({
+                        value: String(month),
+                        label: `${month} tháng`,
+                      }))}
+                    />
+                  </div>
                   <button
                     onClick={() => void handleScanTraffic()}
                     disabled={isBusy || !detail}
@@ -1080,7 +1334,41 @@ export function ProjectsTab() {
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-4">
                 <section className="rounded-md border border-border bg-card p-4">
-                  <SectionTitle icon={Radar} title="Traffic summary" />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="mb-0">
+                      <SectionTitle icon={Radar} title="Traffic summary" />
+                    </div>
+                    {detail?.traffic_scans && detail.traffic_scans.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Kỳ dữ liệu:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {detail.traffic_scans.map(scan => {
+                            const isSelected = selectedPeriods.includes(scan.period_month);
+                            return (
+                              <button
+                                key={scan.period_month}
+                                onClick={() => {
+                                  setSelectedPeriods(prev => {
+                                    if (prev.includes(scan.period_month)) {
+                                      const next = prev.filter(p => p !== scan.period_month);
+                                      return next.length === 0 ? prev : next;
+                                    }
+                                    return [...prev, scan.period_month];
+                                  });
+                                }}
+                                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${isSelected
+                                  ? "bg-emerald-100 border-emerald-500 text-emerald-800 font-medium"
+                                  : "bg-background border-border text-muted-foreground hover:bg-muted"
+                                  }`}
+                              >
+                                {scan.period_month}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {trafficResult ? (
                     <>
                       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -1117,11 +1405,11 @@ export function ProjectsTab() {
                           <div className="mb-3 flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <BarChart3 size={14} className="text-sky-600" />
-                              <p className="text-xs font-semibold uppercase text-muted-foreground">Top 5 quốc gia traffic</p>
+                              <p className="text-xs font-semibold uppercase text-muted-foreground">Top 10 quốc gia traffic</p>
                             </div>
                             <p className="text-xs text-muted-foreground">{trafficCountryChartData.length} markets</p>
                           </div>
-                          <div className="h-56">
+                          <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
                               <BarChart data={trafficCountryChartData} layout="vertical" margin={{ top: 4, right: 18, left: 8, bottom: 0 }}>
                                 <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" horizontal={false} />
@@ -1162,9 +1450,10 @@ export function ProjectsTab() {
                           </div>
                           <div className="mt-3 space-y-1.5">
                             {trafficCountryChartData.map((country) => (
-                              <div key={country.name} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 text-xs">
+                              <div key={country.name} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2 text-xs">
                                 <span className="truncate font-medium">{country.name}</span>
                                 <span className="tabular-nums text-muted-foreground">{formatCompact(country.visits)} lượt</span>
+                                <span className="tabular-nums text-muted-foreground">{formatDuration(country.duration)} ở lại</span>
                                 <span className="tabular-nums text-muted-foreground">{formatPercent(country.bounce, 1)} thoát</span>
                               </div>
                             ))}
@@ -1342,11 +1631,10 @@ export function ProjectsTab() {
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                   <span className="font-semibold">{country.country}</span>
-                                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${
-                                    country.restriction_type === "banned"
-                                      ? "bg-red-50 text-red-700"
-                                      : "bg-amber-50 text-amber-700"
-                                  }`}>
+                                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${country.restriction_type === "banned"
+                                    ? "bg-red-50 text-red-700"
+                                    : "bg-amber-50 text-amber-700"
+                                    }`}>
                                     {country.restriction_type === "banned" ? "Cấm" : "Hạn chế"}
                                   </span>
                                   {country.confidence && (
@@ -1457,7 +1745,7 @@ export function ProjectsTab() {
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">15 headlines</p>
+                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{adCopy.headlines.length} headlines</p>
                         <div className="space-y-1.5">
                           {adCopy.headlines.map((headline) => (
                             <button
@@ -1472,7 +1760,7 @@ export function ProjectsTab() {
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">4 descriptions</p>
+                        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{adCopy.descriptions.length} descriptions</p>
                         <div className="space-y-1.5">
                           {adCopy.descriptions.map((description) => (
                             <button
@@ -1520,8 +1808,18 @@ export function ProjectsTab() {
                                 <span className="mt-1 block truncate text-muted-foreground">
                                   {sitelink.url}
                                 </span>
-                                <span className="mt-1 block">{sitelink.description1}</span>
-                                <span className="block">{sitelink.description2}</span>
+                                <span className="mt-1 block">
+                                  {sitelink.description1}{" "}
+                                  <span className="text-muted-foreground">
+                                    ({(sitelink.description1 || "").length}/35)
+                                  </span>
+                                </span>
+                                <span className="block">
+                                  {sitelink.description2}{" "}
+                                  <span className="text-muted-foreground">
+                                    ({(sitelink.description2 || "").length}/35)
+                                  </span>
+                                </span>
                               </button>
                             ))}
                           </div>
@@ -1539,6 +1837,97 @@ export function ProjectsTab() {
           </div>
         )}
       </main>
+
+      {/* Edit Project Modal */}
+      {editingLink && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingLink(null);
+          }}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+          {/* Modal content */}
+          <div
+            className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-background shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <h2 className="text-lg font-semibold">Sửa dự án: {editingLink.domain}</h2>
+              <button
+                onClick={() => setEditingLink(null)}
+                className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <XCircle size={16} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Affiliate URL
+                </label>
+                <input
+                  type="text"
+                  value={editLinkInput}
+                  onChange={(e) => setEditLinkInput(e.target.value)}
+                  placeholder="https://example.com/ref"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+                  disabled={savingEdit}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Tên dự án
+                </label>
+                <input
+                  type="text"
+                  value={editProjectName}
+                  onChange={(e) => setEditProjectName(e.target.value)}
+                  placeholder="Tên dự án"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+                  disabled={savingEdit}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Search dùng chung (keywords)
+                </label>
+                <input
+                  type="text"
+                  value={editProjectSearch}
+                  onChange={(e) => setEditProjectSearch(e.target.value)}
+                  placeholder="xm trading"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+                  disabled={savingEdit}
+                />
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={savingEdit || !editLinkInput.trim()}
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+                >
+                  {savingEdit ? <Loader2 size={16} className="animate-spin" /> : "Lưu thay đổi"}
+                </button>
+                <button
+                  onClick={() => setEditingLink(null)}
+                  disabled={savingEdit}
+                  className="h-10 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

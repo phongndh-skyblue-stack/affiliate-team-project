@@ -51,7 +51,7 @@ export default function RegisterPage() {
             <div className="flex items-center gap-2 mt-3">
               <div className="size-8 rounded-full bg-[#059669]/20 border border-[#059669]/25 flex items-center justify-center text-xs font-bold text-[#34D399]">T</div>
               <div>
-                <p className="text-xs font-semibold text-white">Nguyễn Minh Tuấn</p>
+                <p className="text-xs font-semibold text-white">Bùi Thế Anh (TonyThe)</p>
                 <p className="text-xs text-[#64748B]">Content Creator</p>
               </div>
             </div>

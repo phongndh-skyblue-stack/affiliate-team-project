@@ -82,6 +82,8 @@ class AffiliateProjectScanResponse(BaseModel):
     top_countries: list[TopCountryInsight] = Field(default_factory=list)
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)
+    ad_copy: dict[str, Any] | None = None
+
 
 
 class AffiliateLinkModel(BaseModel):
@@ -89,6 +91,8 @@ class AffiliateLinkModel(BaseModel):
     user_id: str | None = None
     affiliate_url: str
     domain: str
+    name: str | None = None
+    search_query: str | None = None
     raw_data: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
@@ -96,6 +100,14 @@ class AffiliateLinkModel(BaseModel):
 
 class AffiliateLinkCreateRequest(BaseModel):
     website: str = Field(..., min_length=1, description="Affiliate link cần tạo/lưu")
+    name: str | None = Field(None, description="Project name")
+    search: str | None = Field(None, description="Shared search keyword for project-linked searches")
+
+
+class AffiliateLinkUpdateRequest(BaseModel):
+    website: str = Field(..., min_length=1, description="Affiliate link")
+    name: str | None = Field(None, description="Project name")
+    search: str | None = Field(None, description="Shared search keyword for project-linked searches")
 
 
 class AffiliateLinkTrafficModel(BaseModel):
@@ -123,6 +135,7 @@ class AffiliateLinkProjectDataModel(BaseModel):
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)
     raw_data: dict[str, Any] | None = None
+    ad_copy: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 

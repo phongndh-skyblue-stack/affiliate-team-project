@@ -419,14 +419,24 @@ class AffiliateDataService:
     def __init__(self, db: Session) -> None:
         self.repository = AffiliateDataRepository(db)
 
-    def create_affiliate_link(self, user_id: str, website: str) -> dict:
+    def create_affiliate_link(
+        self,
+        user_id: str,
+        website: str,
+        name: str | None = None,
+        search: str | None = None,
+    ) -> dict:
         normalized_url = normalize_affiliate_url(website)
         domain = extract_domain(normalized_url)
+        clean_name = (name or "").strip() or domain
+        clean_search = (search or "").strip() or clean_name or domain
 
         row = self.repository.get_or_create_affiliate_link(
             user_id=user_id,
             affiliate_url=normalized_url,
             domain=domain,
+            name=clean_name,
+            search_query=clean_search,
         )
         self.repository.commit()
 
@@ -435,6 +445,8 @@ class AffiliateDataService:
             "user_id": row.user_id,
             "affiliate_url": row.affiliate_url,
             "domain": row.domain,
+            "name": row.name,
+            "search_query": row.search_query,
             "raw_data": row.raw_data,
             "created_at": row.created_at,
             "updated_at": row.updated_at,
@@ -446,7 +458,7 @@ class AffiliateDataService:
         affiliate_link_id: str,
         months: int,
         start_period: str | None = None,
-    ) -> dict:
+    ) -> list[dict]:
         link = self.repository.get_affiliate_link_by_id_for_user(
             user_id=user_id,
             affiliate_link_id=affiliate_link_id,
@@ -454,20 +466,27 @@ class AffiliateDataService:
         if not link:
             raise ValueError("Affiliate link không tồn tại hoặc không thuộc user hiện tại")
 
-        traffic_result = await scan_traffic(
+        traffic_results = await scan_traffic(
             link.affiliate_url,
             months=months,
             start_period=start_period,
         )
-        traffic_result["url"] = link.affiliate_url
-        traffic_result["domain"] = link.domain
 
-        self.repository.create_traffic_scan(
-            affiliate_link_id=link.id,
-            traffic_result=traffic_result,
-        )
+        self.repository.delete_traffic_scans_by_affiliate_link(link.id)
+
+        saved_results = []
+        for traffic_result in traffic_results:
+            traffic_result["url"] = link.affiliate_url
+            traffic_result["domain"] = link.domain
+
+            self.repository.create_traffic_scan(
+                affiliate_link_id=link.id,
+                traffic_result=traffic_result,
+            )
+            saved_results.append(traffic_result)
+
         self.repository.commit()
-        return traffic_result
+        return saved_results
 
     async def create_project_scan(
         self,
@@ -491,12 +510,98 @@ class AffiliateDataService:
             include_raw_content=include_raw_content,
         )
 
+        try:
+            from app.shared.agents.scan_project.llm_ad_generator import generate_ads_from_insights
+            from app.core.config import settings
+            ads_copy = generate_ads_from_insights(
+                project_data=project_result,
+                language="English",
+                api_key=settings.MINIMAX_API_KEY
+            )
+            if ads_copy and not ads_copy.get("raw_response"):
+                project_result["ad_copy"] = {
+                    "finalUrl": link.affiliate_url,
+                    "brandKeywords": ads_copy.get("brand_keywords") or [],
+                    "headlines": ads_copy.get("headlines") or [],
+                    "descriptions": ads_copy.get("descriptions") or [],
+                    "sitelinks": [
+                        {
+                            "text": s.get("title") or "",
+                            "url": link.affiliate_url,
+                            "description1": s.get("description1") or "",
+                            "description2": s.get("description2") or "",
+                        }
+                        for s in ads_copy.get("sitelinks") or []
+                    ]
+                }
+            else:
+                project_result["ad_copy"] = None
+        except Exception as e:
+            print(f"Failed to generate ad copy via LLM: {e}")
+            project_result["ad_copy"] = None
+
         self.repository.create_project_data_scan(
             affiliate_link_id=link.id,
             project_result=project_result,
         )
         self.repository.commit()
         return project_result
+
+    def update_affiliate_link(
+        self,
+        user_id: str,
+        affiliate_link_id: str,
+        website: str,
+        name: str | None = None,
+        search: str | None = None,
+    ) -> dict:
+        link = self.repository.get_affiliate_link_by_id_for_user(
+            user_id=user_id,
+            affiliate_link_id=affiliate_link_id,
+        )
+        if not link:
+            raise KeyError("Không tìm thấy affiliate link của user hiện tại")
+
+        normalized_url = normalize_affiliate_url(website)
+        domain = extract_domain(normalized_url)
+        clean_name = (name or "").strip() or domain
+        clean_search = (search or "").strip() or clean_name or domain
+
+        from sqlalchemy import select
+        from app.api.affiliate_data.model import AffiliateLink
+        stmt = select(AffiliateLink).where(
+            AffiliateLink.user_id == user_id,
+            AffiliateLink.affiliate_url == normalized_url,
+            AffiliateLink.id != affiliate_link_id,
+        )
+        dup = self.repository.db.scalar(stmt)
+        if dup:
+            raise ValueError("Dự án với affiliate URL này đã tồn tại")
+
+        link.affiliate_url = normalized_url
+        link.domain = domain
+        link.name = clean_name
+        link.search_query = clean_search
+        link.raw_data = {
+            "affiliate_url": normalized_url,
+            "domain": domain,
+            "name": clean_name,
+            "search_query": clean_search,
+        }
+
+        self.repository.commit()
+
+        return {
+            "id": link.id,
+            "user_id": link.user_id,
+            "affiliate_url": link.affiliate_url,
+            "domain": link.domain,
+            "name": link.name,
+            "search_query": link.search_query,
+            "raw_data": link.raw_data,
+            "created_at": link.created_at,
+            "updated_at": link.updated_at,
+        }
 
     def get_all_affiliate_links(self, user_id: str) -> list[dict]:
         rows = self.repository.get_all_affiliate_links_for_user(user_id)
@@ -506,6 +611,8 @@ class AffiliateDataService:
                 "user_id": row.user_id,
                 "affiliate_url": row.affiliate_url,
                 "domain": row.domain,
+                "name": row.name,
+                "search_query": row.search_query,
                 "raw_data": row.raw_data,
                 "created_at": row.created_at,
                 "updated_at": row.updated_at,
@@ -580,6 +687,7 @@ class AffiliateDataService:
                     "answer": item.answer,
                     "results": item.results or [],
                     "raw_data": item.raw_data,
+                    "ad_copy": item.raw_data.get("ad_copy") if item.raw_data else None,
                     "created_at": item.created_at,
                     "updated_at": item.updated_at,
                 }

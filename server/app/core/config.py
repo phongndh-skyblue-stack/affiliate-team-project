@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "MIC ACE API"
     APP_ENV: str = "development"
     DEBUG: bool = True
-    APP_PORT: int = 9030
+    APP_PORT: int = 4050
     API_PREFIX: str = "/api"
+    PAGE_SIZE: int = 10
 
     DATABASE_URL: str = "sqlite:///./micace.db"
     SQLALCHEMY_ECHO: bool = False
@@ -27,11 +28,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    CORS_ORIGINS: str = "http://localhost:4000,http://127.0.0.1:4000"
 
     # --- Third-party API keys (comma-separated for key rotation) ---
     SERPAPI_KEYS: str = ""
     TAVILY_KEYS: str = ""
+    MINIMAX_API_KEY: str = ""
 
     # --- Redis ---
     REDIS_URL: str = "redis://127.0.0.1:6379/0"
@@ -61,7 +63,7 @@ class Settings(BaseSettings):
     # --- Google OAuth (Mail Delegation + Google Ads client) ---
     GOOGLE_CLIENT_ID: str = ""               # OAuth 2.0 Web client ID for delegation flow
     GOOGLE_CLIENT_SECRET: str = ""           # OAuth client secret
-    GOOGLE_OAUTH_REDIRECT_URI: str = "http://localhost:3000/oauth/callback"  # Frontend receives ?code=&state=
+    GOOGLE_OAUTH_REDIRECT_URI: str = "http://localhost:4000/oauth/callback"  # Frontend receives ?code=&state=
     GOOGLE_OAUTH_STATE_EXPIRATION_MINUTES: int = 60  # Link expiry in minutes
 
     # --- Gmail Sender (Mail Delegation emails) ---
@@ -74,6 +76,9 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_BOT_USERNAME: str = ""
     TELEGRAM_VERIFICATION_TTL_SECONDS: int = 600
+
+
+
 
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),

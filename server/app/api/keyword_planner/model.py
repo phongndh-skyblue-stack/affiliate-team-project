@@ -21,6 +21,8 @@ class KeywordPlannerJob(Base):
     user_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    project_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    project_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # "keywords" | "url"
     input_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
@@ -87,6 +89,91 @@ class KeywordPlannerResult(Base):
 
     job: Mapped[KeywordPlannerJob] = relationship(
         "KeywordPlannerJob", back_populates="results"
+    )
+
+
+class KeywordCandidateProject(Base):
+    """A URL-optional project opportunity saved from keyword research."""
+
+    __tablename__ = "keyword_candidate_projects"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    affiliate_project_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("affiliate_links.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    source_job_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("keyword_planner_jobs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    source_ads_id: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="new", index=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tags: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    language_id: Mapped[int] = mapped_column(Integer, nullable=False, default=1000)
+    location_ids: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    website_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
+
+    items: Mapped[list["KeywordCandidateItem"]] = relationship(
+        "KeywordCandidateItem",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        order_by="KeywordCandidateItem.opportunity_score.desc()",
+    )
+
+
+class KeywordCandidateItem(Base):
+    """Durable keyword metric and classification snapshot for a candidate."""
+
+    __tablename__ = "keyword_candidate_items"
+    __table_args__ = (
+        UniqueConstraint("candidate_id", "normalized_keyword", name="uq_candidate_keyword"),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    candidate_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("keyword_candidate_projects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_result_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("keyword_planner_results.id", ondelete="SET NULL"), nullable=True
+    )
+    keyword: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_keyword: Mapped[str] = mapped_column(String(500), nullable=False)
+    avg_monthly_searches: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    competition: Mapped[str] = mapped_column(String(50), nullable=False, default="")
+    competition_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    low_top_page_bid: Mapped[float | None] = mapped_column(Float, nullable=True)
+    high_top_page_bid: Mapped[float | None] = mapped_column(Float, nullable=True)
+    monthly_searches: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    inferred_intent: Mapped[str] = mapped_column(String(30), nullable=False, default="unknown")
+    manual_intent: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    opportunity_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    opportunity_tier: Mapped[str] = mapped_column(String(20), nullable=False, default="low")
+    score_explanation: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tags: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
+
+    candidate: Mapped[KeywordCandidateProject] = relationship(
+        "KeywordCandidateProject", back_populates="items"
     )
 
 

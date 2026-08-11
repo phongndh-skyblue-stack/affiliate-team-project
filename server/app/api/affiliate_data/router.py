@@ -11,6 +11,7 @@ from app.api.affiliate_data.schema import (
     AffiliateLinkCreateRequest,
     AffiliateLinkModel,
     AffiliateLinkDetailResponse,
+    AffiliateLinkUpdateRequest,
     AffiliateProjectScanRequest,
     AffiliateProjectScanResponse,
     ScanTrafficRequest,
@@ -42,7 +43,7 @@ def create_affiliate_link_endpoint(
     service: AffiliateDataService = Depends(get_service),
 ) -> AffiliateLinkModel:
     try:
-        row = service.create_affiliate_link(current_user.id, payload.website)
+        row = service.create_affiliate_link(current_user.id, payload.website, payload.name, payload.search)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return AffiliateLinkModel(**row)
@@ -50,7 +51,7 @@ def create_affiliate_link_endpoint(
 
 @router.post(
     "/scan-traffic",
-    response_model=ScanTrafficResponse,
+    response_model=list[ScanTrafficResponse],
     summary="Quét traffic chi tiết của 1 URL từ SimilarWeb Pro",
     responses={
         400: {"description": "URL không hợp lệ hoặc không thể xác định domain"},
@@ -61,7 +62,7 @@ async def scan_traffic_endpoint(
     payload: ScanTrafficRequest,
     current_user: User = Depends(get_current_user),
     service: AffiliateDataService = Depends(get_service),
-) -> ScanTrafficResponse:
+) -> list[ScanTrafficResponse]:
     """Quét traffic cho URL cho trước.
 
     - Cookie SimilarWeb Pro được cache và tự refresh khi hết hạn.
@@ -69,7 +70,7 @@ async def scan_traffic_endpoint(
       traffic sources và mạng xã hội.
     """
     try:
-        result = await service.create_traffic_scan(
+        results = await service.create_traffic_scan(
             user_id=current_user.id,
             affiliate_link_id=payload.affiliate_link_id,
             months=payload.months,
@@ -83,20 +84,24 @@ async def scan_traffic_endpoint(
             detail=f"Quét traffic thất bại: {exc}",
         )
 
-    details_raw = result.get("traffic_details")
-    traffic_details: TrafficDetails | None = None
-    if details_raw:
-        # alias "global" → "global_"
-        traffic_details = TrafficDetails.model_validate(details_raw)
+    response_list = []
+    for result in results:
+        details_raw = result.get("traffic_details")
+        traffic_details: TrafficDetails | None = None
+        if details_raw:
+            # alias "global" → "global_"
+            traffic_details = TrafficDetails.model_validate(details_raw)
 
-    return ScanTrafficResponse(
-        domain=result["domain"],
-        url=result["url"],
-        found=result["found"],
-        monthly_visits=result["monthly_visits"],
-        period_month=result["period_month"],
-        traffic_details=traffic_details,
-    )
+        response_list.append(ScanTrafficResponse(
+            domain=result["domain"],
+            url=result["url"],
+            found=result["found"],
+            monthly_visits=result["monthly_visits"],
+            period_month=result["period_month"],
+            traffic_details=traffic_details,
+        ))
+
+    return response_list
 
 
 @router.post(
@@ -202,3 +207,33 @@ def get_affiliate_link_detail_endpoint(
         )
 
     return AffiliateLinkDetailResponse(**result)
+
+
+@router.put(
+    "/affiliate-link/{affiliate_link_id}",
+    response_model=AffiliateLinkModel,
+    summary="Cập nhật affiliate link",
+    responses={
+        404: {"description": "Không tìm thấy affiliate link của user hiện tại"},
+        400: {"description": "Website/domain không hợp lệ"},
+    },
+)
+def update_affiliate_link_endpoint(
+    affiliate_link_id: str,
+    payload: AffiliateLinkUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    service: AffiliateDataService = Depends(get_service),
+) -> AffiliateLinkModel:
+    try:
+        row = service.update_affiliate_link(
+            user_id=current_user.id,
+            affiliate_link_id=affiliate_link_id,
+            website=payload.website,
+            name=payload.name,
+            search=payload.search,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return AffiliateLinkModel(**row)

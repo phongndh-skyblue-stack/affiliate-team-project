@@ -32,8 +32,10 @@ export function LoginForm() {
     try {
       await login(data);
     } catch (err: unknown) {
+      const axiosError = err as any;
       const message =
-        err instanceof Error ? err.message : "Đăng nhập thất bại. Vui lòng thử lại.";
+        axiosError?.response?.data?.detail ||
+        (err instanceof Error ? err.message : "Đăng nhập thất bại. Vui lòng thử lại.");
       setServerError(message);
     }
   };

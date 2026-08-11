@@ -59,7 +59,7 @@ Tạo file `.env` trong thư mục `server/` (xem mẫu ở `.env.example`):
 APP_NAME=MIC ACE API
 APP_ENV=development
 DEBUG=true
-APP_PORT=9030
+APP_PORT=4050
 API_PREFIX=/api
 
 DATABASE_URL=sqlite:///./micace.db
@@ -72,7 +72,7 @@ JWT_REFRESH_SECRET_KEY=change-me-refresh-secret
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
 
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+CORS_ORIGINS=http://localhost:4000,http://127.0.0.1:4000
 ```
 
 ## Chạy local
@@ -89,12 +89,12 @@ source .venv/bin/activate
 # Cài dependencies
 pip install -r requirements.txt
 
-# Chạy server (port 9030)
-uvicorn app.main:app --reload --port 9030
+# Chạy server (port 4050)
+uvicorn app.main:app --reload --port 4050
 ```
 
-Server chạy tại **http://localhost:9030**.  
-Swagger UI: **http://localhost:9030/docs**
+Server chạy tại **http://localhost:4050**.  
+Swagger UI: **http://localhost:4050/docs**
 
 ## Alembic — Database migrations
 
@@ -141,10 +141,10 @@ alembic downgrade -1
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 9030
+uvicorn app.main:app --reload --host 0.0.0.0 --port 4050
 ```
 
-Server mặc định chạy tại `http://localhost:9030`, nên frontend `client/` có thể dùng luôn `http://localhost:9030/api`.
+Server mặc định chạy tại `http://localhost:4050`, nên frontend `client/` có thể dùng luôn `http://localhost:4050/api`.
 
 Nếu chạy bằng Python trực tiếp, backend dùng host mặc định trong code và đọc `APP_PORT` từ `.env` nếu có:
 

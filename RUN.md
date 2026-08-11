@@ -117,13 +117,13 @@ Mở Git Bash mới.
 
 ```bash
 cd /d/MICACE/affiliate-project/server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 9030
+uvicorn app.main:app --reload --host 0.0.0.0 --port 4050
 ```
 
 Kiểm tra backend trong trình duyệt:
 
 ```text
-http://localhost:9030/docs
+http://localhost:4050/docs
 ```
 
 Giữ cửa sổ backend này mở.
@@ -147,7 +147,7 @@ npm run dev
 Mở web:
 
 ```text
-http://localhost:3000
+http://localhost:4000
 ```
 
 Giữ cửa sổ frontend này mở.
@@ -196,7 +196,7 @@ Backend:
 
 ```bash
 cd /d/MICACE/affiliate-project/server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 9030
+uvicorn app.main:app --reload --host 0.0.0.0 --port 4050
 ```
 
 Frontend:
@@ -316,13 +316,13 @@ Mở Terminal mới.
 
 ```zsh
 cd ~/Documents/MICACE/affiliate-project/server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 9030
+uvicorn app.main:app --reload --host 0.0.0.0 --port 4050
 ```
 
 Kiểm tra backend trong trình duyệt:
 
 ```text
-http://localhost:9030/docs
+http://localhost:4050/docs
 ```
 
 Giữ cửa sổ backend này mở.
@@ -346,7 +346,7 @@ npm run dev
 Mở web:
 
 ```text
-http://localhost:3000
+http://localhost:4000
 ```
 
 Giữ cửa sổ frontend này mở.
@@ -394,7 +394,7 @@ Backend:
 
 ```zsh
 cd ~/Documents/MICACE/affiliate-project/server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 9030
+uvicorn app.main:app --reload --host 0.0.0.0 --port 4050
 ```
 
 Frontend:
@@ -477,7 +477,7 @@ python3 -m bot.main
 Kiểm tra backend đã chạy chưa:
 
 ```text
-http://localhost:9030/docs
+http://localhost:4050/docs
 ```
 
 Kiểm tra file frontend env:
@@ -497,8 +497,8 @@ macOS:
 Cần có:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:9030/api
-PORT=3000
+NEXT_PUBLIC_API_URL=http://localhost:4050/api
+PORT=4000
 ```
 
 ### Lỗi ARQ không chạy

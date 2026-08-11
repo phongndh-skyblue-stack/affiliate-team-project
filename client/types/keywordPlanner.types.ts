@@ -7,6 +7,7 @@ export interface ScanByKeywordsRequest {
   languageId?: number;
   locationIds?: number[];
   resultLimit?: number;
+  projectId?: string;
 }
 
 export interface ScanByUrlRequest {
@@ -16,6 +17,7 @@ export interface ScanByUrlRequest {
   languageId?: number;
   locationIds?: number[];
   resultLimit?: number;
+  projectId?: string;
 }
 
 // ─── Responses ───────────────────────────────────────────────────────────────
@@ -35,6 +37,11 @@ export interface KeywordIdeaItem {
   lowTopPageBid: number | null;
   highTopPageBid: number | null;
   monthlySearches: MonthlySearchVolumeItem[];
+  intent?: KeywordIntent;
+  opportunityScore?: number;
+  opportunityTier?: OpportunityTier;
+  trendPercentage?: number;
+  scoreExplanation?: string;
 }
 
 export interface JobResponse {
@@ -50,6 +57,8 @@ export interface JobResponse {
   status: "pending" | "done" | "error";
   errorMessage: string | null;
   resultCount: number;
+  projectId: string | null;
+  projectName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -80,4 +89,89 @@ export interface AdsAccountResponse {
 export interface AdsAccountListResponse {
   total: number;
   items: AdsAccountResponse[];
+}
+
+export type KeywordIntent =
+  | "informational"
+  | "commercial"
+  | "transactional"
+  | "navigational"
+  | "unknown";
+
+export type OpportunityTier = "high" | "medium" | "low";
+export type CandidateStatus = "new" | "researching" | "promising" | "rejected" | "promoted";
+
+export interface CandidateKeywordInput {
+  sourceResultId?: string | null;
+  keyword: string;
+  avgMonthlySearches: number;
+  competition: string;
+  competitionIndex: number | null;
+  lowTopPageBid: number | null;
+  highTopPageBid: number | null;
+  monthlySearches: MonthlySearchVolumeItem[];
+  inferredIntent: KeywordIntent;
+  manualIntent?: KeywordIntent | null;
+  opportunityScore: number;
+  opportunityTier: OpportunityTier;
+  scoreExplanation: string;
+  notes?: string | null;
+  tags?: string[];
+}
+
+export interface CandidateKeyword extends CandidateKeywordInput {
+  id: string;
+  effectiveIntent: KeywordIntent;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CandidateProject {
+  id: string;
+  userId: string;
+  affiliateProjectId: string | null;
+  sourceJobId: string | null;
+  sourceAdsId: string | null;
+  name: string;
+  description: string | null;
+  status: CandidateStatus;
+  notes: string | null;
+  tags: string[];
+  languageId: number;
+  locationIds: number[];
+  websiteUrl: string | null;
+  keywords: CandidateKeyword[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CandidateCreateRequest {
+  name: string;
+  description?: string;
+  status?: CandidateStatus;
+  notes?: string;
+  tags?: string[];
+  languageId?: number;
+  locationIds?: number[];
+  sourceAdsId?: string;
+  sourceJobId?: string;
+  websiteUrl?: string;
+  keywords: CandidateKeywordInput[];
+}
+
+export interface CandidateUpdateRequest {
+  name?: string;
+  description?: string | null;
+  status?: CandidateStatus;
+  notes?: string | null;
+  tags?: string[];
+  languageId?: number;
+  locationIds?: number[];
+  websiteUrl?: string | null;
+  keywords?: CandidateKeywordInput[];
+}
+
+export interface CandidateListResponse {
+  total: number;
+  items: CandidateProject[];
 }

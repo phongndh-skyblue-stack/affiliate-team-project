@@ -20,6 +20,7 @@ from app.core.database import SessionLocal
 def _load_model_metadata() -> None:
     # ARQ starts outside FastAPI's router import graph, so load FK targets explicitly.
     import app.api.auth.model  # noqa: F401
+    import app.api.affiliate_data.model  # noqa: F401
     import app.api.telegram.model  # noqa: F401
 
 
@@ -48,6 +49,7 @@ async def run_scheduled_search_ads(ctx, schedule_id: str) -> dict:
             no_proxy=schedule.no_proxy,
             headful=schedule.headful,
             proxy_id=schedule.proxy_id,
+            project_id=schedule.project_id,
         )
         service = SearchAdsService(db)
         response = await service.run_search(user_id=schedule.user_id, payload=payload, is_scheduled=True)
@@ -163,6 +165,8 @@ async def _enqueue_next_daily_run(db, schedule_id: str) -> None:
             headful=schedule.headful,
             proxy_id=schedule.proxy_id,
             proxy_name=schedule.proxy_name,
+            project_id=schedule.project_id,
+            project_name=schedule.project_name,
             batch_id=schedule.batch_id,
             run_at=next_run_at,
             schedule_mode=schedule.schedule_mode,

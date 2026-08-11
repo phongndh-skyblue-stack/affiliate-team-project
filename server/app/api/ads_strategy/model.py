@@ -19,7 +19,7 @@ class AdsStrategyApiKey(Base):
     )
     display_name: Mapped[str] = mapped_column(String(120), nullable=False)
     provider: Mapped[str] = mapped_column(String(40), nullable=False, default="gemini")
-    model_name: Mapped[str] = mapped_column(String(80), nullable=False, default="gemini-2.5-flash")
+    model_name: Mapped[str] = mapped_column(String(80), nullable=False, default="gemini-2.0-flash")
     encrypted_api_key: Mapped[str] = mapped_column(Text, nullable=False)
     api_key_last4: Mapped[str] = mapped_column(String(8), nullable=False, default="")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

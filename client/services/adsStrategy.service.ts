@@ -8,6 +8,9 @@ import type {
   AdsStrategyPromptListResponse,
   AdsStrategyResult,
   AdsStrategyResultListResponse,
+  Country,
+  AdsStrategyCheckModelsRequest,
+  AdsStrategyCheckModelsResponse,
 } from "@/types/adsStrategy.types";
 
 export const adsStrategyService = {
@@ -32,6 +35,16 @@ export const adsStrategyService = {
 
   deleteApiKey: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/ads-strategy/api-keys/${id}`);
+  },
+
+  checkModels: async (
+    data: AdsStrategyCheckModelsRequest
+  ): Promise<AdsStrategyCheckModelsResponse> => {
+    const response = await axiosInstance.post<AdsStrategyCheckModelsResponse>(
+      "/ads-strategy/api-keys/check-models",
+      data
+    );
+    return response.data;
   },
 
   listPrompts: async (): Promise<AdsStrategyPromptListResponse> => {
@@ -101,5 +114,10 @@ export const adsStrategyService = {
 
   deleteResult: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/ads-strategy/results/${id}`);
+  },
+
+  getCountries: async (): Promise<Country[]> => {
+    const response = await axiosInstance.get<Country[]>("/ads-strategy/countries");
+    return response.data;
   },
 };

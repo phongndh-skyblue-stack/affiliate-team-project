@@ -1,31 +1,60 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState, useRef } from "react";
 import {
+  AlertTriangle,
   Check,
   Clipboard,
+  Database,
   FileText,
   KeyRound,
   Loader2,
   Plus,
+  RefreshCw,
   Save,
   Sparkles,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/common/CustomSelect";
 import { adsStrategyService } from "@/services/adsStrategy.service";
+import { adsTransparentService } from "@/services/adsTransparent.service";
+import { affiliateProjectService } from "@/services/affiliateProject.service";
+import { keywordPlannerService } from "@/services/keywordPlanner.service";
+import { manualSearchService } from "@/services/manualSearch.service";
+import { searchAdsService } from "@/services/searchAds.service";
+import type {
+  AffiliateLinkDetailResponse,
+  AffiliateLinkModel,
+  AffiliateLinkProjectDataModel,
+  AffiliateLinkTrafficModel,
+  TrafficCountryItem,
+} from "@/types/affiliateProject.types";
+import type { AdSearchHistoryItem } from "@/types/adsTransparent.types";
 import type {
   AdsStrategyApiKey,
   AdsStrategyGenerateResponse,
   AdsStrategyPrompt,
   AdsStrategyResult,
+  Country,
 } from "@/types/adsStrategy.types";
+import type { KeywordIdeaItem } from "@/types/keywordPlanner.types";
+import type { ManualCompetitorSearchHistoryItem } from "@/types/manualSearch.types";
+import type {
+  SearchAdsCompetitorItem,
+  SearchAdsHistoryItem,
+} from "@/types/searchAds.types";
 
 const DEFAULT_FIELDS = [
   { key: "website_url", label: "Website hoặc Landing Page", type: "url", required: true },
+  { key: "project_context", label: "Dữ liệu dự án tự động", type: "textarea", required: false },
+  { key: "brand_or_offer", label: "Tên brand/offer", type: "text", required: false },
+  { key: "industry", label: "Ngành hàng", type: "text", required: false },
+  { key: "restricted_countries", label: "Quốc gia cấm/hạn chế", type: "text", required: false },
   { key: "market", label: "Thị trường ưu tiên", type: "text", required: false },
   { key: "budget", label: "Ngân sách dự kiến", type: "text", required: false },
+  { key: "payout", label: "Payout/commission", type: "text", required: false },
   { key: "response_language", label: "Ngôn ngữ kết quả", type: "select", required: false },
   { key: "notes", label: "Ghi chú bổ sung", type: "textarea", required: false },
 ];
@@ -60,17 +89,26 @@ function applyLanguageInstruction(template: string, language: string) {
   return `${template.replace(pattern, "").trim()}\n\n${languageInstruction(language)}`;
 }
 
-const DEFAULT_PROMPT = `Hãy đóng vai Chuyên gia Phân tích Thị trường & Lập kế hoạch chiến dịch Google Ads Search.
+const DEFAULT_PROMPT = `Hãy đóng vai một Media Buyer chuyên chạy Google Ads Search cho các dự án affiliate.
+
+Mục tiêu của bạn là phân tích link affiliate/landing page, đọc dữ liệu hệ thống đã thu thập, kiểm soát rủi ro chính sách và tạo chiến lược test có thể triển khai thật.
 
 Website/Landing page: {{website_url}}
+Tên brand/offer: {{brand_or_offer}}
+Ngành hàng: {{industry}}
 Thị trường ưu tiên: {{market}}
+Quốc gia bị cấm/hạn chế đã biết: {{restricted_countries}}
 Ngân sách dự kiến: {{budget}}
+Payout/commission: {{payout}}
 Ngôn ngữ kết quả mong muốn: {{response_language}}
 Ghi chú bổ sung: {{notes}}
 
+Dữ liệu hệ thống đã thu thập:
+{{project_context}}
+
 Nhiệm vụ:
-1. Đọc và phân tích website để xác định sản phẩm/dịch vụ, ngành hàng, ưu thế cốt lõi và khuyến mãi hiện có nếu có.
-2. Kiểm tra cảnh báo chính sách Google Ads liên quan trực tiếp đến ngành hàng.
+1. Đọc và phân tích website/dữ liệu hệ thống để xác định sản phẩm/dịch vụ, ngành hàng, ưu thế cốt lõi, khuyến mãi và tracking affiliate hiện có nếu có.
+2. Kiểm tra cảnh báo chính sách Google Ads liên quan trực tiếp đến ngành hàng, quốc gia, brand bidding và affiliate tracking.
 3. Xuất toàn bộ báo cáo trong một câu trả lời theo đúng cấu trúc dưới đây.
 
 ## 1. Phân tích sản phẩm, đối thủ và thị trường
@@ -84,7 +122,8 @@ Nhiệm vụ:
 
 ## 2. Phân tích Google Search keywords
 - Kiểm tra khả năng brand bidding. Nếu brand bidding bị cấm hoặc rủi ro, tự động chuyển sang solution-based keywords hoặc competitor/alternative keywords.
-- Tạo bảng keyword bằng tiếng Anh. Ưu tiên mạnh Exact Match để kiểm soát ngân sách.
+- Mặc định chỉ dùng các keyword đã được hệ thống lấy trong mục [KEYWORD_PLANNER] của dữ liệu hệ thống. Không tự tạo thêm keyword mới nếu chưa ghi rõ là "Suggested expansion".
+- Tạo bảng keyword bằng tiếng Anh từ đúng danh sách keyword đã có volume. Ưu tiên mạnh Exact Match để kiểm soát ngân sách.
 - Với mỗi keyword, cung cấp volume ước tính theo 3 tháng gần nhất và phân tích xu hướng 3 tháng: tăng, giảm hoặc đi ngang.
 - Phân tích search intent và nhu cầu thật của người tìm kiếm.
 
@@ -162,6 +201,322 @@ function parseTableRow(line: string) {
     .replace(/\|$/, "")
     .split("|")
     .map((cell) => cell.trim());
+}
+
+interface ProjectKeywordIdea extends KeywordIdeaItem {
+  jobId: string;
+  pageUrl?: string | null;
+  seedKeywords: string[];
+}
+
+interface StrategyProjectData {
+  detail: AffiliateLinkDetailResponse | null;
+  keywordIdeas: ProjectKeywordIdea[];
+  searchHistories: SearchAdsHistoryItem[];
+  savedSearchCompetitors: SearchAdsCompetitorItem[];
+  manualHistories: ManualCompetitorSearchHistoryItem[];
+  transparencyHistories: AdSearchHistoryItem[];
+}
+
+interface ContextChecklistItem {
+  label: string;
+  ready: boolean;
+  detail: string;
+  action?: string;
+  targetTab?: string;
+}
+
+interface StrategyContextResult {
+  text: string;
+  checklist: ContextChecklistItem[];
+  suggestedMarket: string;
+  keywordIdeas: ProjectKeywordIdea[];
+}
+
+function normalize(value: string | null | undefined): string {
+  return (value || "").trim().toLowerCase();
+}
+
+function normalizeDomain(value: string | null | undefined): string {
+  return normalize(value).replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+}
+
+function getBrandRoot(domain: string): string {
+  const parts = normalizeDomain(domain).split(".").filter(Boolean);
+  if (parts.length <= 2) return parts[0] || "";
+  const secondLevelTlds = new Set(["co", "com", "net", "org", "ac", "gov"]);
+  const beforeTld = parts[parts.length - 2];
+  return secondLevelTlds.has(beforeTld) && parts.length >= 3
+    ? parts[parts.length - 3] || beforeTld
+    : beforeTld || parts[0] || "";
+}
+
+function getBrandKeywordCandidates(domain: string): string[] {
+  const brand = getBrandRoot(domain);
+  if (!brand) return [];
+  return [
+    brand,
+    `${brand} review`,
+    `${brand} promo code`,
+    `${brand} bonus`,
+    `${brand} app`,
+    `${brand} login`,
+    `${brand} affiliate`,
+  ];
+}
+
+function latestBySnakeCreatedAt<T extends { created_at: string }>(items: T[]): T | null {
+  return [...items].sort((a, b) => b.created_at.localeCompare(a.created_at))[0] || null;
+}
+
+function latestTraffic(detail: AffiliateLinkDetailResponse | null): AffiliateLinkTrafficModel | null {
+  return latestBySnakeCreatedAt(detail?.traffic_scans || []);
+}
+
+function latestProjectScan(detail: AffiliateLinkDetailResponse | null): AffiliateLinkProjectDataModel | null {
+  return latestBySnakeCreatedAt(detail?.project_data_scans || []);
+}
+
+function topTrafficCountries(traffic: AffiliateLinkTrafficModel | null): TrafficCountryItem[] {
+  return [...(traffic?.traffic_details?.country || [])]
+    .sort((a, b) => b.traffic_share_percentage - a.traffic_share_percentage)
+    .slice(0, 8);
+}
+
+function matchesProject(value: string | null | undefined, project: AffiliateLinkModel | null): boolean {
+  if (!project) return false;
+  const text = normalize(value);
+  const domain = normalizeDomain(project.domain || project.affiliate_url);
+  const brand = getBrandRoot(domain);
+  return Boolean(
+    text &&
+      ((domain && text.includes(domain)) ||
+        (brand && text.includes(brand)) ||
+        (project.id && text.includes(project.id.toLowerCase())) ||
+        (project.name && text.includes(project.name.toLowerCase())))
+  );
+}
+
+function compactText(value: string | null | undefined, max = 280): string {
+  const cleaned = (value || "").replace(/\s+/g, " ").trim();
+  return cleaned.length > max ? `${cleaned.slice(0, max - 3)}...` : cleaned;
+}
+
+function formatCompactNumber(value: number | null | undefined): string {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value || 0);
+}
+
+function currencyFromKeywordIdeas(ideas: ProjectKeywordIdea[]): string {
+  return ideas.some((item) => item.lowTopPageBid != null || item.highTopPageBid != null) ? "account currency" : "unknown";
+}
+
+function keywordPlannerRunInstruction(keywordIdeas: ProjectKeywordIdea[]): string {
+  const allowedKeywords = keywordIdeas.map((item) => item.keyword).filter(Boolean);
+  return [
+    "[KEYWORD_DEFAULT_RULE]",
+    allowedKeywords.length
+      ? `Default Google Search keywords must be limited to these fetched Keyword Planner keywords only: ${allowedKeywords.join(", ")}.`
+      : "No fetched Keyword Planner keywords are available. Do not invent default keywords; ask the user to scan Keyword Planner first or clearly label any keyword as Suggested expansion.",
+    "In section #2, build the main keyword table only from the fetched Keyword Planner list above. Any extra solution-based, competitor, or alternative keyword must be separated under a clearly labeled Suggested expansion section and must not be treated as default.",
+    "[/KEYWORD_DEFAULT_RULE]",
+  ].join("\n");
+}
+
+function buildStrategyContext(
+  project: AffiliateLinkModel | null,
+  data: StrategyProjectData,
+  userInput: {
+    market: string;
+    budget: string;
+    payout: string;
+    brandOrOffer: string;
+    industry: string;
+    restrictedCountries: string;
+    notes: string;
+  }
+): StrategyContextResult {
+  if (!project) {
+    return {
+      text: "Chưa chọn dự án trong hệ thống. Chỉ dùng dữ liệu người dùng nhập thủ công.",
+      suggestedMarket: userInput.market,
+      keywordIdeas: [],
+      checklist: [
+        { label: "Dự án", ready: false, detail: "Chưa chọn dự án", action: "Tạo hoặc chọn dự án", targetTab: "projects" },
+        { label: "Traffic", ready: false, detail: "Chưa có dữ liệu", action: "Quét traffic trong tab Dự án", targetTab: "projects" },
+        { label: "Keyword Planner", ready: false, detail: "Chưa có dữ liệu", action: "Quét keyword/CPC trong Google Ads", targetTab: "keyword-planner" },
+        { label: "Đối thủ", ready: false, detail: "Chưa có dữ liệu", action: "Quét quảng cáo theo keyword", targetTab: "search-ads" },
+      ],
+    };
+  }
+
+  const detail = data.detail;
+  const traffic = latestTraffic(detail);
+  const projectScan = latestProjectScan(detail);
+  const countries = topTrafficCountries(traffic);
+  const restricted = projectScan?.restricted_countries || [];
+  const domain = normalizeDomain(project.domain || project.affiliate_url);
+  const brandKeywords = getBrandKeywordCandidates(domain);
+  const keywordIdeas = data.keywordIdeas
+    .filter((item) => {
+      const pageDomain = normalizeDomain(item.pageUrl);
+      const keyword = normalize(item.keyword);
+      const brand = getBrandRoot(domain);
+      return (
+        pageDomain === domain ||
+        pageDomain.endsWith(`.${domain}`) ||
+        item.seedKeywords.some((seed) => matchesProject(seed, project)) ||
+        Boolean(brand && keyword.includes(brand))
+      );
+    })
+    .sort((a, b) => (b.avgMonthlySearches || 0) - (a.avgMonthlySearches || 0))
+    .slice(0, 20);
+
+  const searchRows = data.searchHistories
+    .filter((item) => item.projectId === project.id || matchesProject(item.keyword, project))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 8);
+  const savedCompetitors = data.savedSearchCompetitors
+    .filter((item) => matchesProject(item.keyword, project) || matchesProject(item.advertiserDomain, project))
+    .slice(0, 12);
+  const manualRows = data.manualHistories
+    .filter((item) => item.projectId === project.id || matchesProject(item.keyword, project))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 8);
+  const ttmbRows = data.transparencyHistories
+    .filter((item) => {
+      if (item.projectId === project.id) return true;
+      return (
+        matchesProject(item.text, project) ||
+        matchesProject(item.advertiserIdQuery, project) ||
+        item.creatives.some((creative) => matchesProject(creative.targetDomain, project))
+      );
+    })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 8);
+
+  const competitorNames = new Map<string, string>();
+  for (const item of savedCompetitors) {
+    const key = item.advertiserDomain || item.advertiserName || item.title || item.keyword;
+    if (key) competitorNames.set(normalize(key), `${item.advertiserName || item.title || key} (${item.advertiserDomain || item.keyword})`);
+  }
+  for (const row of searchRows) {
+    for (const ad of row.ads.slice(0, 5)) {
+      const key = ad.advertiserDomain || ad.advertiserName || ad.title;
+      if (key) competitorNames.set(normalize(key), `${ad.advertiserName || ad.title || key} (${ad.advertiserDomain || ad.displayUrl || row.keyword})`);
+    }
+  }
+  for (const row of manualRows) {
+    for (const ad of row.ads.slice(0, 5)) {
+      const key = ad.destinationDomain || ad.advertiser || ad.title;
+      if (key) competitorNames.set(normalize(key), `${ad.advertiser || ad.title || key} (${ad.destinationDomain || row.keyword})`);
+    }
+  }
+  for (const row of ttmbRows) {
+    for (const creative of row.creatives.slice(0, 5)) {
+      const key = creative.targetDomain || creative.advertiser;
+      if (key) competitorNames.set(normalize(key), `${creative.advertiser} (${creative.targetDomain || "TTMB"})`);
+    }
+  }
+
+  const suggestedMarket = userInput.market || countries.find((country) => {
+    const countryName = normalize(country.country_name);
+    return !restricted.some((item) => normalize(item.country).includes(countryName) || countryName.includes(normalize(item.country)));
+  })?.country_name || "All";
+
+  const lines = [
+    "[PROJECT]",
+    `Name: ${project.name || projectScan?.project_name || "-"}`,
+    `Affiliate URL: ${project.affiliate_url}`,
+    `Domain: ${domain || "-"}`,
+    `Search query: ${project.search_query || "-"}`,
+    `Brand/offer input: ${userInput.brandOrOffer || projectScan?.project_name || project.name || "-"}`,
+    `Industry input: ${userInput.industry || "-"}`,
+    "",
+    "[USER_INPUT]",
+    `Preferred market: ${userInput.market || "-"}`,
+    `Known restricted countries: ${userInput.restrictedCountries || "-"}`,
+    `Budget: ${userInput.budget || "Chưa nhập; hãy đề xuất 3 phương án test và hỏi lại nếu cần chốt ngân sách"}`,
+    `Payout/commission: ${userInput.payout || "-"}`,
+    `Notes/rules: ${userInput.notes || "-"}`,
+    "",
+    "[PROJECT_SCAN]",
+    `Project link detected: ${projectScan?.project_link || "-"}`,
+    `Event content: ${compactText(projectScan?.event_content, 500) || "-"}`,
+    `Sale content/offer: ${compactText(projectScan?.sale_content, 500) || "-"}`,
+    `AI scan answer: ${compactText(projectScan?.answer, 900) || "-"}`,
+    "",
+    "[TRAFFIC]",
+    traffic
+      ? `Latest monthly visits: ${formatCompactNumber(traffic.monthly_visits)} in ${traffic.period_month}; found=${traffic.found}`
+      : "No traffic scan found.",
+    countries.length
+      ? `Top countries: ${countries.map((item) => `${item.country_name} ${item.traffic_share_percentage.toFixed(2)}%`).join("; ")}`
+      : "Top countries: none.",
+    traffic?.traffic_details?.source
+      ? `Traffic source share: ${Object.entries(traffic.traffic_details.source)
+          .filter(([key, value]) => key !== "period_month" && typeof value === "number")
+          .map(([key, value]) => `${key}=${Number(value).toFixed(1)}%`)
+          .join("; ")}`
+      : "Traffic sources: none.",
+    "",
+    "[COUNTRY_RESTRICTIONS]",
+    restricted.length
+      ? restricted.map((item) => `${item.country}: ${item.restriction_type}; confidence=${item.confidence || "-"}; signals=${item.signals.join(" | ")}`).join("\n")
+      : "No restricted/banned countries found in previous scans.",
+    "",
+    "[KEYWORD_PLANNER]",
+    keywordIdeas.length
+      ? `Default keyword set from fetched Keyword Planner data: ${keywordIdeas.map((item) => item.keyword).join(", ")}`
+      : "Default keyword set from fetched Keyword Planner data: none.",
+    `Brand keyword candidates: ${brandKeywords.join(", ") || "-"}`,
+    keywordIdeas.length
+      ? keywordIdeas
+          .map((item) => {
+            const bids = item.lowTopPageBid != null || item.highTopPageBid != null
+              ? `CPC low/high ${item.lowTopPageBid ?? "-"}-${item.highTopPageBid ?? "-"} ${currencyFromKeywordIdeas(keywordIdeas)}`
+              : "CPC unavailable";
+            return `${item.keyword}: ${item.avgMonthlySearches || 0} avg monthly searches; competition=${item.competition}; ${bids}`;
+          })
+          .join("\n")
+      : "No matching Keyword Planner ideas found. Ask to scan brand keywords/page URL before final CPC decision.",
+    "",
+    "[COMPETITORS]",
+    competitorNames.size
+      ? Array.from(competitorNames.values()).slice(0, 24).join("\n")
+      : "No matched competitors found from Search Ads, SerpAPI/manual search, saved competitors or TTMB.",
+    "",
+    "[SEARCH_ADS_HISTORY]",
+    searchRows.length
+      ? searchRows.map((item) => `${item.keyword}: ${item.totalAdsFound} ads, ${item.createdAt}`).join("\n")
+      : "No Search Ads scan matched this project.",
+    "",
+    "[SERPAPI_MANUAL_HISTORY]",
+    manualRows.length
+      ? manualRows.map((item) => `${item.keyword}: ${item.totalAdsFound} ads, ${item.createdAt}`).join("\n")
+      : "No SerpAPI/manual competitor scan matched this project.",
+    "",
+    "[TTMB_HISTORY]",
+    ttmbRows.length
+      ? ttmbRows.map((item) => `${item.text || item.advertiserIdQuery || "-"}: ${item.creatives.length} creatives, ${item.createdAt}`).join("\n")
+      : "No TTMB/Ads Transparency scan matched this project.",
+  ];
+
+  const checklist: ContextChecklistItem[] = [
+    { label: "Dự án", ready: true, detail: project.name || domain || project.affiliate_url },
+    { label: "Traffic", ready: Boolean(traffic), detail: traffic ? `${formatCompactNumber(traffic.monthly_visits)} visits/tháng` : "Chưa quét traffic", action: "Quét traffic trong tab Dự án", targetTab: "projects" },
+    { label: "Country traffic", ready: countries.length > 0, detail: countries[0] ? `Top: ${countries[0].country_name}` : "Chưa có country", action: "Quét traffic để lấy country split", targetTab: "projects" },
+    { label: "Restriction", ready: restricted.length > 0, detail: restricted.length ? `${restricted.length} quốc gia/rule` : "Chưa có dữ liệu cấm/hạn chế", action: "Quét dữ liệu dự án để kiểm tra restriction", targetTab: "projects" },
+    { label: "Keyword volume", ready: keywordIdeas.length > 0, detail: keywordIdeas[0] ? `${keywordIdeas[0].keyword}: ${formatCompactNumber(keywordIdeas[0].avgMonthlySearches)}` : "Chưa có Keyword Planner", action: "Quét keyword/CPC trong Google Ads", targetTab: "keyword-planner" },
+    { label: "CPC", ready: keywordIdeas.some((item) => item.lowTopPageBid != null || item.highTopPageBid != null), detail: "Low/high top page bid", action: "Quét Keyword Planner trước khi chốt ngân sách", targetTab: "keyword-planner" },
+    { label: "Đối thủ", ready: competitorNames.size > 0, detail: competitorNames.size ? `${competitorNames.size} đối thủ/tín hiệu` : "Chưa có đối thủ khớp dự án", action: "Quét quảng cáo hoặc TTMB theo brand keyword", targetTab: "search-ads" },
+    { label: "Ngân sách", ready: Boolean(userInput.budget.trim()), detail: userInput.budget.trim() || "Chưa nhập" },
+    { label: "Payout", ready: Boolean(userInput.payout.trim()), detail: userInput.payout.trim() || "Chưa nhập" },
+  ];
+
+  return { text: lines.join("\n"), checklist, suggestedMarket, keywordIdeas };
 }
 
 function StrategyResultView({ text }: { text: string }) {
@@ -295,6 +650,7 @@ function StrategyResultView({ text }: { text: string }) {
   return <div className="space-y-4">{nodes}</div>;
 }
 
+
 export function AdsStrategySkillTab() {
   const [apiKeys, setApiKeys] = useState<AdsStrategyApiKey[]>([]);
   const [prompts, setPrompts] = useState<AdsStrategyPrompt[]>([]);
@@ -310,36 +666,142 @@ export function AdsStrategySkillTab() {
 
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyValue, setNewKeyValue] = useState("");
-  const [newKeyModel, setNewKeyModel] = useState("gemini-2.5-flash");
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [fetchedModels, setFetchedModels] = useState<string[]>([]);
+
+  const [runModelName, setRunModelName] = useState("gemini-2.0-flash");
+  const [runAvailableModels, setRunAvailableModels] = useState<string[]>([
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro"
+  ]);
+  const [isFetchingRunModels, setIsFetchingRunModels] = useState(false);
 
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [brandOrOffer, setBrandOrOffer] = useState("");
+  const [industry, setIndustry] = useState("");
   const [market, setMarket] = useState("Vietnam");
+  const [restrictedCountries, setRestrictedCountries] = useState("");
   const [budget, setBudget] = useState("");
+  const [payout, setPayout] = useState("");
   const [responseLanguage, setResponseLanguage] = useState("Tiếng Việt");
   const [notes, setNotes] = useState("");
+  const [affiliateLinks, setAffiliateLinks] = useState<AffiliateLinkModel[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [projectData, setProjectData] = useState<StrategyProjectData>({
+    detail: null,
+    keywordIdeas: [],
+    searchHistories: [],
+    savedSearchCompetitors: [],
+    manualHistories: [],
+    transparencyHistories: [],
+  });
+  const [projectContextLoading, setProjectContextLoading] = useState(false);
+
+  const [countries, setCountries] = useState<Country[]>([]);
+  const marketOptions = useMemo(() => {
+    const opts = [{ value: "All", label: "Tất cả quốc gia (All)" }];
+    countries.forEach((c) => {
+      opts.push({ value: c.nameEn, label: `${c.nameVi} (${c.nameEn})` });
+    });
+    return opts;
+  }, [countries]);
 
   const [promptName, setPromptName] = useState("Prompt chiến lược ads");
   const [promptTemplate, setPromptTemplate] = useState(DEFAULT_PROMPT);
   const [lastResponse, setLastResponse] = useState<AdsStrategyGenerateResponse | null>(null);
 
+  const [promptMode, setPromptMode] = useState<"template" | "compiled" | "manual">("compiled");
+  const [manualResultText, setManualResultText] = useState("");
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  const selectedProject = useMemo(
+    () => affiliateLinks.find((item) => item.id === selectedProjectId) ?? null,
+    [affiliateLinks, selectedProjectId]
+  );
+
+  const strategyContext = useMemo(
+    () =>
+      buildStrategyContext(selectedProject, projectData, {
+        market: market.trim(),
+        budget: budget.trim(),
+        payout: payout.trim(),
+        brandOrOffer: brandOrOffer.trim(),
+        industry: industry.trim(),
+        restrictedCountries: restrictedCountries.trim(),
+        notes: notes.trim(),
+      }),
+    [brandOrOffer, budget, industry, market, notes, payout, projectData, restrictedCountries, selectedProject]
+  );
+
+  const promptTemplateForRun = useMemo(() => {
+    const keywordRule = keywordPlannerRunInstruction(strategyContext.keywordIdeas);
+    if (promptTemplate.includes("{{project_context}}")) {
+      return `${promptTemplate.trim()}\n\n${keywordRule}`;
+    }
+    return `${promptTemplate.trim()}\n\n## Dữ liệu hệ thống đã thu thập\n{{project_context}}\n\n${keywordRule}\n\nHãy ưu tiên dữ liệu trong phần này hơn suy đoán chung. Nếu dữ liệu nào thiếu, ghi rõ ở mục dữ liệu cần kiểm tra thêm.`;
+  }, [promptTemplate, strategyContext.keywordIdeas]);
+
+  const compiledPrompt = useMemo(() => {
+    let result = promptTemplateForRun;
+    const values = {
+      website_url: websiteUrl.trim(),
+      project_context: strategyContext.text,
+      brand_or_offer: brandOrOffer.trim(),
+      industry: industry.trim(),
+      market: market.trim(),
+      restricted_countries: restrictedCountries.trim(),
+      budget: budget.trim(),
+      payout: payout.trim(),
+      response_language: responseLanguage,
+      notes: notes.trim(),
+    };
+    for (const [key, val] of Object.entries(values)) {
+      result = result.replaceAll(`{{${key}}}`, val || `[chưa nhập ${key}]`);
+    }
+    return result;
+  }, [
+    brandOrOffer,
+    budget,
+    industry,
+    market,
+    notes,
+    payout,
+    promptTemplateForRun,
+    responseLanguage,
+    restrictedCountries,
+    strategyContext.text,
+    websiteUrl,
+  ]);
+
+  const handleCopyPrompt = async () => {
+    const textToCopy = promptMode === "template" ? promptTemplate : compiledPrompt;
+    await navigator.clipboard.writeText(textToCopy);
+    setPromptCopied(true);
+    window.setTimeout(() => setPromptCopied(false), 1500);
+    toast.success("Đã copy nội dung prompt!");
+  };
+
   const selectedPrompt = useMemo(
     () => prompts.find((prompt) => prompt.id === selectedPromptId) ?? null,
     [prompts, selectedPromptId]
   );
-  const selectedKey = useMemo(
-    () => apiKeys.find((key) => key.id === selectedKeyId) ?? null,
-    [apiKeys, selectedKeyId]
-  );
-
   const inputValues = useMemo(
     () => ({
       website_url: websiteUrl.trim(),
+      project_context: strategyContext.text,
+      brand_or_offer: brandOrOffer.trim(),
+      industry: industry.trim(),
       market: market.trim(),
+      restricted_countries: restrictedCountries.trim(),
       budget: budget.trim(),
+      payout: payout.trim(),
       response_language: responseLanguage,
       notes: notes.trim(),
     }),
-    [budget, market, notes, responseLanguage, websiteUrl]
+    [brandOrOffer, budget, industry, market, notes, payout, responseLanguage, restrictedCountries, strategyContext.text, websiteUrl]
   );
 
   const totalResultPages = Math.max(1, Math.ceil(results.length / RESULTS_PER_PAGE));
@@ -351,15 +813,24 @@ export function AdsStrategySkillTab() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [keysRes, promptsRes, resultsRes] = await Promise.all([
+      const [keysRes, promptsRes, resultsRes, countriesRes, linksRes] = await Promise.all([
         adsStrategyService.listApiKeys(),
         adsStrategyService.listPrompts(),
         adsStrategyService.listResults(),
+        adsStrategyService.getCountries(),
+        affiliateProjectService.getAffiliateLinks().catch(() => []),
       ]);
       setApiKeys(keysRes.items);
       setPrompts(promptsRes.items);
       setResults(resultsRes.items);
+      setCountries(countriesRes);
+      setAffiliateLinks(linksRes);
       setSelectedKeyId((current) => current || keysRes.items[0]?.id || "");
+      const projectIdFromUrl =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("projectId") || ""
+          : "";
+      setSelectedProjectId((current) => current || projectIdFromUrl || linksRes[0]?.id || "");
       const defaultPrompt = promptsRes.items.find((item) => item.isDefault) ?? promptsRes.items[0];
       if (defaultPrompt) {
         setSelectedPromptId((current) => current || defaultPrompt.id);
@@ -373,10 +844,143 @@ export function AdsStrategySkillTab() {
     }
   };
 
+  const loadProjectContext = async (project: AffiliateLinkModel | null) => {
+    if (!project) {
+      setProjectData({
+        detail: null,
+        keywordIdeas: [],
+        searchHistories: [],
+        savedSearchCompetitors: [],
+        manualHistories: [],
+        transparencyHistories: [],
+      });
+      return;
+    }
+
+    setProjectContextLoading(true);
+    try {
+      const [detail, jobsRes, searchHistory, savedCompetitors, manualHistory, ttmbHistory] = await Promise.all([
+        affiliateProjectService.getAffiliateLinkDetail(project.affiliate_url).catch(() => null),
+        keywordPlannerService.listJobs(0, 100).catch(() => ({ total: 0, items: [] })),
+        searchAdsService.getHistory("all").catch(() => ({ total: 0, items: [] })),
+        searchAdsService.getCompetitors().catch(() => ({ total: 0, items: [] })),
+        manualSearchService.getHistory().catch(() => ({ total: 0, items: [] })),
+        adsTransparentService.getHistory(1, 100).catch(() => ({ total: 0, page: 1, pageSize: 100, totalPages: 0, items: [] })),
+      ]);
+
+      const jobs = jobsRes.items || [];
+      const matchingJobs = jobs.filter((job) => {
+        const pageDomain = normalizeDomain(job.pageUrl);
+        return (
+          job.status === "done" &&
+          (pageDomain === normalizeDomain(project.domain) ||
+            pageDomain.endsWith(`.${normalizeDomain(project.domain)}`) ||
+            (job.keywords || []).some((keyword) => matchesProject(keyword, project)))
+        );
+      });
+      const keywordIdeaGroups = await Promise.all(
+        matchingJobs.slice(0, 12).map((job) =>
+          keywordPlannerService
+            .getJobResults(job.id)
+            .then((res) =>
+              res.results.map((item) => ({
+                ...item,
+                jobId: job.id,
+                pageUrl: job.pageUrl,
+                seedKeywords: job.keywords || [],
+              }))
+            )
+            .catch(() => [] as ProjectKeywordIdea[])
+        )
+      );
+
+      setProjectData({
+        detail,
+        keywordIdeas: keywordIdeaGroups.flat(),
+        searchHistories: searchHistory.items || [],
+        savedSearchCompetitors: savedCompetitors.items || [],
+        manualHistories: manualHistory.items || [],
+        transparencyHistories: ttmbHistory.items || [],
+      });
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Không gom được dữ liệu dự án."));
+    } finally {
+      setProjectContextLoading(false);
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadData();
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadProjectContext(selectedProject);
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (!selectedProject || websiteUrl.trim()) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWebsiteUrl(selectedProject.affiliate_url);
+    setBrandOrOffer(selectedProject.name || getBrandRoot(selectedProject.domain) || "");
+    if (selectedProject.search_query) setIndustry(selectedProject.search_query);
+  }, [selectedProject, websiteUrl]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFetchedModels([]);
+  }, [newKeyValue]);
+
+  useEffect(() => {
+    if (!selectedKeyId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRunAvailableModels([
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro"
+      ]);
+      setRunModelName("gemini-2.0-flash");
+      return;
+    }
+
+    let active = true;
+    const fetchRunModels = async () => {
+      setIsFetchingRunModels(true);
+      try {
+        const res = await adsStrategyService.checkModels({ apiKeyId: selectedKeyId });
+        if (active && res.models && res.models.length > 0) {
+          setRunAvailableModels(res.models);
+          // Auto-select a default model if current runModelName is not in the list
+          const defaultOrder = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+          let bestModel = "";
+          for (const m of defaultOrder) {
+            if (res.models.includes(m)) {
+              bestModel = m;
+              break;
+            }
+          }
+          if (!bestModel) {
+            bestModel = res.models[0];
+          }
+          setRunModelName(bestModel);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải model cho key chạy:", err);
+      } finally {
+        if (active) {
+          setIsFetchingRunModels(false);
+        }
+      }
+    };
+
+    void fetchRunModels();
+    return () => {
+      active = false;
+    };
+  }, [selectedKeyId]);
 
   const handleSelectPrompt = (promptId: string) => {
     setSelectedPromptId(promptId);
@@ -384,6 +988,41 @@ export function AdsStrategySkillTab() {
     if (prompt) {
       setPromptName(prompt.name);
       setPromptTemplate(prompt.promptTemplate);
+    }
+  };
+
+  const handleSelectProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    const project = affiliateLinks.find((item) => item.id === projectId);
+    if (!project) return;
+    setWebsiteUrl(project.affiliate_url);
+    setBrandOrOffer(project.name || getBrandRoot(project.domain) || "");
+    if (project.search_query) setIndustry(project.search_query);
+  };
+
+  const openChecklistTarget = (item: ContextChecklistItem) => {
+    if (!item.targetTab) return;
+    const projectId = selectedProject?.id || selectedProjectId;
+    const projectQuery = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+    window.location.assign(`/dashboard?tab=${item.targetTab}${projectQuery}`);
+  };
+
+  const handleFetchModels = async (keyToFetch: string) => {
+    if (!keyToFetch || keyToFetch.trim().length < 10) return;
+    setIsFetchingModels(true);
+    setFetchedModels([]);
+    try {
+      const res = await adsStrategyService.checkModels({ apiKey: keyToFetch.trim() });
+      if (res.models && res.models.length > 0) {
+        setFetchedModels(res.models);
+        toast.success(`Đã tải thành công ${res.models.length} model từ API key!`);
+      } else {
+        toast.warning("Không tìm thấy model nào hỗ trợ generateContent với API key này.");
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Không thể xác thực API key hoặc lấy danh sách model."));
+    } finally {
+      setIsFetchingModels(false);
     }
   };
 
@@ -396,12 +1035,13 @@ export function AdsStrategySkillTab() {
       const created = await adsStrategyService.createApiKey({
         displayName: newKeyName.trim(),
         apiKey: newKeyValue.trim(),
-        modelName: newKeyModel.trim() || "gemini-2.5-flash",
+        modelName: "gemini-2.0-flash",
       });
       setApiKeys((items) => [created, ...items]);
       setSelectedKeyId(created.id);
       setNewKeyName("");
       setNewKeyValue("");
+      setFetchedModels([]);
       toast.success("Đã lưu Gemini API key.");
     } catch (error) {
       toast.error(getErrorMessage(error, "Không lưu được API key."));
@@ -488,9 +1128,9 @@ export function AdsStrategySkillTab() {
       const response = await adsStrategyService.generate({
         apiKeyId: selectedKeyId,
         promptId: selectedPromptId || null,
-        promptTemplate: applyLanguageInstruction(promptTemplate, responseLanguage),
+        promptTemplate: applyLanguageInstruction(promptTemplateForRun, responseLanguage),
         inputValues,
-        modelName: selectedKey?.modelName,
+        modelName: runModelName,
       });
       setLastResponse(response);
       setActiveInnerTab("run");
@@ -504,8 +1144,60 @@ export function AdsStrategySkillTab() {
     }
   };
 
+  const validateInputs = () => {
+    if (!websiteUrl.trim()) {
+      toast.error("Vui lòng nhập Website hoặc Landing Page.");
+      return false;
+    }
+    if (!market.trim()) {
+      toast.error("Vui lòng chọn Thị trường ưu tiên.");
+      return false;
+    }
+    if (!responseLanguage.trim()) {
+      toast.error("Vui lòng chọn Ngôn ngữ kết quả.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSaveManualResult = async () => {
+    if (!validateInputs()) return;
+    if (!manualResultText.trim()) {
+      toast.error("Vui lòng nhập hoặc dán nội dung kết quả.");
+      return;
+    }
+    setSavingResult(true);
+    try {
+      const saved = await adsStrategyService.saveResult({
+        title: websiteUrl.trim() || "Chiến lược ads",
+        apiKeyId: selectedKeyId || null,
+        promptId: selectedPromptId || null,
+        websiteUrl: websiteUrl.trim(),
+        market: market.trim(),
+        budget: budget.trim(),
+        notes: notes.trim(),
+        modelName: selectedKeyId ? runModelName : "Manual Input",
+        promptText: compiledPrompt,
+        responseText: manualResultText.trim(),
+        rawResponse: null,
+        inputValues,
+        promptTokens: null,
+        responseTokens: null,
+        totalTokens: null,
+      });
+      setResults((items) => [saved, ...items]);
+      setManualResultText("");
+      toast.success("Đã lưu kết quả AI từ nguồn ngoài.");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Không lưu được kết quả."));
+    } finally {
+      setSavingResult(false);
+    }
+  };
+
   const handleSaveResult = async () => {
     if (!lastResponse) return;
+    if (!validateInputs()) return;
     setSavingResult(true);
     try {
       const saved = await adsStrategyService.saveResult({
@@ -592,11 +1284,10 @@ export function AdsStrategySkillTab() {
             <button
               key={tab.id}
               onClick={() => setActiveInnerTab(tab.id)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${
-                isActive
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${isActive
                   ? "bg-[#059669] text-white shadow-sm shadow-[#059669]/30"
                   : "text-muted-foreground hover:bg-background hover:text-foreground"
-              }`}
+                }`}
             >
               <Icon size={15} />
               {tab.label}
@@ -610,51 +1301,198 @@ export function AdsStrategySkillTab() {
           <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <h3 className="mb-4 font-semibold">Đầu vào phân tích</h3>
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="block md:col-span-2">
-                <span className="text-sm font-medium">Gemini API key</span>
-                <select value={selectedKeyId} onChange={(e) => setSelectedKeyId(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]">
-                  <option value="">Chọn API key</option>
-                  {apiKeys.map((key) => (
-                    <option key={key.id} value={key.id}>
-                      {key.displayName} · {key.modelName} · ****{key.apiKeyLast4}
-                    </option>
-                  ))}
-                </select>
+              <div className="block md:col-span-2">
+                <CustomSelect
+                  label="Gemini API key"
+                  value={selectedKeyId}
+                  onChange={setSelectedKeyId}
+                  placeholder="Chọn API key"
+                  options={apiKeys.map((key) => ({
+                    value: key.id,
+                    label: `${key.displayName} · ****${key.apiKeyLast4}`
+                  }))}
+                />
                 {apiKeys.length === 0 && (
                   <button onClick={() => setActiveInnerTab("keys")} className="mt-2 text-xs font-medium text-[#059669] hover:underline">
                     Chưa có key, bấm để thêm Gemini API key
                   </button>
                 )}
-              </label>
-              <label className="block md:col-span-2">
-                <span className="text-sm font-medium">Prompt sử dụng</span>
-                <select value={selectedPromptId} onChange={(e) => handleSelectPrompt(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]">
-                  {prompts.map((prompt) => (
-                    <option key={prompt.id} value={prompt.id}>
-                      {prompt.name}{prompt.isDefault ? " (mặc định)" : ""}
-                    </option>
+              </div>
+              {selectedKeyId && (
+                <div className="block md:col-span-2">
+                  <div className="relative">
+                    <CustomSelect
+                      label="Model sử dụng"
+                      value={runModelName}
+                      onChange={setRunModelName}
+                      placeholder="Chọn model..."
+                      options={runAvailableModels.map((model) => ({
+                        value: model,
+                        label: model
+                      }))}
+                    />
+                    {isFetchingRunModels && (
+                      <div className="absolute right-3 top-9">
+                        <Loader2 className="size-4 animate-spin text-[#059669]" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <div className="block md:col-span-2">
+                <CustomSelect
+                  label="Prompt sử dụng"
+                  value={selectedPromptId}
+                  onChange={handleSelectPrompt}
+                  options={prompts.map((prompt) => ({
+                    value: prompt.id,
+                    label: `${prompt.name}${prompt.isDefault ? " (mặc định)" : ""}`
+                  }))}
+                />
+              </div>
+              <div className="block md:col-span-2 rounded-lg border border-dashed border-[#059669]/30 bg-[#059669]/5 p-4">
+                <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-2">
+                    <Database size={17} className="mt-0.5 text-[#059669]" />
+                    <div>
+                      <p className="text-sm font-semibold">Dữ liệu dự án tự động</p>
+                      <p className="text-xs text-muted-foreground">
+                        Chọn dự án để hệ thống gom traffic, quốc gia, restriction, keyword volume và đối thủ vào prompt.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void loadProjectContext(selectedProject)}
+                    disabled={!selectedProject || projectContextLoading}
+                    className="gap-1.5"
+                  >
+                    {projectContextLoading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw size={13} />}
+                    Refresh
+                  </Button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+                  <CustomSelect
+                    label="Dự án affiliate"
+                    value={selectedProjectId}
+                    onChange={handleSelectProject}
+                    placeholder="Chọn dự án đã lưu..."
+                    options={affiliateLinks.map((project) => ({
+                      value: project.id,
+                      label: `${project.name || project.domain} · ${project.domain}`,
+                    }))}
+                    showSearch={true}
+                    searchPlaceholder="Tìm dự án..."
+                  />
+                  <div className="flex items-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!strategyContext.suggestedMarket}
+                      onClick={() => setMarket(strategyContext.suggestedMarket)}
+                      className="w-full whitespace-nowrap"
+                    >
+                      Dùng market gợi ý
+                    </Button>
+                  </div>
+                </div>
+                {affiliateLinks.length === 0 && (
+                  <p className="mt-3 rounded-md bg-background/70 p-3 text-xs text-muted-foreground">
+                    Chưa có dự án trong tab Dự án. Bạn vẫn có thể nhập URL thủ công, nhưng AI sẽ thiếu context đã quét.
+                  </p>
+                )}
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {strategyContext.checklist.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        if (!item.ready && item.targetTab) openChecklistTarget(item);
+                      }}
+                      disabled={item.ready || !item.targetTab}
+                      title={!item.ready && item.action ? item.action : undefined}
+                      className={`rounded-md border px-3 py-2 text-left transition ${
+                        item.ready
+                          ? "border-[#059669]/30 bg-background"
+                          : item.targetTab
+                            ? "cursor-pointer border-amber-300/60 bg-amber-50 text-amber-950 hover:border-[#059669]/60 hover:bg-[#059669]/5 dark:bg-amber-950/20 dark:text-amber-100"
+                            : "cursor-default border-amber-300/60 bg-amber-50 text-amber-950 dark:bg-amber-950/20 dark:text-amber-100"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {item.ready ? (
+                          <Check size={13} className="text-[#059669]" />
+                        ) : (
+                          <AlertTriangle size={13} className="text-amber-600" />
+                        )}
+                        <span className="text-xs font-semibold">{item.label}</span>
+                      </div>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{item.detail}</p>
+                      {!item.ready && item.action && (
+                        <p className="mt-1 text-[11px] font-medium text-[#059669]">
+                          {item.targetTab ? `${item.action} · Bấm để mở` : item.action}
+                        </p>
+                      )}
+                    </button>
                   ))}
-                </select>
-              </label>
+                </div>
+                <details className="mt-3 rounded-md border border-border bg-background/80">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-muted-foreground">
+                    Xem context sẽ gửi cho AI
+                  </summary>
+                  <pre className="max-h-72 overflow-auto whitespace-pre-wrap border-t border-border p-3 text-xs leading-5 text-muted-foreground">
+                    {strategyContext.text}
+                  </pre>
+                </details>
+              </div>
               <label className="block md:col-span-2">
                 <span className="text-sm font-medium">Website hoặc Landing Page</span>
                 <input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium">Thị trường ưu tiên</span>
-                <input value={market} onChange={(e) => setMarket(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
+                <span className="text-sm font-medium">Tên brand/offer</span>
+                <input value={brandOrOffer} onChange={(e) => setBrandOrOffer(e.target.value)} placeholder="VD: Brand, offer, app..." className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
               </label>
+              <label className="block">
+                <span className="text-sm font-medium">Ngành hàng</span>
+                <input value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="VD: SaaS, finance, health..." className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
+              </label>
+              <CustomSelect
+                label="Thị trường ưu tiên"
+                value={market}
+                onChange={setMarket}
+                placeholder="Chọn quốc gia..."
+                showSearch={true}
+                searchPlaceholder="Tìm kiếm quốc gia..."
+                clearable={true}
+                clearText="Xóa lựa chọn (Bỏ chọn)"
+                options={marketOptions}
+              />
               <label className="block">
                 <span className="text-sm font-medium">Ngân sách dự kiến</span>
                 <input value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="VD: 500 USD/tháng" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium">Ngôn ngữ kết quả</span>
-                <select value={responseLanguage} onChange={(e) => handleResponseLanguageChange(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]">
-                  <option value="Tiếng Việt">Tiếng Việt</option>
-                  <option value="English">English</option>
-                </select>
+                <span className="text-sm font-medium">Payout/commission</span>
+                <input value={payout} onChange={(e) => setPayout(e.target.value)} placeholder="VD: $60 CPA, 30% revshare..." className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
               </label>
+              <label className="block">
+                <span className="text-sm font-medium">Quốc gia cấm/hạn chế đã biết</span>
+                <input value={restrictedCountries} onChange={(e) => setRestrictedCountries(e.target.value)} placeholder="VD: US banned, UK restricted..." className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
+              </label>
+              <div>
+                <CustomSelect
+                  label="Ngôn ngữ kết quả"
+                  value={responseLanguage}
+                  onChange={handleResponseLanguageChange}
+                  options={[
+                    { value: "Tiếng Việt", label: "Tiếng Việt" },
+                    { value: "English", label: "English" }
+                  ]}
+                />
+              </div>
               <label className="block md:col-span-2">
                 <span className="text-sm font-medium">Ghi chú bổ sung</span>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Mục tiêu CPA, sản phẩm chủ lực, offer hiện có..." className="mt-1 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
@@ -663,11 +1501,140 @@ export function AdsStrategySkillTab() {
           </section>
 
           <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold">Prompt sẽ gửi sang Gemini</h3>
-              <span className="text-xs text-muted-foreground">Dùng biến: {"{{website_url}}"}, {"{{market}}"}, {"{{budget}}"}, {"{{response_language}}"}, {"{{notes}}"}</span>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="font-semibold text-base">Prompt chiến dịch</h3>
+                <div className="flex rounded-lg border border-border bg-muted/60 p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPromptMode("template")}
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${promptMode === "template"
+                        ? "bg-[#059669] text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    Mẫu (Template)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPromptMode("compiled")}
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${promptMode === "compiled"
+                        ? "bg-[#059669] text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    Xem trước (Compiled)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPromptMode("manual")}
+                    className={`rounded-md px-3 py-1 font-medium transition cursor-pointer ${promptMode === "manual"
+                        ? "bg-[#059669] text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    Nhập kết quả
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {promptMode === "compiled" && (
+                  <div className="flex items-center gap-1.5 border-r border-border pr-3">
+                    <span className="text-xs font-medium text-muted-foreground">Mở nhanh:</span>
+                    <a
+                      href="https://chatgpt.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded bg-[#10a37f]/10 px-2 py-1 text-xs font-semibold text-[#10a37f] hover:bg-[#10a37f]/20 transition"
+                    >
+                      ChatGPT
+                    </a>
+                    <a
+                      href="https://gemini.google.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded bg-[#1a73e8]/10 px-2 py-1 text-xs font-semibold text-[#1a73e8] hover:bg-[#1a73e8]/20 transition"
+                    >
+                      Gemini
+                    </a>
+                    <a
+                      href="https://grok.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded bg-black/10 dark:bg-white/10 px-2 py-1 text-xs font-semibold text-foreground hover:bg-black/20 dark:hover:bg-white/20 transition"
+                    >
+                      Grok
+                    </a>
+                  </div>
+                )}
+
+                {promptMode !== "manual" && (
+                  <Button
+                    onClick={handleCopyPrompt}
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 h-8 text-xs font-medium"
+                  >
+                    {promptCopied ? <Check size={13} /> : <Clipboard size={13} />}
+                    {promptCopied ? "Đã copy" : "Copy prompt"}
+                  </Button>
+                )}
+              </div>
             </div>
-            <textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} rows={14} className="w-full resize-y rounded-lg border border-input bg-background p-3 text-sm leading-6 outline-none focus:border-[#059669]" />
+
+            {promptMode === "template" && (
+              <div>
+                <textarea
+                  value={promptTemplate}
+                  onChange={(e) => setPromptTemplate(e.target.value)}
+                  rows={14}
+                  className="w-full resize-y rounded-lg border border-input bg-background p-3 text-sm leading-6 outline-none focus:border-[#059669]"
+                  placeholder="Nhập cấu trúc prompt..."
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Dùng các biến: {"{{website_url}}"}, {"{{project_context}}"}, {"{{brand_or_offer}}"}, {"{{industry}}"}, {"{{market}}"}, {"{{restricted_countries}}"}, {"{{budget}}"}, {"{{payout}}"}, {"{{response_language}}"}, {"{{notes}}"} để tự động điền giá trị.
+                </span>
+              </div>
+            )}
+            {promptMode === "compiled" && (
+              <div>
+                <textarea
+                  value={compiledPrompt}
+                  readOnly
+                  rows={14}
+                  className="w-full resize-y rounded-lg border border-input bg-muted/30 p-3 text-sm leading-6 outline-none"
+                  placeholder="Prompt sau khi điền các trường thông tin..."
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Đây là prompt đã điền đầy đủ các thông tin bạn nhập ở trên. Bạn có thể copy để gửi sang các AI khác (ChatGPT, Gemini, Grok).
+                </span>
+              </div>
+            )}
+            {promptMode === "manual" && (
+              <div className="space-y-3">
+                <textarea
+                  value={manualResultText}
+                  onChange={(e) => setManualResultText(e.target.value)}
+                  rows={14}
+                  className="w-full resize-y rounded-lg border border-input bg-background p-3 text-sm leading-6 outline-none focus:border-[#059669]"
+                  placeholder="Dán (Paste) kết quả phân tích quảng cáo từ các AI khác (như ChatGPT, Grok, Claude,...) vào đây để lưu trữ..."
+                />
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <span className="text-xs text-muted-foreground">
+                    Nhập nội dung phân tích nhận được từ chatbot khác rồi bấm Lưu kết quả để lưu trữ vào hệ thống.
+                  </span>
+                  <Button
+                    onClick={handleSaveManualResult}
+                    disabled={savingResult}
+                    className="gap-2 bg-[#059669] text-white hover:bg-[#047857]"
+                  >
+                    {savingResult ? <Loader2 className="size-4 animate-spin" /> : <Save size={15} />}
+                    Lưu kết quả ngoài
+                  </Button>
+                </div>
+              </div>
+            )}
           </section>
 
           {lastResponse && (
@@ -706,14 +1673,49 @@ export function AdsStrategySkillTab() {
             <KeyRound size={18} className="text-[#059669]" />
             <h3 className="font-semibold">Quản lý Gemini API keys</h3>
           </div>
-          <div className="grid gap-3 md:grid-cols-[1fr_1.3fr_1fr_auto]">
+          <div className="grid gap-3 md:grid-cols-[1fr_1.3fr_auto]">
             <input value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} placeholder="Tên key, VD: Key chính" className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
-            <input value={newKeyValue} onChange={(e) => setNewKeyValue(e.target.value)} placeholder="AIza..." type="password" className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
-            <input value={newKeyModel} onChange={(e) => setNewKeyModel(e.target.value)} placeholder="gemini-2.5-flash" className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-[#059669]" />
+            <div className="relative flex items-center">
+              <input
+                value={newKeyValue}
+                onChange={(e) => setNewKeyValue(e.target.value)}
+                placeholder="AIza..."
+                type="password"
+                className="w-full rounded-lg border border-input bg-background pl-3 pr-20 py-2 text-sm outline-none focus:border-[#059669]"
+              />
+              {newKeyValue.trim().length >= 10 && (
+                <button
+                  type="button"
+                  onClick={() => handleFetchModels(newKeyValue)}
+                  disabled={isFetchingModels}
+                  className="absolute right-2 px-1.5 py-1 rounded text-xs font-semibold text-[#059669] hover:bg-[#059669]/10 disabled:opacity-50 transition cursor-pointer"
+                  title="Tự động lấy danh sách model hỗ trợ từ API key"
+                >
+                  {isFetchingModels ? (
+                    <Loader2 className="size-3.5 animate-spin text-[#059669]" />
+                  ) : (
+                    "Lấy model"
+                  )}
+                </button>
+              )}
+            </div>
             <Button onClick={handleCreateKey} className="gap-2 bg-[#059669] text-white hover:bg-[#047857]">
               <Plus size={15} /> Thêm key
             </Button>
           </div>
+
+          {fetchedModels.length > 0 && (
+            <div className="mt-3 rounded-lg border border-dashed border-[#059669]/30 bg-[#059669]/5 p-3.5">
+              <span className="text-xs font-semibold text-[#059669] block mb-2">Các model khả dụng cho API key này:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {fetchedModels.map((model) => (
+                  <span key={model} className="inline-flex items-center rounded bg-[#059669]/10 px-2 py-0.5 text-xs font-medium text-[#065f46]">
+                    {model}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-5 space-y-3">
             {apiKeys.length === 0 ? (
@@ -760,11 +1762,10 @@ export function AdsStrategySkillTab() {
                 <button
                   key={prompt.id}
                   onClick={() => handleSelectPrompt(prompt.id)}
-                  className={`w-full rounded-lg border p-3 text-left transition ${
-                    selectedPromptId === prompt.id
+                  className={`w-full rounded-lg border p-3 text-left transition ${selectedPromptId === prompt.id
                       ? "border-[#059669] bg-[#059669]/10"
                       : "border-border bg-background hover:border-[#059669]/50"
-                  }`}
+                    }`}
                 >
                   <span className="block text-sm font-semibold">{prompt.name}</span>
                   <span className="text-xs text-muted-foreground">

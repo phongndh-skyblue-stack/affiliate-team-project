@@ -1,0 +1,498 @@
+{
+    "global": [
+        {
+            "period_month": "2026-05",
+            "total_visits_monthly": 11532691,
+            "avg_visits_monthly": 11532691,
+            "unique_visits_monthly": 2639408,
+            "repeat_visits_monthly": 156643,
+            "pages_per_visit": 17.56,
+            "avg_visit_duration": 297,
+            "bounce_rate_percentage": 24.93
+        }
+    ],
+    "country": [
+        {
+            "country_code": "AR",
+            "country_name": "Argentina",
+            "traffic_share_percentage": 20.57,
+            "total_visits_monthly": 2371976,
+            "pages_per_visit": 26.61,
+            "avg_visit_duration": 374,
+            "bounce_rate_percentage": 17.53
+        },
+        {
+            "country_code": "IN",
+            "country_name": "India",
+            "traffic_share_percentage": 6.04,
+            "total_visits_monthly": 696521,
+            "pages_per_visit": 7.7,
+            "avg_visit_duration": 355,
+            "bounce_rate_percentage": 5.91
+        },
+        {
+            "country_code": "KZ",
+            "country_name": "Kazakhstan",
+            "traffic_share_percentage": 5.68,
+            "total_visits_monthly": 654958,
+            "pages_per_visit": 26.23,
+            "avg_visit_duration": 395,
+            "bounce_rate_percentage": 17.29
+        },
+        {
+            "country_code": "TH",
+            "country_name": "Thailand",
+            "traffic_share_percentage": 4.51,
+            "total_visits_monthly": 520104,
+            "pages_per_visit": 21.13,
+            "avg_visit_duration": 329,
+            "bounce_rate_percentage": 27.18
+        },
+        {
+            "country_code": "US",
+            "country_name": "United States",
+            "traffic_share_percentage": 4.31,
+            "total_visits_monthly": 497516,
+            "pages_per_visit": 4.31,
+            "avg_visit_duration": 507,
+            "bounce_rate_percentage": 37.89
+        },
+        {
+            "country_code": "TR",
+            "country_name": "Turkey",
+            "traffic_share_percentage": 3.92,
+            "total_visits_monthly": 452547,
+            "pages_per_visit": 23.71,
+            "avg_visit_duration": 356,
+            "bounce_rate_percentage": 20.44
+        },
+        {
+            "country_code": "SA",
+            "country_name": "Saudi Arabia",
+            "traffic_share_percentage": 3.58,
+            "total_visits_monthly": 412684,
+            "pages_per_visit": 6.61,
+            "avg_visit_duration": 260,
+            "bounce_rate_percentage": 1.72
+        },
+        {
+            "country_code": "IT",
+            "country_name": "Italy",
+            "traffic_share_percentage": 3.11,
+            "total_visits_monthly": 358235,
+            "pages_per_visit": 7.35,
+            "avg_visit_duration": 289,
+            "bounce_rate_percentage": 3.0
+        },
+        {
+            "country_code": "ES",
+            "country_name": "Spain",
+            "traffic_share_percentage": 2.56,
+            "total_visits_monthly": 295179,
+            "pages_per_visit": 8.5,
+            "avg_visit_duration": 280,
+            "bounce_rate_percentage": 9.57
+        },
+        {
+            "country_code": "AU",
+            "country_name": "Australia",
+            "traffic_share_percentage": 2.0,
+            "total_visits_monthly": 230982,
+            "pages_per_visit": 26.93,
+            "avg_visit_duration": 138,
+            "bounce_rate_percentage": 15.24
+        },
+        {
+            "country_code": "SG",
+            "country_name": "Singapore",
+            "traffic_share_percentage": 1.93,
+            "total_visits_monthly": 222584,
+            "pages_per_visit": 2.53,
+            "avg_visit_duration": 37,
+            "bounce_rate_percentage": 98.89
+        },
+        {
+            "country_code": "DE",
+            "country_name": "Germany",
+            "traffic_share_percentage": 1.87,
+            "total_visits_monthly": 215669,
+            "pages_per_visit": 6.73,
+            "avg_visit_duration": 197,
+            "bounce_rate_percentage": 36.15
+        },
+        {
+            "country_code": "ID",
+            "country_name": "Indonesia",
+            "traffic_share_percentage": 1.62,
+            "total_visits_monthly": 186679,
+            "pages_per_visit": 12.79,
+            "avg_visit_duration": 329,
+            "bounce_rate_percentage": 15.33
+        },
+        {
+            "country_code": "FR",
+            "country_name": "France",
+            "traffic_share_percentage": 1.51,
+            "total_visits_monthly": 173822,
+            "pages_per_visit": 10.86,
+            "avg_visit_duration": 224,
+            "bounce_rate_percentage": 32.31
+        },
+        {
+            "country_code": "AT",
+            "country_name": "Austria",
+            "traffic_share_percentage": 1.39,
+            "total_visits_monthly": 159801,
+            "pages_per_visit": 10.48,
+            "avg_visit_duration": 320,
+            "bounce_rate_percentage": 7.85
+        },
+        {
+            "country_code": "IE",
+            "country_name": "Ireland",
+            "traffic_share_percentage": 1.34,
+            "total_visits_monthly": 155049,
+            "pages_per_visit": 15.54,
+            "avg_visit_duration": 415,
+            "bounce_rate_percentage": 25.08
+        },
+        {
+            "country_code": "VN",
+            "country_name": "Vietnam",
+            "traffic_share_percentage": 1.34,
+            "total_visits_monthly": 154984,
+            "pages_per_visit": 14.09,
+            "avg_visit_duration": 225,
+            "bounce_rate_percentage": 45.44
+        },
+        {
+            "country_code": "BO",
+            "country_name": "Bolivia",
+            "traffic_share_percentage": 1.29,
+            "total_visits_monthly": 148256,
+            "pages_per_visit": 18.8,
+            "avg_visit_duration": 268,
+            "bounce_rate_percentage": 33.18
+        },
+        {
+            "country_code": "GB",
+            "country_name": "United Kingdom",
+            "traffic_share_percentage": 1.2,
+            "total_visits_monthly": 138882,
+            "pages_per_visit": 10.49,
+            "avg_visit_duration": 312,
+            "bounce_rate_percentage": 36.37
+        },
+        {
+            "country_code": "EC",
+            "country_name": "Ecuador",
+            "traffic_share_percentage": 1.16,
+            "total_visits_monthly": 133570,
+            "pages_per_visit": 24.24,
+            "avg_visit_duration": 314,
+            "bounce_rate_percentage": 25.88
+        },
+        {
+            "country_code": "SE",
+            "country_name": "Sweden",
+            "traffic_share_percentage": 1.15,
+            "total_visits_monthly": 132940,
+            "pages_per_visit": 7.51,
+            "avg_visit_duration": 304,
+            "bounce_rate_percentage": 7.46
+        },
+        {
+            "country_code": "NZ",
+            "country_name": "New Zealand",
+            "traffic_share_percentage": 1.01,
+            "total_visits_monthly": 115980,
+            "pages_per_visit": 7.96,
+            "avg_visit_duration": 315,
+            "bounce_rate_percentage": 20.63
+        },
+        {
+            "country_code": "KE",
+            "country_name": "Kenya",
+            "traffic_share_percentage": 0.97,
+            "total_visits_monthly": 111803,
+            "pages_per_visit": 29.58,
+            "avg_visit_duration": 444,
+            "bounce_rate_percentage": 15.11
+        },
+        {
+            "country_code": "TW",
+            "country_name": "Taiwan",
+            "traffic_share_percentage": 0.9,
+            "total_visits_monthly": 103441,
+            "pages_per_visit": 7.25,
+            "avg_visit_duration": 122,
+            "bounce_rate_percentage": 83.23
+        },
+        {
+            "country_code": "UZ",
+            "country_name": "Uzbekistan",
+            "traffic_share_percentage": 0.88,
+            "total_visits_monthly": 101810,
+            "pages_per_visit": 15.53,
+            "avg_visit_duration": 199,
+            "bounce_rate_percentage": 13.44
+        },
+        {
+            "country_code": "CI",
+            "country_name": "C\u00f4te d'Ivoire",
+            "traffic_share_percentage": 0.85,
+            "total_visits_monthly": 98122,
+            "pages_per_visit": 28.42,
+            "avg_visit_duration": 395,
+            "bounce_rate_percentage": 14.89
+        },
+        {
+            "country_code": "MD",
+            "country_name": "Moldova",
+            "traffic_share_percentage": 0.76,
+            "total_visits_monthly": 87700,
+            "pages_per_visit": 12.85,
+            "avg_visit_duration": 215,
+            "bounce_rate_percentage": 55.87
+        },
+        {
+            "country_code": "PK",
+            "country_name": "Pakistan",
+            "traffic_share_percentage": 0.74,
+            "total_visits_monthly": 85401,
+            "pages_per_visit": 17.4,
+            "avg_visit_duration": 319,
+            "bounce_rate_percentage": 46.2
+        },
+        {
+            "country_code": "NO",
+            "country_name": "Norway",
+            "traffic_share_percentage": 0.69,
+            "total_visits_monthly": 79249,
+            "pages_per_visit": 20.29,
+            "avg_visit_duration": 211,
+            "bounce_rate_percentage": 24.18
+        },
+        {
+            "country_code": "LK",
+            "country_name": "Sri Lanka",
+            "traffic_share_percentage": 0.67,
+            "total_visits_monthly": 77447,
+            "pages_per_visit": 10.72,
+            "avg_visit_duration": 315,
+            "bounce_rate_percentage": 5.79
+        },
+        {
+            "country_code": "AE",
+            "country_name": "United Arab Emirates",
+            "traffic_share_percentage": 0.65,
+            "total_visits_monthly": 74943,
+            "pages_per_visit": 11.7,
+            "avg_visit_duration": 151,
+            "bounce_rate_percentage": 53.07
+        },
+        {
+            "country_code": "KR",
+            "country_name": "Korea, Republic of",
+            "traffic_share_percentage": 0.63,
+            "total_visits_monthly": 72188,
+            "pages_per_visit": 16.71,
+            "avg_visit_duration": 247,
+            "bounce_rate_percentage": 43.59
+        },
+        {
+            "country_code": "FI",
+            "country_name": "Finland",
+            "traffic_share_percentage": 0.61,
+            "total_visits_monthly": 70092,
+            "pages_per_visit": 20.04,
+            "avg_visit_duration": 323,
+            "bounce_rate_percentage": 25.11
+        },
+        {
+            "country_code": "PL",
+            "country_name": "Poland",
+            "traffic_share_percentage": 0.61,
+            "total_visits_monthly": 70089,
+            "pages_per_visit": 14.0,
+            "avg_visit_duration": 153,
+            "bounce_rate_percentage": 30.74
+        },
+        {
+            "country_code": "AO",
+            "country_name": "Angola",
+            "traffic_share_percentage": 0.6,
+            "total_visits_monthly": 68920,
+            "pages_per_visit": 22.43,
+            "avg_visit_duration": 369,
+            "bounce_rate_percentage": 22.45
+        },
+        {
+            "country_code": "CA",
+            "country_name": "Canada",
+            "traffic_share_percentage": 0.59,
+            "total_visits_monthly": 67868,
+            "pages_per_visit": 7.65,
+            "avg_visit_duration": 132,
+            "bounce_rate_percentage": 44.78
+        },
+        {
+            "country_code": "UA",
+            "country_name": "Ukraine",
+            "traffic_share_percentage": 0.59,
+            "total_visits_monthly": 67731,
+            "pages_per_visit": 18.67,
+            "avg_visit_duration": 283,
+            "bounce_rate_percentage": 30.46
+        },
+        {
+            "country_code": "GH",
+            "country_name": "Ghana",
+            "traffic_share_percentage": 0.56,
+            "total_visits_monthly": 64707,
+            "pages_per_visit": 24.22,
+            "avg_visit_duration": 379,
+            "bounce_rate_percentage": 19.97
+        },
+        {
+            "country_code": "CR",
+            "country_name": "Costa Rica",
+            "traffic_share_percentage": 0.56,
+            "total_visits_monthly": 64314,
+            "pages_per_visit": 24.74,
+            "avg_visit_duration": 373,
+            "bounce_rate_percentage": 20.04
+        },
+        {
+            "country_code": "BY",
+            "country_name": "Belarus",
+            "traffic_share_percentage": 0.55,
+            "total_visits_monthly": 63226,
+            "pages_per_visit": 22.27,
+            "avg_visit_duration": 309,
+            "bounce_rate_percentage": 21.4
+        },
+        {
+            "country_code": "VE",
+            "country_name": "Venezuela",
+            "traffic_share_percentage": 0.53,
+            "total_visits_monthly": 60735,
+            "pages_per_visit": 30.91,
+            "avg_visit_duration": 469,
+            "bounce_rate_percentage": 11.99
+        },
+        {
+            "country_code": "RU",
+            "country_name": "Russia",
+            "traffic_share_percentage": 0.48,
+            "total_visits_monthly": 55818,
+            "pages_per_visit": 12.02,
+            "avg_visit_duration": 219,
+            "bounce_rate_percentage": 43.62
+        },
+        {
+            "country_code": "JP",
+            "country_name": "Japan",
+            "traffic_share_percentage": 0.48,
+            "total_visits_monthly": 55298,
+            "pages_per_visit": 7.9,
+            "avg_visit_duration": 72,
+            "bounce_rate_percentage": 32.84
+        },
+        {
+            "country_code": "AZ",
+            "country_name": "Azerbaijan",
+            "traffic_share_percentage": 0.47,
+            "total_visits_monthly": 54452,
+            "pages_per_visit": 19.14,
+            "avg_visit_duration": 251,
+            "bounce_rate_percentage": 39.31
+        },
+        {
+            "country_code": "NI",
+            "country_name": "Nicaragua",
+            "traffic_share_percentage": 0.45,
+            "total_visits_monthly": 52328,
+            "pages_per_visit": 24.19,
+            "avg_visit_duration": 414,
+            "bounce_rate_percentage": 17.06
+        },
+        {
+            "country_code": "MY",
+            "country_name": "Malaysia",
+            "traffic_share_percentage": 0.45,
+            "total_visits_monthly": 52153,
+            "pages_per_visit": 19.53,
+            "avg_visit_duration": 312,
+            "bounce_rate_percentage": 33.61
+        },
+        {
+            "country_code": "DO",
+            "country_name": "Dominican Republic",
+            "traffic_share_percentage": 0.44,
+            "total_visits_monthly": 51072,
+            "pages_per_visit": 29.71,
+            "avg_visit_duration": 429,
+            "bounce_rate_percentage": 16.97
+        },
+        {
+            "country_code": "MN",
+            "country_name": "Mongolia",
+            "traffic_share_percentage": 0.42,
+            "total_visits_monthly": 48829,
+            "pages_per_visit": 14.16,
+            "avg_visit_duration": 252,
+            "bounce_rate_percentage": 39.06
+        },
+        {
+            "country_code": "ET",
+            "country_name": "Ethiopia",
+            "traffic_share_percentage": 0.4,
+            "total_visits_monthly": 46049,
+            "pages_per_visit": 23.15,
+            "avg_visit_duration": 326,
+            "bounce_rate_percentage": 28.16
+        },
+        {
+            "country_code": "HK",
+            "country_name": "Hong Kong",
+            "traffic_share_percentage": 0.36,
+            "total_visits_monthly": 42020,
+            "pages_per_visit": 3.68,
+            "avg_visit_duration": 55,
+            "bounce_rate_percentage": 86.68
+        }
+    ],
+    "source": {
+        "period_month": "2026-05",
+        "organic_search": 0.0,
+        "social": 0.0,
+        "email": 14073.75,
+        "display_ads": 2231235.83,
+        "direct": 6616325.34,
+        "referrals": 249011.42,
+        "paid_search": 0.0
+    },
+    "social": [
+        {
+            "platform_name": "Youtube",
+            "share_percentage": 0.8722741986301167
+        },
+        {
+            "platform_name": "Telegram Webapp",
+            "share_percentage": 0.06200363314378872
+        },
+        {
+            "platform_name": "X-twitter",
+            "share_percentage": 0.0618315186496263
+        },
+        {
+            "platform_name": "WhatsApp Webapp",
+            "share_percentage": 0.0024199958631737598
+        },
+        {
+            "platform_name": "Discord",
+            "share_percentage": 0.001418447029459589
+        }
+    ]
+}

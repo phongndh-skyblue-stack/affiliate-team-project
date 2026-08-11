@@ -8,11 +8,20 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.auth.model import User
-from app.api.keyword_planner.model import AdsAccount, AuthorGmail, KeywordPlannerJob
+from app.api.affiliate_data.repository import AffiliateDataRepository
+from app.api.affiliate_data.service import extract_domain, normalize_affiliate_url
+from app.api.keyword_planner.classification import enrich_keyword_ideas
+from app.api.keyword_planner.model import (
+    AdsAccount,
+    AuthorGmail,
+    KeywordCandidateProject,
+    KeywordPlannerJob,
+)
 from app.api.keyword_planner.repository import (
     AdsAccountRepository,
     AuthorGmailRepository,
     DelegatedMailRepository,
+    KeywordCandidateRepository,
     KeywordPlannerRepository,
 )
 from app.api.keyword_planner.schema import (
@@ -20,6 +29,12 @@ from app.api.keyword_planner.schema import (
     AdsAccountListResponse,
     AdsAccountResponse,
     CallbackResponse,
+    CandidateCreateRequest,
+    CandidateKeywordResponse,
+    CandidateListResponse,
+    CandidatePromoteRequest,
+    CandidateResponse,
+    CandidateUpdateRequest,
     ImportAccountsResponse,
     JobListResponse,
     JobResponse,
@@ -54,6 +69,8 @@ def _job_to_response(job: KeywordPlannerJob, result_count: int = 0) -> JobRespon
         status=job.status,
         error_message=job.error_message,
         result_count=result_count,
+        project_id=job.project_id,
+        project_name=job.project_name,
         created_at=job.created_at.isoformat(),
         updated_at=job.updated_at.isoformat(),
     )
@@ -65,6 +82,16 @@ class KeywordPlannerService:
         self.account_repo = AdsAccountRepository(db)
         self.author_repo = AuthorGmailRepository(db)
         self.db = db
+
+    def _get_project_name(self, user_id: str, project_id: str | None) -> str | None:
+        if not project_id:
+            return None
+        project = AffiliateDataRepository(self.db).get_project_label_by_id_for_user(
+            user_id, project_id
+        )
+        if not project:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        return project[1]
 
     def _get_refresh_token_for_account(self, ads_id: str, user_id: str) -> tuple[str, str | None]:
         """Return (refresh_token, login_customer_id) for the given ads_id.
@@ -99,6 +126,7 @@ class KeywordPlannerService:
         refresh_token, login_customer_id = self._get_refresh_token_for_account(
             payload.ads_id, user_id
         )
+        project_name = self._get_project_name(user_id, payload.project_id)
         job = self.repo.create_job(
             user_id=user_id,
             ads_id=payload.ads_id,
@@ -109,6 +137,8 @@ class KeywordPlannerService:
             language_id=payload.language_id,
             location_ids=payload.location_ids or [],
             result_limit=payload.result_limit,
+            project_id=payload.project_id,
+            project_name=project_name,
         )
 
         try:
@@ -147,6 +177,7 @@ class KeywordPlannerService:
         refresh_token, login_customer_id = self._get_refresh_token_for_account(
             payload.ads_id, user_id
         )
+        project_name = self._get_project_name(user_id, payload.project_id)
         job = self.repo.create_job(
             user_id=user_id,
             ads_id=payload.ads_id,
@@ -157,6 +188,8 @@ class KeywordPlannerService:
             language_id=payload.language_id,
             location_ids=payload.location_ids or [],
             result_limit=payload.result_limit,
+            project_id=payload.project_id,
+            project_name=project_name,
         )
 
         try:
@@ -193,9 +226,9 @@ class KeywordPlannerService:
     # Query endpoints
     # ------------------------------------------------------------------
 
-    def get_job_results(self, job_id: str) -> JobResultsResponse:
+    def get_job_results(self, job_id: str, user_id: str) -> JobResultsResponse:
         job = self.repo.get_job_by_id(job_id)
-        if not job:
+        if not job or job.user_id != user_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found.")
         results = self.repo.get_results_by_job_id(job_id)
         return JobResultsResponse(
@@ -226,27 +259,167 @@ class KeywordPlannerService:
 
 
 def _to_idea_items(results) -> list[KeywordIdeaItem]:
-    items = []
+    raw_items = []
     for r in results:
-        monthly = [
-            MonthlySearchVolumeItem(
-                year=ms["year"], month=ms["month"], searches=ms["searches"]
-            )
-            for ms in (r.monthly_searches or [])
-        ]
-        items.append(
-            KeywordIdeaItem(
-                id=r.id,
-                keyword=r.keyword,
-                avg_monthly_searches=r.avg_monthly_searches,
-                competition=r.competition,
-                competition_index=r.competition_index,
-                low_top_page_bid=r.low_top_page_bid,
-                high_top_page_bid=r.high_top_page_bid,
-                monthly_searches=monthly,
-            )
+        raw_items.append(
+            {
+                "id": r.id,
+                "keyword": r.keyword,
+                "avg_monthly_searches": r.avg_monthly_searches,
+                "competition": r.competition,
+                "competition_index": r.competition_index,
+                "low_top_page_bid": r.low_top_page_bid,
+                "high_top_page_bid": r.high_top_page_bid,
+                "monthly_searches": r.monthly_searches or [],
+            }
         )
-    return items
+    return [KeywordIdeaItem(**item) for item in enrich_keyword_ideas(raw_items)]
+
+
+def _candidate_to_response(candidate: KeywordCandidateProject) -> CandidateResponse:
+    keywords = [
+        CandidateKeywordResponse(
+            id=item.id,
+            source_result_id=item.source_result_id,
+            keyword=item.keyword,
+            avg_monthly_searches=item.avg_monthly_searches,
+            competition=item.competition,
+            competition_index=item.competition_index,
+            low_top_page_bid=item.low_top_page_bid,
+            high_top_page_bid=item.high_top_page_bid,
+            monthly_searches=item.monthly_searches or [],
+            inferred_intent=item.inferred_intent,
+            manual_intent=item.manual_intent,
+            effective_intent=item.manual_intent or item.inferred_intent,
+            opportunity_score=item.opportunity_score,
+            opportunity_tier=item.opportunity_tier,
+            score_explanation=item.score_explanation,
+            notes=item.notes,
+            tags=item.tags or [],
+            created_at=item.created_at,
+            updated_at=item.updated_at,
+        )
+        for item in candidate.items
+    ]
+    return CandidateResponse(
+        id=candidate.id,
+        user_id=candidate.user_id,
+        affiliate_project_id=candidate.affiliate_project_id,
+        source_job_id=candidate.source_job_id,
+        source_ads_id=candidate.source_ads_id,
+        name=candidate.name,
+        description=candidate.description,
+        status=candidate.status,
+        notes=candidate.notes,
+        tags=candidate.tags or [],
+        language_id=candidate.language_id,
+        location_ids=candidate.location_ids or [],
+        website_url=candidate.website_url,
+        keywords=keywords,
+        created_at=candidate.created_at,
+        updated_at=candidate.updated_at,
+    )
+
+
+def _keyword_input_to_dict(item) -> dict:
+    data = item.model_dump()
+    data["monthly_searches"] = [month.model_dump() for month in item.monthly_searches]
+    return data
+
+
+class KeywordCandidateService:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+        self.repo = KeywordCandidateRepository(db)
+
+    def create_candidate(self, user_id: str, payload: CandidateCreateRequest) -> CandidateResponse:
+        if payload.source_job_id:
+            job = KeywordPlannerRepository(self.db).get_job_by_id(payload.source_job_id)
+            if not job or job.user_id != user_id:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Keyword job not found.")
+        candidate = self.repo.create_candidate(
+            user_id=user_id,
+            name=payload.name,
+            description=payload.description,
+            status=payload.status,
+            notes=payload.notes,
+            tags=payload.tags,
+            language_id=payload.language_id,
+            location_ids=payload.location_ids,
+            source_ads_id=payload.source_ads_id,
+            source_job_id=payload.source_job_id,
+            website_url=payload.website_url,
+        )
+        self.repo.replace_candidate_items(
+            candidate, [_keyword_input_to_dict(item) for item in payload.keywords]
+        )
+        self.db.commit()
+        return _candidate_to_response(self._get_owned(candidate.id, user_id))
+
+    def list_candidates(
+        self, user_id: str, *, status_filter: Optional[str] = None, skip: int = 0, limit: int = 50
+    ) -> CandidateListResponse:
+        items, total = self.repo.list_candidates(
+            user_id, status=status_filter, skip=skip, limit=limit
+        )
+        return CandidateListResponse(total=total, items=[_candidate_to_response(item) for item in items])
+
+    def get_candidate(self, candidate_id: str, user_id: str) -> CandidateResponse:
+        return _candidate_to_response(self._get_owned(candidate_id, user_id))
+
+    def update_candidate(
+        self, candidate_id: str, user_id: str, payload: CandidateUpdateRequest
+    ) -> CandidateResponse:
+        candidate = self._get_owned(candidate_id, user_id)
+        scalar_fields = ("name", "description", "status", "notes", "tags", "language_id", "location_ids", "website_url")
+        provided = payload.model_fields_set
+        for field in scalar_fields:
+            if field in provided:
+                setattr(candidate, field, getattr(payload, field))
+        if payload.keywords is not None:
+            self.repo.replace_candidate_items(
+                candidate, [_keyword_input_to_dict(item) for item in payload.keywords]
+            )
+        self.db.commit()
+        return _candidate_to_response(self._get_owned(candidate_id, user_id))
+
+    def delete_candidate(self, candidate_id: str, user_id: str) -> None:
+        candidate = self._get_owned(candidate_id, user_id)
+        self.repo.delete_candidate(candidate)
+        self.db.commit()
+
+    def promote_candidate(
+        self, candidate_id: str, user_id: str, payload: CandidatePromoteRequest
+    ) -> CandidateResponse:
+        candidate = self._get_owned(candidate_id, user_id)
+        if candidate.affiliate_project_id:
+            return _candidate_to_response(candidate)
+        website_url = payload.website_url or candidate.website_url
+        if not website_url:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cần nhập website/affiliate URL trước khi chuyển thành dự án.",
+            )
+        normalized_url = normalize_affiliate_url(website_url)
+        domain = extract_domain(normalized_url)
+        affiliate = AffiliateDataRepository(self.db).get_or_create_affiliate_link(
+            user_id=user_id,
+            affiliate_url=normalized_url,
+            domain=domain,
+            name=candidate.name,
+            search_query=candidate.items[0].keyword if candidate.items else candidate.name,
+        )
+        candidate.affiliate_project_id = affiliate.id
+        candidate.website_url = normalized_url
+        candidate.status = "promoted"
+        self.db.commit()
+        return _candidate_to_response(self._get_owned(candidate_id, user_id))
+
+    def _get_owned(self, candidate_id: str, user_id: str) -> KeywordCandidateProject:
+        candidate = self.repo.get_candidate_for_user(candidate_id, user_id)
+        if not candidate:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate project not found.")
+        return candidate
 
 
 # ===========================================================================

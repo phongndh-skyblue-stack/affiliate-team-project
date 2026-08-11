@@ -1,6 +1,7 @@
 import axiosInstance from "@/lib/axios";
 import type {
   AffiliateLinkCreateRequest,
+  AffiliateLinkUpdateRequest,
   AffiliateLinkDetailResponse,
   AffiliateLinkModel,
   ScanAffiliateProjectRequest,
@@ -59,6 +60,17 @@ export const affiliateProjectService = {
       "/affiliate-data/scan-affiliate-project",
       payload,
       { signal }
+    );
+    return response.data;
+  },
+
+  updateAffiliateLink: async (
+    id: string,
+    payload: AffiliateLinkUpdateRequest
+  ): Promise<AffiliateLinkModel> => {
+    const response = await axiosInstance.put<AffiliateLinkModel>(
+      `/affiliate-data/affiliate-link/${id}`,
+      payload
     );
     return response.data;
   },

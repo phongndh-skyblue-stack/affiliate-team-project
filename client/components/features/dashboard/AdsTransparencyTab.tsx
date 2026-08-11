@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   ScanLine,
@@ -18,6 +18,9 @@ import {
   Tag,
   X,
   RefreshCw,
+  Link2,
+  Check,
+  Trash2,
 } from "lucide-react";
 import { DayPicker, type DateRange } from "react-day-picker";
 import { format } from "date-fns";
@@ -25,13 +28,28 @@ import { vi } from "date-fns/locale";
 import "react-day-picker/style.css";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { affiliateProjectService } from "@/services/affiliateProject.service";
+import { CustomSelect } from "@/components/common/CustomSelect";
 import { adsTransparentService } from "@/services/adsTransparent.service";
+import type { AffiliateLinkModel } from "@/types/affiliateProject.types";
 import type {
   AdsTransparencySearchRequest,
   AdCreativeHistoryItem,
   AdSearchHistoryItem,
   CompetitorGroup,
 } from "@/types/adsTransparent.types";
+
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -228,43 +246,61 @@ function HistoryRow({
   item,
   onScanDetail,
   scannedCounts,
+  onDeleteHistory,
 }: {
   item: AdSearchHistoryItem;
   onScanDetail: (c: AdCreativeHistoryItem, action: DetailAction) => void;
   scannedCounts: Map<string, number>;
+  onDeleteHistory: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const totalCreatives = item.creatives.length;
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors text-left"
-      >
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#059669]/10">
-          <Search size={14} className="text-[#059669]" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">
-            {item.text ?? item.advertiserIdQuery ?? "(không có từ khóa)"}
-          </p>
-          <div className="flex flex-wrap gap-x-3 gap-y-0 mt-0.5 text-[11px] text-muted-foreground">
-            {item.platform && <span>{item.platform}</span>}
-            {item.creativeFormat && <span>{item.creativeFormat}</span>}
-            {item.region && (
-              <span>{REGION_OPTIONS.find((r) => r.value === item.region)?.label ?? item.region}</span>
-            )}
-            <span>{formatDate(item.createdAt)}</span>
+      <div className="w-full flex items-center justify-between gap-3 px-4 py-3.5">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex-1 min-w-0 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left"
+        >
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#059669]/10">
+            <Search size={14} className="text-[#059669]" />
           </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-            {totalCreatives} ads
-          </span>
-          {open ? <ChevronUp size={15} className="text-muted-foreground" /> : <ChevronDown size={15} className="text-muted-foreground" />}
-        </div>
-      </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">
+              {item.text ?? item.advertiserIdQuery ?? "(không có từ khóa)"}
+            </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-0 mt-0.5 text-[11px] text-muted-foreground">
+              {item.platform && <span>{item.platform}</span>}
+              {item.creativeFormat && <span>{item.creativeFormat}</span>}
+              {item.region && (
+                <span>{REGION_OPTIONS.find((r) => r.value === item.region)?.label ?? item.region}</span>
+              )}
+              <span>{formatDate(item.createdAt)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 mr-2">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {totalCreatives} ads
+            </span>
+            {open ? <ChevronUp size={15} className="text-muted-foreground" /> : <ChevronDown size={15} className="text-muted-foreground" />}
+          </div>
+        </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteHistory(item.id);
+          }}
+          className="border border-border text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 gap-1.5"
+          title="Xoá lần quét này"
+        >
+          <Trash2 size={14} />
+          Xoá
+        </Button>
+      </div>
 
       {open && (
         <div className="border-t border-border px-4 py-4">
@@ -527,8 +563,8 @@ function DateRangePicker({
     selected.from && selected.to
       ? `${format(selected.from, "dd/MM/yyyy")} - ${format(selected.to, "dd/MM/yyyy")}`
       : selected.from
-      ? `${format(selected.from, "dd/MM/yyyy")} - ...`
-      : "Chọn khoảng thời gian";
+        ? `${format(selected.from, "dd/MM/yyyy")} - ...`
+        : "Chọn khoảng thời gian";
 
   return (
     <div ref={containerRef} className="relative">
@@ -623,6 +659,8 @@ function DateRangePicker({
 function ScanForm({ onScanDone }: ScanFormProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<AffiliateLinkModel[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [form, setForm] = useState<AdsTransparencySearchRequest>({
     text: "",
     platform: undefined,
@@ -638,10 +676,33 @@ function ScanForm({ onScanDone }: ScanFormProps) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+
+  function applySelectedProject() {
+    if (!selectedProject) return;
+    setForm((current) => ({
+      ...current,
+      text: selectedProject.domain,
+      advertiserId: undefined,
+      projectId: selectedProject.id,
+    }));
+  }
+
+  useEffect(() => {
+    affiliateProjectService
+      .getAffiliateLinks()
+      .then(setProjects)
+      .catch(() => toast.error("Không tải được danh sách dự án"));
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.text && !form.advertiserId) {
       toast.error("Nhập domain hoặc Advertiser ID trước khi quét");
+      return;
+    }
+    if (form.text && (form.text.startsWith("http://") || form.text.startsWith("https://") || form.text.includes("://"))) {
+      toast.error("Vui lòng nhập domain hoặc tên nhà quảng cáo không kèm theo http:// hoặc https:// (ví dụ: binance.com)");
       return;
     }
     setLoading(true);
@@ -690,6 +751,64 @@ function ScanForm({ onScanDone }: ScanFormProps) {
                 <span className="font-semibold text-[#dc2626]">*</span> Trường bắt buộc
               </span>
               <span>Điền ít nhất 1 trong 2 trường: Domain / Tên nhà quảng cáo hoặc Advertiser ID.</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 rounded-lg border border-dashed border-border bg-background/60 p-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+              <div className="min-w-0">
+                <CustomSelect
+                  value={selectedProjectId}
+                  onChange={(val) => {
+                    setSelectedProjectId(val);
+                    const proj = projects.find((project) => project.id === val);
+                    if (proj) {
+                      setForm((current) => ({
+                        ...current,
+                        text: proj.domain,
+                        advertiserId: undefined,
+                        projectId: proj.id,
+                      }));
+                    } else {
+                      setForm((current) => ({
+                        ...current,
+                        projectId: undefined,
+                      }));
+                    }
+                  }}
+                  placeholder="Chọn dự án để quét theo project"
+                  options={projects.map((project) => ({
+                    value: project.id,
+                    label: `${project.name || project.domain} - ${project.affiliate_url || project.domain}`
+                  }))}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={applySelectedProject}
+                disabled={!selectedProject}
+                className={cn(
+                  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium disabled:opacity-50",
+                  selectedProjectId
+                    ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Link2 size={14} /> Dùng URL dự án
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedProjectId("");
+                  set("projectId", null);
+                }}
+                className={cn(
+                  "h-10 rounded-lg border px-3 text-sm font-medium",
+                  !selectedProjectId
+                    ? "border-[#059669] bg-[#059669] text-white hover:bg-[#047857]"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Riêng lẻ
+              </button>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -753,61 +872,45 @@ function ScanForm({ onScanDone }: ScanFormProps) {
                 <label className="mb-1.5 block text-xs font-medium text-foreground/90">
                   Nền tảng
                 </label>
-                <select
+                <CustomSelect
                   value={form.platform ?? ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     set(
                       "platform",
-                      (e.target.value as AdsTransparencySearchRequest["platform"]) || undefined
+                      (val as AdsTransparencySearchRequest["platform"]) || undefined
                     )
                   }
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm transition-colors hover:border-[#059669]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-                >
-                  {PLATFORM_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  options={PLATFORM_OPTIONS}
+                />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-foreground/90">
                   Định dạng
                 </label>
-                <select
+                <CustomSelect
                   value={form.creativeFormat ?? ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     set(
                       "creativeFormat",
-                      (e.target.value as AdsTransparencySearchRequest["creativeFormat"]) || undefined
+                      (val as AdsTransparencySearchRequest["creativeFormat"]) || undefined
                     )
                   }
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm transition-colors hover:border-[#059669]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-                >
-                  {FORMAT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  options={FORMAT_OPTIONS}
+                />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-foreground/90">
                   Khu vực
                 </label>
-                <select
+                <CustomSelect
                   value={form.region ?? ""}
-                  onChange={(e) => set("region", e.target.value || undefined)}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm transition-colors hover:border-[#059669]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/25"
-                >
-                  {REGION_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => set("region", val || undefined)}
+                  options={REGION_OPTIONS}
+                  showSearch={true}
+                  searchPlaceholder="Tìm kiếm khu vực..."
+                />
               </div>
 
               <div>
@@ -860,6 +963,8 @@ function ScanForm({ onScanDone }: ScanFormProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const PAGE_SIZE = Number(process.env.NEXT_PUBLIC_PAGE_SIZE || 10);
+
 export function AdsTransparencyTab() {
   const [view, setView] = useState<"history" | "competitors">("history");
   const [history, setHistory] = useState<AdSearchHistoryItem[]>([]);
@@ -871,6 +976,15 @@ export function AdsTransparencyTab() {
   const [scannedCounts, setScannedCounts] = useState<Map<string, number>>(new Map());
   const hasFetched = useRef(false);
 
+  // History pagination state
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyTotalPages, setHistoryTotalPages] = useState(0);
+
+  // Delete history state
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   // Competitor pagination state
   const [competitorGroups, setCompetitorGroups] = useState<CompetitorGroup[]>([]);
   const [competitorTotal, setCompetitorTotal] = useState(0);
@@ -879,11 +993,13 @@ export function AdsTransparencyTab() {
   const [loadingCompetitors, setLoadingCompetitors] = useState(false);
   const competitorFetchedRef = useRef(false);
 
-  async function fetchHistory() {
+  async function fetchHistory(page = 1) {
     setLoading(true);
     try {
-      const res = await adsTransparentService.getHistory();
+      const res = await adsTransparentService.getHistory(page, PAGE_SIZE);
       setHistory(res.items);
+      setHistoryTotal(res.total);
+      setHistoryTotalPages(res.totalPages);
     } catch {
       toast.error("Không tải được lịch sử quét");
     } finally {
@@ -894,7 +1010,7 @@ export function AdsTransparencyTab() {
   async function fetchCompetitors(page: number) {
     setLoadingCompetitors(true);
     try {
-      const res = await adsTransparentService.getCompetitors(page, 10);
+      const res = await adsTransparentService.getCompetitors(page, PAGE_SIZE);
       setCompetitorGroups(res.items);
       setCompetitorTotal(res.total);
       setCompetitorTotalPages(res.totalPages);
@@ -908,7 +1024,7 @@ export function AdsTransparencyTab() {
   useEffect(() => {
     if (!hasFetched.current) {
       hasFetched.current = true;
-      fetchHistory();
+      fetchHistory(1);
     }
   }, []);
 
@@ -921,7 +1037,8 @@ export function AdsTransparencyTab() {
   }, [view]);
 
   function handleScanDone() {
-    fetchHistory();
+    setHistoryPage(1);
+    fetchHistory(1);
     if (competitorFetchedRef.current) {
       fetchCompetitors(competitorPage);
     }
@@ -932,12 +1049,48 @@ export function AdsTransparencyTab() {
     fetchCompetitors(newPage);
   }
 
+  function handleHistoryPageChange(newPage: number) {
+    setHistoryPage(newPage);
+    fetchHistory(newPage);
+  }
+
   function handleRefresh() {
-    fetchHistory();
+    fetchHistory(historyPage);
     if (competitorFetchedRef.current) {
       fetchCompetitors(competitorPage);
     }
   }
+
+  const openDeleteDialog = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDeleteTargetId(null);
+  };
+
+  async function deleteSearch(id: string) {
+    try {
+      await adsTransparentService.deleteHistory(id);
+      toast.success("Đã xoá lịch sử quét");
+      // If we deleted the last item on the current page, go back a page
+      const newPage = (history.length === 1 && historyPage > 1) ? historyPage - 1 : historyPage;
+      setHistoryPage(newPage);
+      fetchHistory(newPage);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Không thể xoá lịch sử quét");
+    }
+  }
+
+  const confirmDeleteSearch = async () => {
+    if (!deleteTargetId) {
+      return;
+    }
+    await deleteSearch(deleteTargetId);
+    closeDeleteDialog();
+  };
 
   const totalAds = history.reduce((s, i) => s + i.creatives.length, 0);
 
@@ -947,9 +1100,9 @@ export function AdsTransparencyTab() {
         {/* Stats bar */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Lần quét", value: history.length, icon: History },
+            { label: "Lần quét", value: historyTotal, icon: History },
             { label: "Đối thủ", value: competitorTotal, icon: Users },
-            { label: "Quảng cáo", value: totalAds, icon: Tag },
+            { label: "Quảng cáo (trang này)", value: totalAds, icon: Tag },
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="rounded-xl border border-border bg-card px-4 py-3 flex items-center gap-3">
               <div className="flex size-8 items-center justify-center rounded-lg bg-[#059669]/10">
@@ -1007,14 +1160,89 @@ export function AdsTransparencyTab() {
               {history.length === 0 ? (
                 <EmptyState />
               ) : (
-                history.map((item) => (
-                  <HistoryRow
-                    key={item.id}
-                    item={item}
-                    onScanDetail={(creative, mode) => setSelectedCreative({ creative, mode })}
-                    scannedCounts={scannedCounts}
-                  />
-                ))
+                <>
+                  {history.map((item) => (
+                    <HistoryRow
+                      key={item.id}
+                      item={item}
+                      onScanDetail={(creative, mode) => setSelectedCreative({ creative, mode })}
+                      scannedCounts={scannedCounts}
+                      onDeleteHistory={openDeleteDialog}
+                    />
+                  ))}
+
+                  {/* Pagination */}
+                  {historyTotalPages > 1 && (
+                    <div className="flex items-center justify-center gap-1 pt-2">
+                      <button
+                        onClick={() => handleHistoryPageChange(1)}
+                        disabled={historyPage === 1}
+                        className="rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        «
+                      </button>
+                      <button
+                        onClick={() => handleHistoryPageChange(historyPage - 1)}
+                        disabled={historyPage === 1}
+                        className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        ‹
+                      </button>
+
+                      {Array.from({ length: historyTotalPages }, (_, i) => i + 1)
+                        .filter(
+                          (p) =>
+                            p === 1 ||
+                            p === historyTotalPages ||
+                            Math.abs(p - historyPage) <= 2
+                        )
+                        .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                          if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                          acc.push(p);
+                          return acc;
+                        }, [])
+                        .map((p, idx) =>
+                          p === "..." ? (
+                            <span key={`ellipsis-${idx}`} className="px-1 text-xs text-muted-foreground">
+                              …
+                            </span>
+                          ) : (
+                            <button
+                              key={p}
+                              onClick={() => handleHistoryPageChange(p as number)}
+                              className={cn(
+                                "min-w-[30px] rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors",
+                                historyPage === p
+                                  ? "border-[#059669] bg-[#059669] text-white"
+                                  : "border-border text-muted-foreground hover:bg-muted"
+                              )}
+                            >
+                              {p}
+                            </button>
+                          )
+                        )}
+
+                      <button
+                        onClick={() => handleHistoryPageChange(historyPage + 1)}
+                        disabled={historyPage === historyTotalPages}
+                        className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        ›
+                      </button>
+                      <button
+                        onClick={() => handleHistoryPageChange(historyTotalPages)}
+                        disabled={historyPage === historyTotalPages}
+                        className="rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        »
+                      </button>
+
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        Trang {historyPage}/{historyTotalPages} · {historyTotal} lượt quét
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )
@@ -1130,6 +1358,27 @@ export function AdsTransparencyTab() {
           })
         }
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => { if (!open) closeDeleteDialog(); setIsDeleteDialogOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xoá</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này sẽ xoá lượt quét này và không thể khôi phục.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant="secondary">Huỷ</Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button variant="destructive" onClick={confirmDeleteSearch}>
+                Xoá
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
