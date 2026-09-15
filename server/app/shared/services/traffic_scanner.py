@@ -73,6 +73,13 @@ def _sw_date(dt: datetime) -> str:
     return f"{dt.year}|{dt.month:02d}|{dt.day:02d}"
 
 
+def _share_percentage(value: Any) -> float:
+    share = float(value or 0)
+    if 0 < share <= 1:
+        share *= 100
+    return round(share, 2)
+
+
 def _scan_months(n: int = _DEFAULT_MONTHS) -> list[tuple[datetime, datetime]]:
     """Trả list (from_dt, to_dt) cho N tháng gần nhất, skip tháng hiện tại.
 
@@ -95,12 +102,48 @@ def _scan_months(n: int = _DEFAULT_MONTHS) -> list[tuple[datetime, datetime]]:
     return list(reversed(months))  # cũ → mới
 
 
+def _scan_months_from_period(
+    n: int,
+    start_period: str,
+) -> list[tuple[datetime, datetime]]:
+    now = datetime.now(timezone.utc)
+    previous_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc) - timedelta(days=1)
+    latest_complete = datetime(previous_month.year, previous_month.month, 1, tzinfo=timezone.utc) - timedelta(days=1)
+    latest_month = datetime(latest_complete.year, latest_complete.month, 1, tzinfo=timezone.utc)
+    try:
+        y_text, m_text = start_period.split("-", 1)
+        y, m = int(y_text), int(m_text)
+        base = datetime(y, m, 1, tzinfo=timezone.utc)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("start_period must be in YYYY-MM format") from exc
+
+    if base > latest_month:
+        base = latest_month
+
+    months: list[tuple[datetime, datetime]] = []
+    for offset in range(n):
+        month_index = base.month - 1 + offset
+        y = base.year + month_index // 12
+        m = month_index % 12 + 1
+        if (y, m) > (latest_complete.year, latest_complete.month):
+            break
+        last = monthrange(y, m)[1]
+        months.append(
+            (
+                datetime(y, m, 1, tzinfo=timezone.utc),
+                datetime(y, m, last, tzinfo=timezone.utc),
+            )
+        )
+    return months
+
 async def _get_widget(
     url: str,
     params: dict[str, Any],
     headers: dict[str, str],
 ) -> tuple[Any, dict[str, str], int]:
     """GET widgetApi với auto-retry khi 401/403 (cookie expire)."""
+    print(f"==========> Calling SimilarWeb API: {url}")
+    print(f"==========> Params: {params}")
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT, trust_env=False) as c:
             r = await c.get(url, params=params, headers=headers)
@@ -298,13 +341,13 @@ async def _fetch_sources(
     domain_total = total.get(domain) or {}
     return {
         "period_month": from_dt.strftime("%Y-%m"),
-        "organic_search": round(domain_total.get("Organic Search") or 0),
-        "social": round(domain_total.get("Social") or 0),
-        "email": round(domain_total.get("Email") or 0),
-        "display_ads": round(domain_total.get("Display Ads") or 0),
-        "direct": round(domain_total.get("Direct") or 0),
-        "referrals": round(domain_total.get("Referrals") or 0),
-        "paid_search": round(domain_total.get("Paid Search") or 0),
+        "organic_search": _share_percentage(domain_total.get("Organic Search")),
+        "social": _share_percentage(domain_total.get("Social")),
+        "email": _share_percentage(domain_total.get("Email")),
+        "display_ads": _share_percentage(domain_total.get("Display Ads")),
+        "direct": _share_percentage(domain_total.get("Direct")),
+        "referrals": _share_percentage(domain_total.get("Referrals")),
+        "paid_search": _share_percentage(domain_total.get("Paid Search")),
     }
 
 
@@ -387,11 +430,15 @@ async def _scan_one_month(
     return g, c, s, so
 
 
-async def scan_traffic(url: str, months: int = _DEFAULT_MONTHS) -> dict[str, Any]:
+async def scan_traffic(
+    url: str,
+    months: int = _DEFAULT_MONTHS,
+    start_period: str | None = None,
+) -> list[dict[str, Any]]:
     """Quét traffic chi tiết của 1 URL từ SimilarWeb Pro.
 
     Returns:
-        dict với keys: domain, found, monthly_visits, period_month, traffic_details
+        list[dict] với keys: domain, found, monthly_visits, period_month, traffic_details
     """
     domain = _extract_domain(url)
     if not domain:
@@ -401,13 +448,10 @@ async def scan_traffic(url: str, months: int = _DEFAULT_MONTHS) -> dict[str, Any
 
     headers = await sw.get_headers()
 
-    all_global: list[dict] = []
-    country_data: list[dict] | None = None
-    source_data: dict | None = None
-    social_data: list[dict] | None = None
+    results: list[dict[str, Any]] = []
     failed: list[tuple[datetime, datetime]] = []
 
-    month_ranges = _scan_months(months)
+    month_ranges = _scan_months_from_period(months, start_period) if start_period else _scan_months(months)
 
     # Pass 1
     for from_dt, to_dt in month_ranges:
@@ -417,13 +461,20 @@ async def scan_traffic(url: str, months: int = _DEFAULT_MONTHS) -> dict[str, Any
                 # domain không có data SW — dừng sớm
                 break
             if g:
-                all_global.extend(g)
-                if c:
-                    country_data = c
-                if s:
-                    source_data = s
-                if so:
-                    social_data = so
+                period_month = from_dt.strftime("%Y-%m")
+                monthly_visits = int(g[0].get("total_visits_monthly") or 0)
+                details: dict[str, Any] = {"global": g}
+                if c: details["country"] = c
+                if s: details["source"] = s
+                if so: details["social"] = so
+                
+                results.append({
+                    "monthly_visits": monthly_visits,
+                    "period_month": period_month,
+                    "domain": domain,
+                    "found": True,
+                    "traffic_details": details,
+                })
             else:
                 failed.append((from_dt, to_dt))
         except Exception as exc:
@@ -440,53 +491,39 @@ async def scan_traffic(url: str, months: int = _DEFAULT_MONTHS) -> dict[str, Any
                 try:
                     g, c, s, so = await _scan_one_month(domain, from_dt, to_dt, headers)
                     if g:
-                        all_global.extend(g)
-                        if c:
-                            country_data = c
-                        if s:
-                            source_data = s
-                        if so:
-                            social_data = so
+                        period_month = from_dt.strftime("%Y-%m")
+                        monthly_visits = int(g[0].get("total_visits_monthly") or 0)
+                        details = {"global": g}
+                        if c: details["country"] = c
+                        if s: details["source"] = s
+                        if so: details["social"] = so
+                        
+                        results.append({
+                            "monthly_visits": monthly_visits,
+                            "period_month": period_month,
+                            "domain": domain,
+                            "found": True,
+                            "traffic_details": details,
+                        })
                 except Exception as exc:
                     logger.warning("Retry thất bại tháng %s: %s", from_dt.strftime("%Y-%m"), exc)
         except Exception as exc:
             logger.error("Refresh cookie cho retry thất bại: %s", exc)
 
-    # Fallback period_month là kỳ mới nhất trong scan_months
-    latest_period = month_ranges[-1][0].strftime("%Y-%m") if month_ranges else ""
-
-    if not all_global:
-        return {
+    if not results:
+        latest_period = month_ranges[-1][0].strftime("%Y-%m") if month_ranges else ""
+        results.append({
             "monthly_visits": 0,
             "period_month": latest_period,
             "domain": domain,
             "found": False,
             "traffic_details": None,
-        }
-
-    latest = max(all_global, key=lambda x: x.get("period_month") or "")
-    monthly_visits = int(latest.get("total_visits_monthly") or 0)
-    period_month = latest.get("period_month") or latest_period
-
-    details: dict[str, Any] = {"global": all_global}
-    if country_data:
-        details["country"] = country_data
-    if source_data:
-        details["source"] = source_data
-    if social_data:
-        details["social"] = social_data
+        })
 
     logger.info(
-        "Quét traffic xong: domain=%r, monthly_visits=%d, period=%s",
+        "Quét traffic xong: domain=%r, lấy được %d tháng",
         domain,
-        monthly_visits,
-        period_month,
+        len(results),
     )
 
-    return {
-        "monthly_visits": monthly_visits,
-        "period_month": period_month,
-        "domain": domain,
-        "found": True,
-        "traffic_details": details,
-    }
+    return results

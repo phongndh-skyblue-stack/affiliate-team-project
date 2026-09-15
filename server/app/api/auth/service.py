@@ -39,7 +39,7 @@ class AuthService:
     def login(self, payload: LoginRequest) -> AuthResponse:
         user = self.repository.get_by_username(payload.username)
         if not user or not verify_password(payload.password, user.password_hash):
-            raise AppHTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password.")
+            raise AppHTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tên đăng nhập hoặc mật khẩu không chính xác.")
 
         return self._build_auth_response(user.id)
 

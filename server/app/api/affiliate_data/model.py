@@ -23,6 +23,8 @@ class AffiliateLink(Base):
 
     affiliate_url: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     domain: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    search_query: Mapped[str | None] = mapped_column(String(500), nullable=True)
     raw_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
@@ -77,6 +79,7 @@ class AffiliateLinkProjectDataScan(Base):
     project_link: Mapped[str | None] = mapped_column(Text, nullable=True)
     event_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     sale_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    restricted_countries: Mapped[list | None] = mapped_column(JSON, nullable=True)
     top_countries: Mapped[list | None] = mapped_column(JSON, nullable=True)
     answer: Mapped[str | None] = mapped_column(Text, nullable=True)
     results: Mapped[list | None] = mapped_column(JSON, nullable=True)

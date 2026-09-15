@@ -30,6 +30,7 @@ class AdsTransparencySearchRequest(CamelModel):
     next_page_token: str | None = Field(
         None, description="Token phân trang từ response trước"
     )
+    project_id: str | None = Field(None, description="Project ID when searching from a saved project")
 
     model_config = {
         "json_schema_extra": {
@@ -136,6 +137,8 @@ class AdSearchHistoryItem(CamelModel):
     political_ads: bool
     num: int
     next_page_token_input: str | None
+    project_id: str | None = None
+    project_name: str | None = None
     total_results: int | None
     next_page_token_output: str | None
     created_at: datetime
@@ -145,6 +148,9 @@ class AdSearchHistoryItem(CamelModel):
 
 class AdSearchHistoryResponse(CamelModel):
     total: int
+    page: int
+    page_size: int
+    total_pages: int
     items: list[AdSearchHistoryItem]
 
 

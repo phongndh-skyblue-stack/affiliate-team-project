@@ -1,0 +1,130 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { io, Socket } from "socket.io-client";
+import { toast } from "sonner";
+import { WS_BASE_URL } from "@/constants/config";
+import { getAccessToken } from "@/lib/authStorage";
+import { useNotificationStore } from "@/stores/notificationStore";
+import { notificationService } from "@/services/notification.service";
+
+/**
+ * Connects to the Socket.IO notification server AND hydrates
+ * notifications from the DB API on first mount.
+ * Must be mounted inside an authenticated layout.
+ */
+export function useNotifications() {
+  const addDelegationResult = useNotificationStore((s) => s.addDelegationResult);
+  const addNotification = useNotificationStore((s) => s.addNotification);
+  const setFromApi = useNotificationStore((s) => s.setFromApi);
+  const hydrated = useNotificationStore((s) => s.hydrated);
+  const socketRef = useRef<Socket | null>(null);
+
+  // Fetch persisted notifications from DB once (after login / on refresh)
+  useEffect(() => {
+    if (hydrated) return;
+    notificationService.list().then((res) => {
+      setFromApi(res.items, res.unreadCount);
+    }).catch(() => {
+      // Non-fatal — socket will still work
+    });
+  }, [hydrated, setFromApi]);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    const socket = io(WS_BASE_URL, {
+      path: "/socket.io",
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 10,
+      reconnectionDelay: 3000,
+      reconnectionDelayMax: 60000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      console.log("[Socket.IO] connected:", socket.id);
+    });
+
+    socket.on("connect_error", (err) => {
+      // Silence "unauthorized" — normal when token expires
+      if (!err.message.includes("unauthorized")) {
+        console.warn("[Socket.IO]", err.message);
+      }
+    });
+
+    socket.on("delegation_result", (data: {
+      mailId: string;
+      message: string;
+      accounts: unknown[];
+      unaccessibleIds: string[];
+    }) => {
+      console.log("[Socket.IO] delegation_result received:", data);
+      addDelegationResult({
+          type: "delegation_result",
+          mailId: data.mailId,
+          message: data.message,
+          accounts: (data.accounts ?? []) as never,
+          unaccessibleIds: data.unaccessibleIds ?? [],
+          mailEmail: ""
+      });
+
+      const accountCount = (data.accounts ?? []).length;
+      toast.success(data.message ?? "Ủy quyền thành công!", {
+        description: accountCount
+          ? `Đã lưu ${accountCount} tài khoản Google Ads vào hệ thống.`
+          : "Không tìm thấy tài khoản nào.",
+        duration: 8000,
+      });
+
+      window.dispatchEvent(
+        new CustomEvent("delegation:result", { detail: data })
+      );
+    });
+
+    socket.on("telegram_linked", (data: {
+      userId: string;
+      chatId?: number;
+    }) => {
+      console.log("[Socket.IO] telegram_linked received:", data);
+      window.dispatchEvent(
+        new CustomEvent("telegram:linked", { detail: data })
+      );
+    });
+
+    socket.on("telegram_unlinked", (data: {
+      userId: string;
+    }) => {
+      console.log("[Socket.IO] telegram_unlinked received:", data);
+      window.dispatchEvent(
+        new CustomEvent("telegram:unlinked", { detail: data })
+      );
+    });
+
+    socket.on("telegram_notification", (data: {
+      id?: string;
+      type: string;
+      message: string;
+      description?: string;
+      chatId?: number;
+      createdAt?: string;
+    }) => {
+      addNotification({
+        id: data.id,
+        type: data.type,
+        message: data.message,
+        description: data.description,
+        chatId: data.chatId,
+        receivedAt: data.createdAt,
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [addDelegationResult, addNotification]);
+}

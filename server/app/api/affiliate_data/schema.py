@@ -11,6 +11,13 @@ class ScanTrafficRequest(BaseModel):
     months: int = Field(default=4, ge=1, le=12, description="Số tháng lịch sử cần lấy")
 
 
+    start_period: str | None = Field(
+        default=None,
+        pattern=r"^\d{4}-\d{2}$",
+        description="Tháng bắt đầu quét, định dạng YYYY-MM",
+    )
+
+
 class TrafficDetails(BaseModel):
     global_: list[dict[str, Any]] = Field(default_factory=list, alias="global")
     country: list[dict[str, Any]] | None = None
@@ -48,6 +55,21 @@ class TopCountryInsight(BaseModel):
     signals: list[str] = Field(default_factory=list)
 
 
+class EvidenceLink(BaseModel):
+    title: str | None = None
+    url: str | None = None
+    snippet: str | None = None
+
+
+class RestrictedCountryInsight(BaseModel):
+    country: str
+    restriction_type: Literal["banned", "restricted"] = "restricted"
+    signals: list[str] = Field(default_factory=list)
+    evidence_links: list[EvidenceLink] = Field(default_factory=list)
+    confidence: Literal["high", "medium", "low"] | None = None
+    verification_note: str | None = None
+
+
 class AffiliateProjectScanResponse(BaseModel):
     website: str
     domain: str
@@ -56,9 +78,12 @@ class AffiliateProjectScanResponse(BaseModel):
     project_link: str | None = None
     event_content: str | None = None
     sale_content: str | None = None
+    restricted_countries: list[RestrictedCountryInsight] = Field(default_factory=list)
     top_countries: list[TopCountryInsight] = Field(default_factory=list)
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)
+    ad_copy: dict[str, Any] | None = None
+
 
 
 class AffiliateLinkModel(BaseModel):
@@ -66,6 +91,8 @@ class AffiliateLinkModel(BaseModel):
     user_id: str | None = None
     affiliate_url: str
     domain: str
+    name: str | None = None
+    search_query: str | None = None
     raw_data: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
@@ -73,6 +100,14 @@ class AffiliateLinkModel(BaseModel):
 
 class AffiliateLinkCreateRequest(BaseModel):
     website: str = Field(..., min_length=1, description="Affiliate link cần tạo/lưu")
+    name: str | None = Field(None, description="Project name")
+    search: str | None = Field(None, description="Shared search keyword for project-linked searches")
+
+
+class AffiliateLinkUpdateRequest(BaseModel):
+    website: str = Field(..., min_length=1, description="Affiliate link")
+    name: str | None = Field(None, description="Project name")
+    search: str | None = Field(None, description="Shared search keyword for project-linked searches")
 
 
 class AffiliateLinkTrafficModel(BaseModel):
@@ -95,10 +130,12 @@ class AffiliateLinkProjectDataModel(BaseModel):
     project_link: str | None = None
     event_content: str | None = None
     sale_content: str | None = None
+    restricted_countries: list[RestrictedCountryInsight] = Field(default_factory=list)
     top_countries: list[TopCountryInsight] = Field(default_factory=list)
     answer: str | None = None
     results: list[dict[str, Any]] = Field(default_factory=list)
     raw_data: dict[str, Any] | None = None
+    ad_copy: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -42,6 +42,32 @@ _COUNTRY_ALIASES: dict[str, tuple[str, ...]] = {
     "Mexico": ("mexico", "mx"),
 }
 
+_RESTRICTION_KEYWORDS = (
+    "banned",
+    "prohibited",
+    "not allowed",
+    "not accepted",
+    "not available",
+    "unable to offer",
+    "do not extend our services",
+    "cease operations",
+    "unavailable",
+    "excluded",
+    "blocked",
+    "restricted",
+    "cannot participate",
+    "cannot purchase",
+    "ineligible",
+)
+
+_BANNED_KEYWORDS = (
+    "banned",
+    "prohibited",
+    "not allowed",
+    "not accepted",
+    "blocked",
+)
+
 _CC_TLD_TO_COUNTRY = {
     "us": "United States",
     "uk": "United Kingdom",
@@ -216,6 +242,106 @@ def _build_country_signals(results: list[dict], answer: str | None) -> list[dict
     return ranked[:5]
 
 
+def _snippet_around(text: str, needle: str, max_chars: int = 300) -> str:
+    lowered = text.lower()
+    index = lowered.find(needle.lower())
+    if index < 0:
+        return re.sub(r"\s+", " ", text).strip()[:max_chars]
+    start = max(0, index - max_chars // 2)
+    end = min(len(text), index + max_chars // 2)
+    return re.sub(r"\s+", " ", text[start:end]).strip()
+
+
+def _split_restriction_contexts(text: str) -> list[str]:
+    cleaned = re.sub(r"\s+", " ", text or "").strip()
+    if not cleaned:
+        return []
+    sentences = re.split(r"(?<=[.!?])\s+", cleaned)
+    if len(sentences) <= 1:
+        return [cleaned[:700]]
+    return [sentence[:700] for sentence in sentences if sentence.strip()]
+
+
+def _build_restricted_country_insights(results: list[dict], answer: str | None) -> list[dict]:
+    buckets: dict[str, dict[str, object]] = {}
+
+    def add_context(country: str, context: str, result: dict | None) -> None:
+        lowered = context.lower()
+        hard = any(keyword in lowered for keyword in _BANNED_KEYWORDS)
+        bucket = buckets.setdefault(
+            country,
+            {
+                "country": country,
+                "restriction_type": "restricted",
+                "signals": [],
+                "evidence_links": [],
+                "confidence": "low",
+                "verification_note": (
+                    "Kết quả này được suy luận tự động từ dữ liệu web. "
+                    "Hãy mở nguồn để kiểm tra Terms, eligibility hoặc restricted jurisdictions."
+                ),
+            },
+        )
+        if hard:
+            bucket["restriction_type"] = "banned"
+
+        signals = bucket["signals"]
+        if isinstance(signals, list):
+            snippet = context[:500]
+            if snippet not in signals:
+                signals.append(snippet)
+
+        url = str(result.get("url") or "") if result else ""
+        if url:
+            evidence_links = bucket["evidence_links"]
+            if isinstance(evidence_links, list) and all(link.get("url") != url for link in evidence_links):
+                evidence_links.append(
+                    {
+                        "title": result.get("title"),
+                        "url": url,
+                        "snippet": _snippet_around(context, country),
+                    }
+                )
+            bucket["confidence"] = "medium"
+
+    sources: list[tuple[str, dict | None]] = []
+    if answer:
+        sources.append((answer, None))
+    for result in results:
+        sources.extend(
+            (
+                (str(result.get("title") or ""), result),
+                (str(result.get("content") or ""), result),
+                (str(result.get("raw_content") or ""), result),
+            )
+        )
+
+    for text, result in sources:
+        for context in _split_restriction_contexts(text):
+            lowered = context.lower()
+            if not any(keyword in lowered for keyword in _RESTRICTION_KEYWORDS):
+                continue
+            for country, aliases in _COUNTRY_ALIASES.items():
+                if any(re.search(rf"\b{re.escape(alias.lower())}\b", lowered) for alias in aliases):
+                    add_context(country, context, result)
+
+    ranked = sorted(
+        buckets.values(),
+        key=lambda item: (
+            1 if item.get("restriction_type") == "banned" else 0,
+            len(item.get("evidence_links") or []),
+            len(item.get("signals") or []),
+        ),
+        reverse=True,
+    )
+    for item in ranked:
+        if isinstance(item.get("evidence_links"), list):
+            item["evidence_links"] = item["evidence_links"][:3]
+        if isinstance(item.get("signals"), list):
+            item["signals"] = item["signals"][:4]
+    return ranked
+
+
 async def scan_affiliate_project_insights(
     website: str,
     max_results: int,
@@ -227,11 +353,8 @@ async def scan_affiliate_project_insights(
     query = " ".join(
         [
             domain,
-            (
-                "affiliate program commission rate payout referral terms percentage fixed amount "
-                "project campaign event sale promotion discount coupon "
-                "headquarters branch office languages countries regions locales"
-            ),
+            "official product features pricing affiliate program commission payout referral terms",
+            "campaign sale promotion offer headquarters countries restricted unavailable regions",
         ]
     )
 
@@ -275,6 +398,7 @@ async def scan_affiliate_project_insights(
     )
 
     top_countries = _build_country_signals(results, data.get("answer"))
+    restricted_countries = _build_restricted_country_insights(results, data.get("answer"))
 
     return {
         "website": website,
@@ -283,6 +407,7 @@ async def scan_affiliate_project_insights(
         "project_link": project_link,
         "event_content": event_content,
         "sale_content": sale_content,
+        "restricted_countries": restricted_countries,
         "top_countries": top_countries,
         "query": data.get("query", query),
         "answer": data.get("answer"),
@@ -294,14 +419,24 @@ class AffiliateDataService:
     def __init__(self, db: Session) -> None:
         self.repository = AffiliateDataRepository(db)
 
-    def create_affiliate_link(self, user_id: str, website: str) -> dict:
+    def create_affiliate_link(
+        self,
+        user_id: str,
+        website: str,
+        name: str | None = None,
+        search: str | None = None,
+    ) -> dict:
         normalized_url = normalize_affiliate_url(website)
         domain = extract_domain(normalized_url)
+        clean_name = (name or "").strip() or domain
+        clean_search = (search or "").strip() or clean_name or domain
 
         row = self.repository.get_or_create_affiliate_link(
             user_id=user_id,
             affiliate_url=normalized_url,
             domain=domain,
+            name=clean_name,
+            search_query=clean_search,
         )
         self.repository.commit()
 
@@ -310,6 +445,8 @@ class AffiliateDataService:
             "user_id": row.user_id,
             "affiliate_url": row.affiliate_url,
             "domain": row.domain,
+            "name": row.name,
+            "search_query": row.search_query,
             "raw_data": row.raw_data,
             "created_at": row.created_at,
             "updated_at": row.updated_at,
@@ -320,7 +457,8 @@ class AffiliateDataService:
         user_id: str,
         affiliate_link_id: str,
         months: int,
-    ) -> dict:
+        start_period: str | None = None,
+    ) -> list[dict]:
         link = self.repository.get_affiliate_link_by_id_for_user(
             user_id=user_id,
             affiliate_link_id=affiliate_link_id,
@@ -328,16 +466,27 @@ class AffiliateDataService:
         if not link:
             raise ValueError("Affiliate link không tồn tại hoặc không thuộc user hiện tại")
 
-        traffic_result = await scan_traffic(link.affiliate_url, months=months)
-        traffic_result["url"] = link.affiliate_url
-        traffic_result["domain"] = link.domain
-
-        self.repository.create_traffic_scan(
-            affiliate_link_id=link.id,
-            traffic_result=traffic_result,
+        traffic_results = await scan_traffic(
+            link.affiliate_url,
+            months=months,
+            start_period=start_period,
         )
+
+        self.repository.delete_traffic_scans_by_affiliate_link(link.id)
+
+        saved_results = []
+        for traffic_result in traffic_results:
+            traffic_result["url"] = link.affiliate_url
+            traffic_result["domain"] = link.domain
+
+            self.repository.create_traffic_scan(
+                affiliate_link_id=link.id,
+                traffic_result=traffic_result,
+            )
+            saved_results.append(traffic_result)
+
         self.repository.commit()
-        return traffic_result
+        return saved_results
 
     async def create_project_scan(
         self,
@@ -361,12 +510,98 @@ class AffiliateDataService:
             include_raw_content=include_raw_content,
         )
 
+        try:
+            from app.shared.agents.scan_project.llm_ad_generator import generate_ads_from_insights
+            from app.core.config import settings
+            ads_copy = generate_ads_from_insights(
+                project_data=project_result,
+                language="English",
+                api_key=settings.MINIMAX_API_KEY
+            )
+            if ads_copy and not ads_copy.get("raw_response"):
+                project_result["ad_copy"] = {
+                    "finalUrl": link.affiliate_url,
+                    "brandKeywords": ads_copy.get("brand_keywords") or [],
+                    "headlines": ads_copy.get("headlines") or [],
+                    "descriptions": ads_copy.get("descriptions") or [],
+                    "sitelinks": [
+                        {
+                            "text": s.get("title") or "",
+                            "url": link.affiliate_url,
+                            "description1": s.get("description1") or "",
+                            "description2": s.get("description2") or "",
+                        }
+                        for s in ads_copy.get("sitelinks") or []
+                    ]
+                }
+            else:
+                project_result["ad_copy"] = None
+        except Exception as e:
+            print(f"Failed to generate ad copy via LLM: {e}")
+            project_result["ad_copy"] = None
+
         self.repository.create_project_data_scan(
             affiliate_link_id=link.id,
             project_result=project_result,
         )
         self.repository.commit()
         return project_result
+
+    def update_affiliate_link(
+        self,
+        user_id: str,
+        affiliate_link_id: str,
+        website: str,
+        name: str | None = None,
+        search: str | None = None,
+    ) -> dict:
+        link = self.repository.get_affiliate_link_by_id_for_user(
+            user_id=user_id,
+            affiliate_link_id=affiliate_link_id,
+        )
+        if not link:
+            raise KeyError("Không tìm thấy affiliate link của user hiện tại")
+
+        normalized_url = normalize_affiliate_url(website)
+        domain = extract_domain(normalized_url)
+        clean_name = (name or "").strip() or domain
+        clean_search = (search or "").strip() or clean_name or domain
+
+        from sqlalchemy import select
+        from app.api.affiliate_data.model import AffiliateLink
+        stmt = select(AffiliateLink).where(
+            AffiliateLink.user_id == user_id,
+            AffiliateLink.affiliate_url == normalized_url,
+            AffiliateLink.id != affiliate_link_id,
+        )
+        dup = self.repository.db.scalar(stmt)
+        if dup:
+            raise ValueError("Dự án với affiliate URL này đã tồn tại")
+
+        link.affiliate_url = normalized_url
+        link.domain = domain
+        link.name = clean_name
+        link.search_query = clean_search
+        link.raw_data = {
+            "affiliate_url": normalized_url,
+            "domain": domain,
+            "name": clean_name,
+            "search_query": clean_search,
+        }
+
+        self.repository.commit()
+
+        return {
+            "id": link.id,
+            "user_id": link.user_id,
+            "affiliate_url": link.affiliate_url,
+            "domain": link.domain,
+            "name": link.name,
+            "search_query": link.search_query,
+            "raw_data": link.raw_data,
+            "created_at": link.created_at,
+            "updated_at": link.updated_at,
+        }
 
     def get_all_affiliate_links(self, user_id: str) -> list[dict]:
         rows = self.repository.get_all_affiliate_links_for_user(user_id)
@@ -376,12 +611,23 @@ class AffiliateDataService:
                 "user_id": row.user_id,
                 "affiliate_url": row.affiliate_url,
                 "domain": row.domain,
+                "name": row.name,
+                "search_query": row.search_query,
                 "raw_data": row.raw_data,
                 "created_at": row.created_at,
                 "updated_at": row.updated_at,
             }
             for row in rows
         ]
+
+    def delete_affiliate_link(self, user_id: str, affiliate_link_id: str) -> None:
+        deleted = self.repository.delete_affiliate_link_for_user(
+            user_id=user_id,
+            affiliate_link_id=affiliate_link_id,
+        )
+        if not deleted:
+            raise ValueError("Affiliate link không tồn tại hoặc không thuộc user hiện tại")
+        self.repository.commit()
 
     def get_affiliate_link_detail_by_user(self, user_id: str, website: str) -> dict | None:
         normalized_url = normalize_affiliate_url(website)
@@ -436,10 +682,12 @@ class AffiliateDataService:
                     "project_link": item.project_link,
                     "event_content": item.event_content,
                     "sale_content": item.sale_content,
+                    "restricted_countries": item.restricted_countries or [],
                     "top_countries": item.top_countries or [],
                     "answer": item.answer,
                     "results": item.results or [],
                     "raw_data": item.raw_data,
+                    "ad_copy": item.raw_data.get("ad_copy") if item.raw_data else None,
                     "created_at": item.created_at,
                     "updated_at": item.updated_at,
                 }

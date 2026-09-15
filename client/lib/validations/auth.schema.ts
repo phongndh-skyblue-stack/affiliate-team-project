@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const loginSchema = z.object({
+const loginCredentialsSchema = z.object({
   username: z
     .string()
     .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự")
@@ -9,6 +9,10 @@ export const loginSchema = z.object({
     .string()
     .min(6, "Mật khẩu phải có ít nhất 6 ký tự")
     .max(100, "Mật khẩu không quá 100 ký tự"),
+});
+
+export const loginSchema = loginCredentialsSchema.extend({
+  rememberMe: z.boolean(),
 });
 
 export const registerSchema = z

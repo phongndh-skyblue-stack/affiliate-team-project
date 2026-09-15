@@ -45,6 +45,7 @@ export interface TrafficDetails {
 export interface ScanTrafficRequest {
   affiliate_link_id: string;
   months?: number;
+  start_period?: string | null;
 }
 
 export interface ScanTrafficResponse {
@@ -62,6 +63,34 @@ export interface TopCountryInsight {
   signals: string[];
 }
 
+export interface RestrictedCountryInsight {
+  country: string;
+  restriction_type: "banned" | "restricted";
+  signals: string[];
+  evidence_links?: Array<{
+    title?: string | null;
+    url?: string | null;
+    snippet?: string | null;
+  }>;
+  confidence?: "high" | "medium" | "low" | null;
+  verification_note?: string | null;
+}
+
+export interface AdCopySitelink {
+  text: string;
+  url: string;
+  description1: string;
+  description2: string;
+}
+
+export interface AdCopy {
+  finalUrl?: string;
+  brandKeywords: string[];
+  headlines: string[];
+  descriptions: string[];
+  sitelinks: AdCopySitelink[];
+}
+
 export interface ScanAffiliateProjectRequest {
   affiliate_link_id: string;
   max_results?: number;
@@ -77,13 +106,23 @@ export interface ScanAffiliateProjectResponse {
   project_link?: string | null;
   event_content?: string | null;
   sale_content?: string | null;
+  restricted_countries: RestrictedCountryInsight[];
   top_countries: TopCountryInsight[];
   answer?: string | null;
   results: Array<Record<string, unknown>>;
+  ad_copy?: AdCopy | null;
 }
 
 export interface AffiliateLinkCreateRequest {
   website: string;
+  name?: string | null;
+  search?: string | null;
+}
+
+export interface AffiliateLinkUpdateRequest {
+  website: string;
+  name?: string | null;
+  search?: string | null;
 }
 
 export interface AffiliateLinkModel {
@@ -91,6 +130,8 @@ export interface AffiliateLinkModel {
   user_id?: string | null;
   affiliate_url: string;
   domain: string;
+  name?: string | null;
+  search_query?: string | null;
   raw_data?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
@@ -116,10 +157,12 @@ export interface AffiliateLinkProjectDataModel {
   project_link?: string | null;
   event_content?: string | null;
   sale_content?: string | null;
+  restricted_countries: RestrictedCountryInsight[];
   top_countries: TopCountryInsight[];
   answer?: string | null;
   results: Array<Record<string, unknown>>;
   raw_data?: Record<string, unknown> | null;
+  ad_copy?: AdCopy | null;
   created_at: string;
   updated_at: string;
 }

@@ -18,6 +18,7 @@ import { AnimateOnScroll } from "@/components/common/AnimateOnScroll";
 import { CountUp } from "@/components/common/CountUp";
 import { LandingNavbar } from "@/components/common/LandingNavbar";
 import { ROUTES } from "@/constants/routes";
+import { RedirectIfAuthenticated } from "@/components/common/RedirectIfAuthenticated";
 
 const FEATURES = [
   { icon: TrendingUp, title: "Hoa hồng cạnh tranh", desc: "Tỷ lệ hoa hồng lên đến 30%, minh bạch và thanh toán đúng hạn mỗi tháng." },
@@ -52,6 +53,7 @@ const TRUST_BADGES = ["Miễn phí đăng ký", "Không ràng buộc", "Hỗ tr�
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] overflow-x-hidden">
+      <RedirectIfAuthenticated />
 
       {/* ── Navbar ── */}
       <LandingNavbar />

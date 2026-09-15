@@ -17,7 +17,12 @@ export function useAuth() {
       setLoading(true);
       try {
         const response = await authService.login(data);
-        setUser(response.user, response.accessToken, response.refreshToken);
+        setUser(
+          response.user,
+          response.accessToken,
+          response.refreshToken,
+          data.rememberMe
+        );
         router.push(ROUTES.DASHBOARD);
       } finally {
         setLoading(false);

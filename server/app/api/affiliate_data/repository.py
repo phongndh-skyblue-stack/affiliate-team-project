@@ -21,6 +21,8 @@ class AffiliateDataRepository:
         user_id: str,
         affiliate_url: str,
         domain: str,
+        name: str | None = None,
+        search_query: str | None = None,
     ) -> AffiliateLink:
         stmt = select(AffiliateLink).where(
             AffiliateLink.user_id == user_id,
@@ -30,13 +32,19 @@ class AffiliateDataRepository:
         if existing:
             if existing.domain != domain:
                 existing.domain = domain
+            if name is not None:
+                existing.name = name
+            if search_query is not None:
+                existing.search_query = search_query
             return existing
 
         row = AffiliateLink(
             user_id=user_id,
             affiliate_url=affiliate_url,
             domain=domain,
-            raw_data={"affiliate_url": affiliate_url, "domain": domain},
+            name=name,
+            search_query=search_query,
+            raw_data={"affiliate_url": affiliate_url, "domain": domain, "name": name, "search_query": search_query},
         )
         self.db.add(row)
         self.db.flush()
@@ -71,6 +79,7 @@ class AffiliateDataRepository:
             project_link=project_result.get("project_link"),
             event_content=project_result.get("event_content"),
             sale_content=project_result.get("sale_content"),
+            restricted_countries=project_result.get("restricted_countries") or [],
             top_countries=project_result.get("top_countries") or [],
             answer=project_result.get("answer"),
             results=project_result.get("results") or [],
@@ -83,6 +92,29 @@ class AffiliateDataRepository:
     def commit(self) -> None:
         self.db.commit()
 
+    def delete_traffic_scans_by_affiliate_link(self, affiliate_link_id: str) -> None:
+        from sqlalchemy import delete
+        stmt = delete(AffiliateLinkTrafficScan).where(
+            AffiliateLinkTrafficScan.affiliate_link_id == affiliate_link_id
+        )
+        self.db.execute(stmt)
+        self.db.flush()
+
+    def delete_affiliate_link_for_user(
+        self,
+        user_id: str,
+        affiliate_link_id: str,
+    ) -> bool:
+        row = self.get_affiliate_link_by_id_for_user(
+            user_id=user_id,
+            affiliate_link_id=affiliate_link_id,
+        )
+        if not row:
+            return False
+        self.db.delete(row)
+        self.db.flush()
+        return True
+
     def get_affiliate_link_by_id_for_user(
         self,
         user_id: str,
@@ -93,6 +125,18 @@ class AffiliateDataRepository:
             AffiliateLink.user_id == user_id,
         )
         return self.db.scalar(stmt)
+
+    def get_project_label_by_id_for_user(
+        self,
+        user_id: str,
+        affiliate_link_id: str | None,
+    ) -> tuple[str, str] | None:
+        if not affiliate_link_id:
+            return None
+        row = self.get_affiliate_link_by_id_for_user(user_id, affiliate_link_id)
+        if not row:
+            return None
+        return row.id, row.name or row.domain
 
     def get_all_affiliate_links_for_user(
         self,

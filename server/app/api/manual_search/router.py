@@ -86,6 +86,8 @@ def get_competitor_search_history(
             gl=item.gl,
             num=item.num,
             no_cache=item.no_cache,
+            project_id=item.project_id,
+            project_name=item.project_name,
             total_ads_found=item.total_ads_found,
             top_ads_count=item.top_ads_count,
             bottom_ads_count=item.bottom_ads_count,
@@ -98,6 +100,25 @@ def get_competitor_search_history(
                     "link": ad.link,
                     "sitelinks": ad.sitelinks,
                     "type": ad.type,
+                    "displayed_link": (ad.raw_data or {}).get(
+                        "displayed_link", ad.advertiser
+                    ),
+                    "tracking_link": (ad.raw_data or {}).get("tracking_link", ""),
+                    "source": (ad.raw_data or {}).get("source", ""),
+                    "destination_domain": (ad.raw_data or {}).get(
+                        "destination_domain", ""
+                    ),
+                    "destination_path": (ad.raw_data or {}).get(
+                        "destination_path", ""
+                    ),
+                    "ref_parameters": (ad.raw_data or {}).get("ref_parameters", {}),
+                    "sitelink_items": (ad.raw_data or {}).get("sitelink_items", []),
+                    "advertiser_candidates": (ad.raw_data or {}).get(
+                        "advertiser_candidates", []
+                    ),
+                    "advertiser_lookup_status": (ad.raw_data or {}).get(
+                        "advertiser_lookup_status", "not_requested"
+                    ),
                 }
                 for ad in item.ads
             ],

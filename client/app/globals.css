@@ -147,6 +147,19 @@
   code, pre, kbd, samp {
     font-family: var(--font-mono), ui-monospace, monospace;
   }
+
+  button {
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+  }
+
+  button:not([disabled]):hover {
+    filter: brightness(0.98);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
 }
 
 /* ── Custom animations ── */

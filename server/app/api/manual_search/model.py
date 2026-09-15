@@ -25,6 +25,10 @@ class ManualCompetitorSearch(Base):
     gl: Mapped[str] = mapped_column(String(10), nullable=False, default="vn")
     num: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
     no_cache: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    project_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("affiliate_links.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    project_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     total_ads_found: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     top_ads_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

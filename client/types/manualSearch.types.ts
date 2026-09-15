@@ -5,6 +5,29 @@ export interface ManualCompetitorSearchRequest {
   gl?: string;
   num?: number;
   noCache?: boolean;
+  enrichAdvertisers?: boolean;
+  projectId?: string | null;
+}
+
+export interface CompetitorSitelinkItem {
+  title: string;
+  link: string;
+  trackingLink?: string;
+  snippet?: string;
+}
+
+export interface AdvertiserCandidate {
+  advertiserId: string;
+  paidForBy: string;
+  creativeId: string;
+  format?: string;
+  targetDomain?: string;
+  firstShown?: number;
+  lastShown?: number;
+  totalDaysShown?: number;
+  detailsLink?: string;
+  advertiserAdsLink?: string;
+  displayRegion?: string;
 }
 
 export interface CompetitorAdItem {
@@ -15,9 +38,20 @@ export interface CompetitorAdItem {
   link: string;
   sitelinks: string[];
   type: string;
+  displayedLink?: string;
+  trackingLink?: string;
+  source?: string;
+  destinationDomain?: string;
+  destinationPath?: string;
+  refParameters?: Record<string, string>;
+  sitelinkItems?: CompetitorSitelinkItem[];
+  advertiserCandidates?: AdvertiserCandidate[];
+  advertiserLookupStatus?: "matched" | "not_found" | "failed" | "missing_domain" | "not_requested";
 }
 
 export interface ManualCompetitorSearchResponse {
+  projectId?: string | null;
+  projectName?: string | null;
   keyword: string;
   googleUrl: string;
   totalAdsFound: number;
@@ -36,6 +70,8 @@ export interface ManualCompetitorSearchHistoryItem {
   gl: string;
   num: number;
   noCache: boolean;
+  projectId?: string | null;
+  projectName?: string | null;
   totalAdsFound: number;
   topAdsCount: number;
   bottomAdsCount: number;

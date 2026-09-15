@@ -33,6 +33,7 @@ export default function RootLayout({
       lang="vi"
       data-scroll-behavior="smooth"
       className={`${beVietnamPro.variable} ${firaCode.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         {children}

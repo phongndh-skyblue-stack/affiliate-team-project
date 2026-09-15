@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import parse_qsl, urlparse
 
 import httpx
 
@@ -155,6 +156,7 @@ async def trace_competitor_ads(
     gl: str = "vn",
     num: int = 10,
     no_cache: bool = False,
+    enrich_advertisers: bool = True,
 ) -> dict[str, Any]:
     """Trace đối thủ: Nhập keyword → Trả về tất cả paid ads đang hiển thị trên Google.
 
@@ -187,13 +189,42 @@ async def trace_competitor_ads(
     data = await _request(params)
 
     def _clean_ad(ad: dict[str, Any], position_prefix: str, ad_type: str) -> dict[str, Any]:
+        link = ad.get("link") or ""
+        parsed_link = urlparse(link)
+        query_params = dict(parse_qsl(parsed_link.query, keep_blank_values=True))
+        ref_params = {
+            key: value
+            for key, value in query_params.items()
+            if any(
+                marker in key.lower()
+                for marker in ("ref", "aff", "affiliate", "partner", "campaign", "utm_")
+            )
+        }
+        sitelink_items = [
+            {
+                "title": item.get("title") or "",
+                "link": item.get("link") or "",
+                "tracking_link": item.get("tracking_link") or "",
+                "snippet": item.get("snippet") or "",
+            }
+            for item in (ad.get("sitelinks") or [])
+        ]
         return {
             "position": f"{position_prefix} {ad.get('position', 'N/A')}",
             "advertiser": ad.get("displayed_link", "N/A"),
             "title": ad.get("title", ""),
-            "snippet": ad.get("snippet", ""),
-            "link": ad.get("link", ""),
-            "sitelinks": [link.get("title") for link in ad.get("sitelinks", [])],
+            "snippet": ad.get("snippet") or ad.get("description") or "",
+            "link": link,
+            "displayed_link": ad.get("displayed_link") or "",
+            "tracking_link": ad.get("tracking_link") or "",
+            "source": ad.get("source") or "",
+            "destination_domain": parsed_link.hostname or "",
+            "destination_path": parsed_link.path or "",
+            "ref_parameters": ref_params,
+            "sitelinks": [item["title"] for item in sitelink_items],
+            "sitelink_items": sitelink_items,
+            "advertiser_candidates": [],
+            "advertiser_lookup_status": "not_requested",
             "type": ad_type,
         }
 
@@ -204,6 +235,9 @@ async def trace_competitor_ads(
         _clean_ad(ad, "Bottom", "bottom_ad") for ad in bottom_ads
     ]
 
+    if enrich_advertisers:
+        await _enrich_competitor_advertisers(all_ads, gl)
+
     return {
         "keyword": keyword,
         "google_url": data.get("search_metadata", {}).get("google_url", ""),
@@ -213,3 +247,91 @@ async def trace_competitor_ads(
         "ads": all_ads,
         "full_raw_data": data if no_cache else None,
     }
+
+
+_TRANSPARENCY_REGION_BY_GL = {
+    "au": "2036",
+    "ca": "2124",
+    "jp": "2392",
+    "kr": "2410",
+    "sg": "2702",
+    "uk": "2826",
+    "us": "2840",
+    "vn": "2704",
+}
+
+_COUNTRY_NAME_BY_GL = {
+    "au": "Australia",
+    "ca": "Canada",
+    "jp": "Nhật Bản",
+    "kr": "Hàn Quốc",
+    "sg": "Singapore",
+    "uk": "Vương quốc Anh",
+    "us": "Hoa Kỳ",
+    "vn": "Việt Nam",
+}
+
+
+async def _enrich_competitor_advertisers(
+    ads: list[dict[str, Any]],
+    gl: str,
+) -> None:
+    """Add transparency advertiser candidates once per unique destination domain."""
+    domain_results: dict[str, list[dict[str, Any]]] = {}
+    domain_statuses: dict[str, str] = {}
+    region = _TRANSPARENCY_REGION_BY_GL.get(gl.lower())
+
+    for ad in ads:
+        domain = (ad.get("destination_domain") or "").lower().removeprefix("www.")
+        if not domain:
+            ad["advertiser_lookup_status"] = "missing_domain"
+            continue
+
+        if domain not in domain_results:
+            try:
+                response = await search_ads_transparency(
+                    text=domain,
+                    platform="SEARCH",
+                    region=region,
+                    num=10,
+                )
+                candidates = []
+                seen: set[tuple[str, str]] = set()
+                for creative in response.get("ad_creatives") or []:
+                    key = (
+                        creative.get("advertiser_id") or "",
+                        creative.get("ad_creative_id") or "",
+                    )
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    candidates.append(
+                        {
+                            "advertiser_id": creative.get("advertiser_id") or "",
+                            "paid_for_by": creative.get("advertiser") or "",
+                            "creative_id": creative.get("ad_creative_id") or "",
+                            "format": creative.get("format") or "",
+                            "target_domain": creative.get("target_domain") or "",
+                            "first_shown": creative.get("first_shown"),
+                            "last_shown": creative.get("last_shown"),
+                            "total_days_shown": creative.get("total_days_shown"),
+                            "details_link": creative.get("details_link") or "",
+                            "advertiser_ads_link": (
+                                f"https://adstransparency.google.com/advertiser/"
+                                f"{creative.get('advertiser_id')}"
+                                f"?region={gl.upper()}&domain={domain}&platform=SEARCH"
+                            ),
+                            "display_region": _COUNTRY_NAME_BY_GL.get(
+                                gl.lower(), gl.upper()
+                            ),
+                        }
+                    )
+                domain_results[domain] = candidates
+                domain_statuses[domain] = "matched" if candidates else "not_found"
+            except Exception:
+                logger.exception("Cannot enrich advertiser transparency for %s", domain)
+                domain_results[domain] = []
+                domain_statuses[domain] = "failed"
+
+        ad["advertiser_candidates"] = domain_results[domain]
+        ad["advertiser_lookup_status"] = domain_statuses[domain]

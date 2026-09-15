@@ -1,0 +1,2749 @@
+{
+  "_meta": {
+    "description": "Danh sach du an (brand + domain) thu thap tu ket qua tim kiem web ngay 2026-08-12, dung lam dau vao tra Keyword Planner.",
+    "note": "Ten dung lam keyword tra cuu chinh la truong 'name' (viet thuong, dang nguoi dung go tren Google)."
+  },
+  "forex": [
+    {
+      "name": "ig",
+      "domain": "ig.com",
+      "query": "ig broker"
+    },
+    {
+      "name": "tastyfx",
+      "domain": "tastyfx.com"
+    },
+    {
+      "name": "interactive brokers",
+      "domain": "interactivebrokers.com"
+    },
+    {
+      "name": "avatrade",
+      "domain": "avatrade.com"
+    },
+    {
+      "name": "pepperstone",
+      "domain": "pepperstone.com"
+    },
+    {
+      "name": "forex.com",
+      "domain": "forex.com",
+      "query": "forex com"
+    },
+    {
+      "name": "trading.com",
+      "domain": "trading.com",
+      "query": "trading com"
+    },
+    {
+      "name": "exness",
+      "domain": "exness.com"
+    },
+    {
+      "name": "xm",
+      "domain": "xm.com"
+    },
+    {
+      "name": "ic markets",
+      "domain": "icmarkets.com"
+    },
+    {
+      "name": "fxpro",
+      "domain": "fxpro.com"
+    },
+    {
+      "name": "oanda",
+      "domain": "oanda.com"
+    },
+    {
+      "name": "fxtm",
+      "domain": "fxtm.com"
+    },
+    {
+      "name": "octafx",
+      "domain": "octafx.com"
+    },
+    {
+      "name": "roboforex",
+      "domain": "roboforex.com"
+    },
+    {
+      "name": "hfm",
+      "domain": "hfm.com"
+    },
+    {
+      "name": "etoro",
+      "domain": "etoro.com"
+    },
+    {
+      "name": "plus500",
+      "domain": "plus500.com"
+    },
+    {
+      "name": "cmc markets",
+      "domain": "cmcmarkets.com"
+    },
+    {
+      "name": "saxo bank",
+      "domain": "home.saxo"
+    }
+  ],
+  "crypto": [
+    {
+      "name": "binance",
+      "domain": "binance.com"
+    },
+    {
+      "name": "coinbase",
+      "domain": "coinbase.com"
+    },
+    {
+      "name": "kraken",
+      "domain": "kraken.com"
+    },
+    {
+      "name": "bybit",
+      "domain": "bybit.com"
+    },
+    {
+      "name": "okx",
+      "domain": "okx.com"
+    },
+    {
+      "name": "crypto.com",
+      "domain": "crypto.com",
+      "query": "crypto com"
+    },
+    {
+      "name": "kucoin",
+      "domain": "kucoin.com"
+    },
+    {
+      "name": "bitget",
+      "domain": "bitget.com"
+    },
+    {
+      "name": "mexc",
+      "domain": "mexc.com"
+    },
+    {
+      "name": "gate.io",
+      "domain": "gate.io",
+      "query": "gate io"
+    },
+    {
+      "name": "htx",
+      "domain": "htx.com"
+    },
+    {
+      "name": "coindcx",
+      "domain": "coindcx.com"
+    },
+    {
+      "name": "ledger",
+      "domain": "ledger.com"
+    },
+    {
+      "name": "trezor",
+      "domain": "trezor.io"
+    }
+  ],
+  "hosting": [
+    {
+      "name": "hostinger",
+      "domain": "hostinger.com"
+    },
+    {
+      "name": "bluehost",
+      "domain": "bluehost.com"
+    },
+    {
+      "name": "hostgator",
+      "domain": "hostgator.com"
+    },
+    {
+      "name": "siteground",
+      "domain": "siteground.com"
+    },
+    {
+      "name": "wp engine",
+      "domain": "wpengine.com"
+    },
+    {
+      "name": "kinsta",
+      "domain": "kinsta.com"
+    },
+    {
+      "name": "cloudways",
+      "domain": "cloudways.com"
+    },
+    {
+      "name": "a2 hosting",
+      "domain": "a2hosting.com"
+    },
+    {
+      "name": "dreamhost",
+      "domain": "dreamhost.com"
+    },
+    {
+      "name": "godaddy",
+      "domain": "godaddy.com"
+    },
+    {
+      "name": "hostpapa",
+      "domain": "hostpapa.com"
+    },
+    {
+      "name": "namecheap",
+      "domain": "namecheap.com"
+    },
+    {
+      "name": "liquid web",
+      "domain": "liquidweb.com"
+    },
+    {
+      "name": "digitalocean",
+      "domain": "digitalocean.com"
+    },
+    {
+      "name": "vultr",
+      "domain": "vultr.com"
+    },
+    {
+      "name": "linode",
+      "domain": "linode.com"
+    },
+    {
+      "name": "ovh",
+      "domain": "ovhcloud.com"
+    },
+    {
+      "name": "ionos",
+      "domain": "ionos.com"
+    },
+    {
+      "name": "contabo",
+      "domain": "contabo.com"
+    },
+    {
+      "name": "scala hosting",
+      "domain": "scalahosting.com"
+    }
+  ],
+  "vpn": [
+    {
+      "name": "nordvpn",
+      "domain": "nordvpn.com"
+    },
+    {
+      "name": "surfshark",
+      "domain": "surfshark.com"
+    },
+    {
+      "name": "proton vpn",
+      "domain": "protonvpn.com",
+      "query": "protonvpn"
+    },
+    {
+      "name": "expressvpn",
+      "domain": "expressvpn.com"
+    },
+    {
+      "name": "private internet access",
+      "domain": "privateinternetaccess.com"
+    },
+    {
+      "name": "cyberghost",
+      "domain": "cyberghostvpn.com"
+    },
+    {
+      "name": "ipvanish",
+      "domain": "ipvanish.com"
+    },
+    {
+      "name": "hotspot shield",
+      "domain": "hotspotshield.com"
+    },
+    {
+      "name": "atlas vpn",
+      "domain": "atlasvpn.com",
+      "query": "atlasvpn"
+    },
+    {
+      "name": "windscribe",
+      "domain": "windscribe.com"
+    }
+  ],
+  "ai_tools": [
+    {
+      "name": "jasper ai",
+      "domain": "jasper.ai"
+    },
+    {
+      "name": "copy ai",
+      "domain": "copy.ai",
+      "query": "copy.ai"
+    },
+    {
+      "name": "writesonic",
+      "domain": "writesonic.com"
+    },
+    {
+      "name": "grammarly",
+      "domain": "grammarly.com"
+    },
+    {
+      "name": "synthesia",
+      "domain": "synthesia.io"
+    },
+    {
+      "name": "pictory",
+      "domain": "pictory.ai"
+    },
+    {
+      "name": "invideo",
+      "domain": "invideo.io"
+    },
+    {
+      "name": "sudowrite",
+      "domain": "sudowrite.com"
+    },
+    {
+      "name": "midjourney",
+      "domain": "midjourney.com"
+    },
+    {
+      "name": "elevenlabs",
+      "domain": "elevenlabs.io"
+    },
+    {
+      "name": "runway ml",
+      "domain": "runwayml.com"
+    },
+    {
+      "name": "descript",
+      "domain": "descript.com"
+    },
+    {
+      "name": "notion ai",
+      "domain": "notion.so"
+    },
+    {
+      "name": "quillbot",
+      "domain": "quillbot.com"
+    }
+  ],
+  "saas_crm": [
+    {
+      "name": "salesforce",
+      "domain": "salesforce.com"
+    },
+    {
+      "name": "hubspot",
+      "domain": "hubspot.com"
+    },
+    {
+      "name": "zoho crm",
+      "domain": "zoho.com"
+    },
+    {
+      "name": "pipedrive",
+      "domain": "pipedrive.com"
+    },
+    {
+      "name": "freshworks",
+      "domain": "freshworks.com"
+    },
+    {
+      "name": "monday.com",
+      "domain": "monday.com",
+      "query": "monday com"
+    },
+    {
+      "name": "gohighlevel",
+      "domain": "gohighlevel.com"
+    },
+    {
+      "name": "activecampaign",
+      "domain": "activecampaign.com"
+    },
+    {
+      "name": "klaviyo",
+      "domain": "klaviyo.com"
+    },
+    {
+      "name": "mailchimp",
+      "domain": "mailchimp.com"
+    },
+    {
+      "name": "getresponse",
+      "domain": "getresponse.com"
+    },
+    {
+      "name": "brevo",
+      "domain": "brevo.com"
+    },
+    {
+      "name": "convertkit",
+      "domain": "kit.com"
+    },
+    {
+      "name": "aweber",
+      "domain": "aweber.com"
+    }
+  ],
+  "saas_design": [
+    {
+      "name": "wix",
+      "domain": "wix.com"
+    },
+    {
+      "name": "squarespace",
+      "domain": "squarespace.com"
+    },
+    {
+      "name": "shopify",
+      "domain": "shopify.com"
+    },
+    {
+      "name": "webflow",
+      "domain": "webflow.com"
+    },
+    {
+      "name": "framer",
+      "domain": "framer.com"
+    },
+    {
+      "name": "canva",
+      "domain": "canva.com"
+    },
+    {
+      "name": "figma",
+      "domain": "figma.com"
+    },
+    {
+      "name": "elementor",
+      "domain": "elementor.com"
+    },
+    {
+      "name": "bigcommerce",
+      "domain": "bigcommerce.com"
+    },
+    {
+      "name": "weebly",
+      "domain": "weebly.com"
+    },
+    {
+      "name": "hostinger website builder",
+      "domain": "hostinger.com"
+    },
+    {
+      "name": "adobe express",
+      "domain": "adobe.com"
+    }
+  ],
+  "education": [
+    {
+      "name": "coursera",
+      "domain": "coursera.org"
+    },
+    {
+      "name": "udemy",
+      "domain": "udemy.com"
+    },
+    {
+      "name": "skillshare",
+      "domain": "skillshare.com"
+    },
+    {
+      "name": "masterclass",
+      "domain": "masterclass.com"
+    },
+    {
+      "name": "teachable",
+      "domain": "teachable.com"
+    },
+    {
+      "name": "thinkific",
+      "domain": "thinkific.com"
+    },
+    {
+      "name": "kajabi",
+      "domain": "kajabi.com"
+    },
+    {
+      "name": "duolingo",
+      "domain": "duolingo.com"
+    },
+    {
+      "name": "babbel",
+      "domain": "babbel.com"
+    },
+    {
+      "name": "italki",
+      "domain": "italki.com"
+    },
+    {
+      "name": "preply",
+      "domain": "preply.com"
+    },
+    {
+      "name": "busuu",
+      "domain": "busuu.com"
+    },
+    {
+      "name": "rosetta stone",
+      "domain": "rosettastone.com"
+    },
+    {
+      "name": "pimsleur",
+      "domain": "pimsleur.com"
+    }
+  ],
+  "finance": [
+    {
+      "name": "sofi",
+      "domain": "sofi.com"
+    },
+    {
+      "name": "lendingclub",
+      "domain": "lendingclub.com"
+    },
+    {
+      "name": "upstart",
+      "domain": "upstart.com"
+    },
+    {
+      "name": "credit karma",
+      "domain": "creditkarma.com"
+    },
+    {
+      "name": "nerdwallet",
+      "domain": "nerdwallet.com"
+    },
+    {
+      "name": "chime",
+      "domain": "chime.com"
+    },
+    {
+      "name": "robinhood",
+      "domain": "robinhood.com"
+    },
+    {
+      "name": "webull",
+      "domain": "webull.com"
+    },
+    {
+      "name": "wise",
+      "domain": "wise.com"
+    },
+    {
+      "name": "revolut",
+      "domain": "revolut.com"
+    },
+    {
+      "name": "payoneer",
+      "domain": "payoneer.com"
+    },
+    {
+      "name": "quickbooks",
+      "domain": "quickbooks.intuit.com"
+    }
+  ],
+  "insurance": [
+    {
+      "name": "geico",
+      "domain": "geico.com"
+    },
+    {
+      "name": "progressive",
+      "domain": "progressive.com"
+    },
+    {
+      "name": "state farm",
+      "domain": "statefarm.com"
+    },
+    {
+      "name": "lemonade insurance",
+      "domain": "lemonade.com"
+    },
+    {
+      "name": "safetywing",
+      "domain": "safetywing.com"
+    },
+    {
+      "name": "world nomads",
+      "domain": "worldnomads.com"
+    },
+    {
+      "name": "allianz travel insurance",
+      "domain": "allianztravelinsurance.com"
+    },
+    {
+      "name": "etiqa",
+      "domain": "etiqa.com.my"
+    }
+  ],
+  "electronics": [
+    {
+      "name": "anker",
+      "domain": "anker.com"
+    },
+    {
+      "name": "alienware",
+      "domain": "alienware.com"
+    },
+    {
+      "name": "razer",
+      "domain": "razer.com"
+    },
+    {
+      "name": "logitech",
+      "domain": "logitech.com"
+    },
+    {
+      "name": "bose",
+      "domain": "bose.com"
+    },
+    {
+      "name": "jbl",
+      "domain": "jbl.com"
+    },
+    {
+      "name": "sonos",
+      "domain": "sonos.com"
+    },
+    {
+      "name": "roborock",
+      "domain": "roborock.com"
+    },
+    {
+      "name": "ecovacs",
+      "domain": "ecovacs.com"
+    },
+    {
+      "name": "dji",
+      "domain": "dji.com"
+    },
+    {
+      "name": "lenovo",
+      "domain": "lenovo.com"
+    },
+    {
+      "name": "dell",
+      "domain": "dell.com"
+    },
+    {
+      "name": "samsung",
+      "domain": "samsung.com"
+    },
+    {
+      "name": "lg electronics",
+      "domain": "lg.com"
+    },
+    {
+      "name": "sony",
+      "domain": "sony.com"
+    },
+    {
+      "name": "asus",
+      "domain": "asus.com"
+    },
+    {
+      "name": "acer",
+      "domain": "acer.com"
+    },
+    {
+      "name": "hp",
+      "domain": "hp.com"
+    },
+    {
+      "name": "msi",
+      "domain": "msi.com"
+    },
+    {
+      "name": "sennheiser",
+      "domain": "sennheiser.com"
+    },
+    {
+      "name": "shark clean",
+      "domain": "sharkclean.com"
+    },
+    {
+      "name": "insta360",
+      "domain": "insta360.com"
+    },
+    {
+      "name": "gopro",
+      "domain": "gopro.com"
+    },
+    {
+      "name": "belkin",
+      "domain": "belkin.com"
+    },
+    {
+      "name": "nothing phone",
+      "domain": "nothing.tech"
+    },
+    {
+      "name": "soundcore",
+      "domain": "soundcore.com"
+    },
+    {
+      "name": "ugreen",
+      "domain": "ugreen.com"
+    },
+    {
+      "name": "baseus",
+      "domain": "baseus.com"
+    },
+    {
+      "name": "keychron",
+      "domain": "keychron.com"
+    },
+    {
+      "name": "nuphy",
+      "domain": "nuphy.com"
+    },
+    {
+      "name": "8bitdo",
+      "domain": "8bitdo.com"
+    },
+    {
+      "name": "dbrand",
+      "domain": "dbrand.com"
+    },
+    {
+      "name": "grovemade",
+      "domain": "grovemade.com"
+    }
+  ],
+  "home_kitchen": [
+    {
+      "name": "breville",
+      "domain": "breville.com"
+    },
+    {
+      "name": "ninja kitchen",
+      "domain": "ninjakitchen.com"
+    },
+    {
+      "name": "delonghi",
+      "domain": "delonghi.com"
+    },
+    {
+      "name": "instant pot",
+      "domain": "instanthome.com"
+    },
+    {
+      "name": "dyson",
+      "domain": "dyson.com"
+    },
+    {
+      "name": "casper",
+      "domain": "casper.com"
+    },
+    {
+      "name": "purple mattress",
+      "domain": "purple.com"
+    },
+    {
+      "name": "saatva",
+      "domain": "saatva.com"
+    },
+    {
+      "name": "nectar sleep",
+      "domain": "nectarsleep.com"
+    },
+    {
+      "name": "tempur pedic",
+      "domain": "tempurpedic.com"
+    },
+    {
+      "name": "amerisleep",
+      "domain": "amerisleep.com"
+    },
+    {
+      "name": "mattress firm",
+      "domain": "mattressfirm.com"
+    },
+    {
+      "name": "wayfair",
+      "domain": "wayfair.com"
+    },
+    {
+      "name": "ikea",
+      "domain": "ikea.com"
+    },
+    {
+      "name": "simplihuman",
+      "domain": "simplehuman.com"
+    },
+    {
+      "name": "brooklinen",
+      "domain": "brooklinen.com"
+    },
+    {
+      "name": "parachute home",
+      "domain": "parachutehome.com"
+    },
+    {
+      "name": "helix sleep",
+      "domain": "helixsleep.com"
+    },
+    {
+      "name": "dreamcloud",
+      "domain": "dreamcloudsleep.com"
+    },
+    {
+      "name": "avocado mattress",
+      "domain": "avocadogreenmattress.com"
+    },
+    {
+      "name": "tuft and needle",
+      "domain": "tuftandneedle.com"
+    },
+    {
+      "name": "bear mattress",
+      "domain": "bearmattress.com"
+    },
+    {
+      "name": "cozy earth",
+      "domain": "cozyearth.com"
+    },
+    {
+      "name": "boll and branch",
+      "domain": "bollandbranch.com"
+    },
+    {
+      "name": "buffy",
+      "domain": "buffy.co"
+    },
+    {
+      "name": "coop sleep goods",
+      "domain": "coopsleepgoods.com"
+    },
+    {
+      "name": "birch living",
+      "domain": "birchliving.com"
+    },
+    {
+      "name": "plushbeds",
+      "domain": "plushbeds.com"
+    },
+    {
+      "name": "sijo home",
+      "domain": "sijohome.com"
+    }
+  ],
+  "beauty": [
+    {
+      "name": "sephora",
+      "domain": "sephora.com"
+    },
+    {
+      "name": "ulta",
+      "domain": "ulta.com"
+    },
+    {
+      "name": "glossier",
+      "domain": "glossier.com"
+    },
+    {
+      "name": "rhode skin",
+      "domain": "rhodeskin.com"
+    },
+    {
+      "name": "kiehls",
+      "domain": "kiehls.com",
+      "query": "kiehl's"
+    },
+    {
+      "name": "elf cosmetics",
+      "domain": "elfcosmetics.com",
+      "query": "e.l.f. cosmetics"
+    },
+    {
+      "name": "elizabeth arden",
+      "domain": "elizabetharden.com"
+    },
+    {
+      "name": "the ordinary",
+      "domain": "theordinary.com"
+    },
+    {
+      "name": "sigma beauty",
+      "domain": "sigmabeauty.com"
+    },
+    {
+      "name": "wishtrend",
+      "domain": "wishtrend.com"
+    },
+    {
+      "name": "charlotte tilbury",
+      "domain": "charlottetilbury.com"
+    },
+    {
+      "name": "il makiage",
+      "domain": "ilmakiage.com"
+    },
+    {
+      "name": "cerave",
+      "domain": "cerave.com"
+    },
+    {
+      "name": "la roche posay",
+      "domain": "laroche-posay.us"
+    },
+    {
+      "name": "paula's choice",
+      "domain": "paulaschoice.com"
+    },
+    {
+      "name": "drunk elephant",
+      "domain": "drunkelephant.com"
+    },
+    {
+      "name": "tatcha",
+      "domain": "tatcha.com"
+    },
+    {
+      "name": "olaplex",
+      "domain": "olaplex.com"
+    },
+    {
+      "name": "dyson airwrap",
+      "domain": "dyson.com"
+    },
+    {
+      "name": "beauty bay",
+      "domain": "beautybay.com"
+    },
+    {
+      "name": "hum nutrition",
+      "domain": "humnutrition.com"
+    },
+    {
+      "name": "versed skin",
+      "domain": "versedskin.com"
+    },
+    {
+      "name": "youth to the people",
+      "domain": "youthtothepeople.com"
+    },
+    {
+      "name": "krave beauty",
+      "domain": "kravebeauty.com"
+    },
+    {
+      "name": "beauty of joseon",
+      "domain": "beautyofjoseon.com"
+    },
+    {
+      "name": "topicals",
+      "domain": "mytopicals.com"
+    },
+    {
+      "name": "bubble skincare",
+      "domain": "hellobubble.com"
+    },
+    {
+      "name": "the inkey list",
+      "domain": "theinkeylist.com"
+    },
+    {
+      "name": "naturium",
+      "domain": "naturium.com"
+    },
+    {
+      "name": "dieux skin",
+      "domain": "dieuxskin.com"
+    },
+    {
+      "name": "soft services",
+      "domain": "softservices.co"
+    }
+  ],
+  "health_sports": [
+    {
+      "name": "nike",
+      "domain": "nike.com"
+    },
+    {
+      "name": "adidas",
+      "domain": "adidas.com"
+    },
+    {
+      "name": "asics",
+      "domain": "asics.com"
+    },
+    {
+      "name": "reebok",
+      "domain": "reebok.com"
+    },
+    {
+      "name": "hoka",
+      "domain": "hoka.com"
+    },
+    {
+      "name": "on running",
+      "domain": "on.com"
+    },
+    {
+      "name": "brooks running",
+      "domain": "brooksrunning.com"
+    },
+    {
+      "name": "road runner sports",
+      "domain": "roadrunnersports.com"
+    },
+    {
+      "name": "onnit",
+      "domain": "onnit.com"
+    },
+    {
+      "name": "myprotein",
+      "domain": "myprotein.com"
+    },
+    {
+      "name": "bowflex",
+      "domain": "bowflex.com"
+    },
+    {
+      "name": "tonal",
+      "domain": "tonal.com"
+    },
+    {
+      "name": "peloton",
+      "domain": "onepeloton.com"
+    },
+    {
+      "name": "whoop",
+      "domain": "whoop.com"
+    },
+    {
+      "name": "hydrow",
+      "domain": "hydrow.com"
+    },
+    {
+      "name": "nordictrack",
+      "domain": "nordictrack.com"
+    },
+    {
+      "name": "garmin fitness",
+      "domain": "garmin.com"
+    },
+    {
+      "name": "oura ring",
+      "domain": "ouraring.com"
+    },
+    {
+      "name": "transparent labs",
+      "domain": "transparentlabs.com"
+    },
+    {
+      "name": "legion athletics",
+      "domain": "legionathletics.com"
+    },
+    {
+      "name": "ritual vitamins",
+      "domain": "ritual.com"
+    },
+    {
+      "name": "athletic greens",
+      "domain": "drinkag1.com"
+    },
+    {
+      "name": "trx training",
+      "domain": "trxtraining.com"
+    },
+    {
+      "name": "heavy rep gear",
+      "domain": "heavyrepgear.com"
+    },
+    {
+      "name": "sixpad",
+      "domain": "sixpad.com"
+    },
+    {
+      "name": "hyperice",
+      "domain": "hyperice.com"
+    },
+    {
+      "name": "therabody",
+      "domain": "therabody.com"
+    },
+    {
+      "name": "rogue fitness",
+      "domain": "roguefitness.com"
+    },
+    {
+      "name": "repr fitness",
+      "domain": "reprfitness.com"
+    },
+    {
+      "name": "bells of steel",
+      "domain": "bellsofsteel.com"
+    },
+    {
+      "name": "vitruvian",
+      "domain": "vitruvian.com"
+    },
+    {
+      "name": "momentous",
+      "domain": "livemomentous.com"
+    },
+    {
+      "name": "seed probiotic",
+      "domain": "seed.com"
+    },
+    {
+      "name": "kachava",
+      "domain": "kachava.com"
+    },
+    {
+      "name": "naked nutrition",
+      "domain": "nakednutrition.com"
+    }
+  ],
+  "fashion": [
+    {
+      "name": "shein",
+      "domain": "shein.com"
+    },
+    {
+      "name": "asos",
+      "domain": "asos.com"
+    },
+    {
+      "name": "zara",
+      "domain": "zara.com"
+    },
+    {
+      "name": "uniqlo",
+      "domain": "uniqlo.com"
+    },
+    {
+      "name": "nordstrom",
+      "domain": "nordstrom.com"
+    },
+    {
+      "name": "revolve",
+      "domain": "revolve.com"
+    },
+    {
+      "name": "farfetch",
+      "domain": "farfetch.com"
+    },
+    {
+      "name": "consuela",
+      "domain": "consuelastyle.com"
+    },
+    {
+      "name": "warby parker",
+      "domain": "warbyparker.com"
+    },
+    {
+      "name": "ray ban",
+      "domain": "ray-ban.com"
+    },
+    {
+      "name": "mvmt watches",
+      "domain": "mvmt.com"
+    },
+    {
+      "name": "daniel wellington",
+      "domain": "danielwellington.com"
+    },
+    {
+      "name": "temu",
+      "domain": "temu.com"
+    },
+    {
+      "name": "lululemon",
+      "domain": "lululemon.com"
+    },
+    {
+      "name": "gymshark",
+      "domain": "gymshark.com"
+    },
+    {
+      "name": "alo yoga",
+      "domain": "aloyoga.com"
+    },
+    {
+      "name": "everlane",
+      "domain": "everlane.com"
+    },
+    {
+      "name": "quince",
+      "domain": "onequince.com"
+    },
+    {
+      "name": "mejuri",
+      "domain": "mejuri.com"
+    },
+    {
+      "name": "allbirds",
+      "domain": "allbirds.com"
+    },
+    {
+      "name": "vuori",
+      "domain": "vuori.com"
+    },
+    {
+      "name": "rhone",
+      "domain": "rhone.com"
+    },
+    {
+      "name": "ten thousand",
+      "domain": "tenthousand.cc"
+    },
+    {
+      "name": "bombas",
+      "domain": "bombas.com"
+    },
+    {
+      "name": "olukai",
+      "domain": "olukai.com"
+    },
+    {
+      "name": "vessi",
+      "domain": "vessi.com"
+    },
+    {
+      "name": "atoms shoes",
+      "domain": "atoms.com"
+    },
+    {
+      "name": "taylor stitch",
+      "domain": "taylorstitch.com"
+    },
+    {
+      "name": "buck mason",
+      "domain": "buckmason.com"
+    }
+  ],
+  "baby": [
+    {
+      "name": "uppababy",
+      "domain": "uppababy.com"
+    },
+    {
+      "name": "bugaboo",
+      "domain": "bugaboo.com"
+    },
+    {
+      "name": "doona",
+      "domain": "doona.com"
+    },
+    {
+      "name": "graco",
+      "domain": "gracobaby.com"
+    },
+    {
+      "name": "chicco",
+      "domain": "chiccousa.com"
+    },
+    {
+      "name": "pampers",
+      "domain": "pampers.com"
+    },
+    {
+      "name": "huggies",
+      "domain": "huggies.com"
+    },
+    {
+      "name": "honest company",
+      "domain": "honest.com"
+    },
+    {
+      "name": "babylist",
+      "domain": "babylist.com"
+    },
+    {
+      "name": "nuna baby",
+      "domain": "nunababy.com"
+    },
+    {
+      "name": "owlet",
+      "domain": "owletcare.com"
+    },
+    {
+      "name": "hatch baby",
+      "domain": "hatch.co"
+    },
+    {
+      "name": "lovevery",
+      "domain": "lovevery.com"
+    },
+    {
+      "name": "newton baby",
+      "domain": "newtonbaby.com"
+    },
+    {
+      "name": "ergobaby",
+      "domain": "ergobaby.com"
+    },
+    {
+      "name": "finn and emma",
+      "domain": "finnandemma.com"
+    },
+    {
+      "name": "smiling tree toys",
+      "domain": "smilingtreetoys.com"
+    },
+    {
+      "name": "babybjorn",
+      "domain": "babybjorn.com"
+    },
+    {
+      "name": "wonderfold",
+      "domain": "wonderfoldwagon.com"
+    },
+    {
+      "name": "happiest baby",
+      "domain": "happiestbaby.com"
+    },
+    {
+      "name": "frida baby",
+      "domain": "frida.com"
+    },
+    {
+      "name": "bumkins",
+      "domain": "bumkins.com"
+    },
+    {
+      "name": "esembly",
+      "domain": "esemblybaby.com"
+    }
+  ],
+  "pets": [
+    {
+      "name": "chewy",
+      "domain": "chewy.com"
+    },
+    {
+      "name": "petco",
+      "domain": "petco.com"
+    },
+    {
+      "name": "petsmart",
+      "domain": "petsmart.com"
+    },
+    {
+      "name": "ollie dog food",
+      "domain": "myollie.com"
+    },
+    {
+      "name": "the farmers dog",
+      "domain": "thefarmersdog.com"
+    },
+    {
+      "name": "barkbox",
+      "domain": "barkbox.com"
+    },
+    {
+      "name": "zooplus",
+      "domain": "zooplus.com"
+    },
+    {
+      "name": "royal canin",
+      "domain": "royalcanin.com"
+    },
+    {
+      "name": "purina",
+      "domain": "purina.com"
+    },
+    {
+      "name": "cherrybrook",
+      "domain": "cherrybrook.com"
+    },
+    {
+      "name": "litter robot",
+      "domain": "litter-robot.com"
+    },
+    {
+      "name": "fi collar",
+      "domain": "tryfi.com"
+    },
+    {
+      "name": "bark",
+      "domain": "bark.co"
+    },
+    {
+      "name": "wild earth",
+      "domain": "wildearth.com"
+    },
+    {
+      "name": "nom nom now",
+      "domain": "nomnomnow.com"
+    },
+    {
+      "name": "petplan",
+      "domain": "petplan.com"
+    },
+    {
+      "name": "furbo",
+      "domain": "furbo.com"
+    },
+    {
+      "name": "pawp",
+      "domain": "pawp.com"
+    },
+    {
+      "name": "halo collar",
+      "domain": "halocollar.com"
+    },
+    {
+      "name": "paw.com",
+      "domain": "paw.com"
+    },
+    {
+      "name": "tractive",
+      "domain": "tractive.com"
+    },
+    {
+      "name": "holistapet",
+      "domain": "holistapet.com"
+    },
+    {
+      "name": "innovet pet",
+      "domain": "innovetpet.com"
+    },
+    {
+      "name": "just food for dogs",
+      "domain": "justfoodfordogs.com"
+    },
+    {
+      "name": "yumwoof",
+      "domain": "yumwoof.com"
+    },
+    {
+      "name": "kong company",
+      "domain": "kongcompany.com"
+    },
+    {
+      "name": "west paw",
+      "domain": "westpaw.com"
+    },
+    {
+      "name": "diggs",
+      "domain": "diggs.pet"
+    },
+    {
+      "name": "sleepypod",
+      "domain": "sleepypod.com"
+    },
+    {
+      "name": "embark vet",
+      "domain": "embarkvet.com"
+    },
+    {
+      "name": "wisdom panel",
+      "domain": "wisdompanel.com"
+    }
+  ],
+  "auto": [
+    {
+      "name": "tire rack",
+      "domain": "tirerack.com"
+    },
+    {
+      "name": "carparts.com",
+      "domain": "carparts.com",
+      "query": "carparts"
+    },
+    {
+      "name": "rockauto",
+      "domain": "rockauto.com"
+    },
+    {
+      "name": "advance auto parts",
+      "domain": "advanceautoparts.com"
+    },
+    {
+      "name": "autozone",
+      "domain": "autozone.com"
+    },
+    {
+      "name": "weathertech",
+      "domain": "weathertech.com"
+    },
+    {
+      "name": "covercraft",
+      "domain": "covercraft.com"
+    },
+    {
+      "name": "garmin dash cam",
+      "domain": "garmin.com"
+    },
+    {
+      "name": "nextbase",
+      "domain": "nextbase.com"
+    },
+    {
+      "name": "viofo",
+      "domain": "viofo.com"
+    },
+    {
+      "name": "michelin",
+      "domain": "michelin.com"
+    },
+    {
+      "name": "discount tire",
+      "domain": "discounttire.com"
+    },
+    {
+      "name": "thule",
+      "domain": "thule.com"
+    },
+    {
+      "name": "yakima",
+      "domain": "yakima.com"
+    },
+    {
+      "name": "noco",
+      "domain": "no.co"
+    },
+    {
+      "name": "chemical guys",
+      "domain": "chemicalguys.com"
+    },
+    {
+      "name": "shine armor",
+      "domain": "shinearmor.com"
+    },
+    {
+      "name": "car supplies warehouse",
+      "domain": "carsupplieswarehouse.com"
+    },
+    {
+      "name": "vivid racing",
+      "domain": "vividracing.com"
+    },
+    {
+      "name": "yitamotor",
+      "domain": "yitamotor.com"
+    },
+    {
+      "name": "adams polishes",
+      "domain": "adamspolishes.com"
+    },
+    {
+      "name": "griots garage",
+      "domain": "griotsgarage.com"
+    },
+    {
+      "name": "meguiars",
+      "domain": "meguiars.com"
+    },
+    {
+      "name": "rough country",
+      "domain": "roughcountry.com"
+    }
+  ],
+  "diy_garden": [
+    {
+      "name": "home depot",
+      "domain": "homedepot.com"
+    },
+    {
+      "name": "lowes",
+      "domain": "lowes.com"
+    },
+    {
+      "name": "dewalt",
+      "domain": "dewalt.com"
+    },
+    {
+      "name": "milwaukee tool",
+      "domain": "milwaukeetool.com"
+    },
+    {
+      "name": "makita",
+      "domain": "makita.com"
+    },
+    {
+      "name": "ryobi",
+      "domain": "ryobitools.com"
+    },
+    {
+      "name": "ego power plus",
+      "domain": "egopowerplus.com",
+      "query": "ego power tools"
+    },
+    {
+      "name": "greenworks",
+      "domain": "greenworkstools.com"
+    },
+    {
+      "name": "husqvarna",
+      "domain": "husqvarna.com"
+    },
+    {
+      "name": "toro",
+      "domain": "toro.com"
+    },
+    {
+      "name": "harbor freight",
+      "domain": "harborfreight.com"
+    },
+    {
+      "name": "festool",
+      "domain": "festool.com"
+    },
+    {
+      "name": "bosch tools",
+      "domain": "boschtools.com"
+    },
+    {
+      "name": "worx",
+      "domain": "worx.com"
+    },
+    {
+      "name": "stihl",
+      "domain": "stihlusa.com"
+    },
+    {
+      "name": "ace hardware",
+      "domain": "acehardware.com"
+    },
+    {
+      "name": "wen products",
+      "domain": "wenproducts.com"
+    },
+    {
+      "name": "grizzly industrial",
+      "domain": "grizzly.com"
+    },
+    {
+      "name": "woodcraft",
+      "domain": "woodcraft.com"
+    },
+    {
+      "name": "rockler",
+      "domain": "rockler.com"
+    },
+    {
+      "name": "fireball tool",
+      "domain": "fireballtool.com"
+    },
+    {
+      "name": "kreg tool",
+      "domain": "kregtool.com"
+    }
+  ],
+  "home_garden": [
+    {
+      "name": "vidaxl",
+      "domain": "vidaxl.com"
+    },
+    {
+      "name": "wayfair",
+      "domain": "wayfair.com"
+    },
+    {
+      "name": "one kings lane",
+      "domain": "onekingslane.com"
+    },
+    {
+      "name": "lovesac",
+      "domain": "lovesac.com"
+    },
+    {
+      "name": "society6",
+      "domain": "society6.com"
+    },
+    {
+      "name": "rug source",
+      "domain": "rugsource.com"
+    },
+    {
+      "name": "west elm",
+      "domain": "westelm.com"
+    },
+    {
+      "name": "article furniture",
+      "domain": "article.com"
+    },
+    {
+      "name": "burrow",
+      "domain": "burrow.com"
+    },
+    {
+      "name": "rst brands",
+      "domain": "rstbrands.com"
+    },
+    {
+      "name": "seedsnow",
+      "domain": "seedsnow.com"
+    },
+    {
+      "name": "gardeners supply",
+      "domain": "gardeners.com"
+    },
+    {
+      "name": "floyd home",
+      "domain": "floyddetroit.com"
+    },
+    {
+      "name": "sabai design",
+      "domain": "sabai.design"
+    },
+    {
+      "name": "medley home",
+      "domain": "medleyhome.com"
+    },
+    {
+      "name": "the sill",
+      "domain": "thesill.com"
+    },
+    {
+      "name": "bloomscape",
+      "domain": "bloomscape.com"
+    },
+    {
+      "name": "back to the roots",
+      "domain": "backtotheroots.com"
+    },
+    {
+      "name": "epic gardening",
+      "domain": "epicgardening.com"
+    },
+    {
+      "name": "greenstalk garden",
+      "domain": "greenstalkgarden.com"
+    }
+  ],
+  "camping_outdoor": [
+    {
+      "name": "rei",
+      "domain": "rei.com"
+    },
+    {
+      "name": "bass pro shops",
+      "domain": "basspro.com"
+    },
+    {
+      "name": "yeti",
+      "domain": "yeti.com"
+    },
+    {
+      "name": "the north face",
+      "domain": "thenorthface.com"
+    },
+    {
+      "name": "patagonia",
+      "domain": "patagonia.com"
+    },
+    {
+      "name": "gci outdoor",
+      "domain": "gcioutdoor.com"
+    },
+    {
+      "name": "coleman",
+      "domain": "coleman.com"
+    },
+    {
+      "name": "big agnes",
+      "domain": "bigagnes.com"
+    },
+    {
+      "name": "nemo equipment",
+      "domain": "nemoequipment.com"
+    },
+    {
+      "name": "hydro flask",
+      "domain": "hydroflask.com"
+    },
+    {
+      "name": "garmin",
+      "domain": "garmin.com"
+    },
+    {
+      "name": "black diamond",
+      "domain": "blackdiamondequipment.com"
+    },
+    {
+      "name": "vargo outdoors",
+      "domain": "vargooutdoors.com"
+    },
+    {
+      "name": "tentsile",
+      "domain": "tentsile.com"
+    },
+    {
+      "name": "life in tents",
+      "domain": "lifeintents.com"
+    },
+    {
+      "name": "kelty",
+      "domain": "kelty.com"
+    },
+    {
+      "name": "sea to summit",
+      "domain": "seatosummitusa.com"
+    },
+    {
+      "name": "durston gear",
+      "domain": "durstongear.com"
+    },
+    {
+      "name": "zpacks",
+      "domain": "zpacks.com"
+    },
+    {
+      "name": "hyperlite mountain gear",
+      "domain": "hyperlitemountaingear.com"
+    },
+    {
+      "name": "gossamer gear",
+      "domain": "gossamergear.com"
+    },
+    {
+      "name": "jetboil",
+      "domain": "jetboil.com"
+    },
+    {
+      "name": "snow peak",
+      "domain": "snowpeak.com"
+    },
+    {
+      "name": "helinox",
+      "domain": "helinox.com"
+    }
+  ],
+  "jewelry_watch": [
+    {
+      "name": "james allen",
+      "domain": "jamesallen.com"
+    },
+    {
+      "name": "brilliant earth",
+      "domain": "brilliantearth.com"
+    },
+    {
+      "name": "blue nile",
+      "domain": "bluenile.com"
+    },
+    {
+      "name": "kay jewelers",
+      "domain": "kay.com"
+    },
+    {
+      "name": "swarovski",
+      "domain": "swarovski.com"
+    },
+    {
+      "name": "pandora jewelry",
+      "domain": "pandora.net"
+    },
+    {
+      "name": "ashford",
+      "domain": "ashford.com"
+    },
+    {
+      "name": "exquisite timepieces",
+      "domain": "exquisitetimepieces.com"
+    },
+    {
+      "name": "seiko",
+      "domain": "seikowatches.com"
+    },
+    {
+      "name": "citizen watch",
+      "domain": "citizenwatch.com"
+    },
+    {
+      "name": "tissot",
+      "domain": "tissotwatches.com"
+    },
+    {
+      "name": "olive and piper",
+      "domain": "oliveandpiper.com"
+    },
+    {
+      "name": "christopher ward",
+      "domain": "christopherward.com"
+    },
+    {
+      "name": "baltic watches",
+      "domain": "baltic-watches.com"
+    },
+    {
+      "name": "lorier",
+      "domain": "lorierwatches.com"
+    },
+    {
+      "name": "monta watch",
+      "domain": "montawatch.com"
+    },
+    {
+      "name": "nodus watches",
+      "domain": "noduswatches.com"
+    },
+    {
+      "name": "farer",
+      "domain": "farer.com"
+    },
+    {
+      "name": "zelos watches",
+      "domain": "zeloswatches.com"
+    },
+    {
+      "name": "qalo",
+      "domain": "qalo.com"
+    },
+    {
+      "name": "annie haak",
+      "domain": "anniehaakdesigns.com"
+    },
+    {
+      "name": "vrai",
+      "domain": "vrai.com"
+    },
+    {
+      "name": "aurate",
+      "domain": "auratenewyork.com"
+    },
+    {
+      "name": "gorjana",
+      "domain": "gorjana.com"
+    }
+  ],
+  "kitchen_gadgets": [
+    {
+      "name": "kitchenaid",
+      "domain": "kitchenaid.com"
+    },
+    {
+      "name": "cuisinart",
+      "domain": "cuisinart.com"
+    },
+    {
+      "name": "farberware",
+      "domain": "farberware.com"
+    },
+    {
+      "name": "le creuset",
+      "domain": "lecreuset.com"
+    },
+    {
+      "name": "lodge cast iron",
+      "domain": "lodgecastiron.com"
+    },
+    {
+      "name": "all clad",
+      "domain": "all-clad.com"
+    },
+    {
+      "name": "hexclad",
+      "domain": "hexclad.com"
+    },
+    {
+      "name": "caraway",
+      "domain": "carawayhome.com"
+    },
+    {
+      "name": "our place",
+      "domain": "fromourplace.com"
+    },
+    {
+      "name": "vitamix",
+      "domain": "vitamix.com"
+    },
+    {
+      "name": "nespresso",
+      "domain": "nespresso.com"
+    },
+    {
+      "name": "keurig",
+      "domain": "keurig.com"
+    },
+    {
+      "name": "pampered chef",
+      "domain": "pamperedchef.com"
+    },
+    {
+      "name": "nutribullet",
+      "domain": "nutribullet.com"
+    },
+    {
+      "name": "homary",
+      "domain": "homary.com"
+    },
+    {
+      "name": "fellow products",
+      "domain": "fellowproducts.com"
+    },
+    {
+      "name": "oxo",
+      "domain": "oxo.com"
+    },
+    {
+      "name": "zwilling",
+      "domain": "zwilling.com"
+    },
+    {
+      "name": "made in cookware",
+      "domain": "madeincookware.com"
+    },
+    {
+      "name": "misen",
+      "domain": "misen.com"
+    },
+    {
+      "name": "material kitchen",
+      "domain": "materialkitchen.com"
+    },
+    {
+      "name": "great jones",
+      "domain": "greatjonesgoods.com"
+    },
+    {
+      "name": "chefman",
+      "domain": "chefman.com"
+    }
+  ],
+  "toys_gaming": [
+    {
+      "name": "lego",
+      "domain": "lego.com"
+    },
+    {
+      "name": "gamestop",
+      "domain": "gamestop.com"
+    },
+    {
+      "name": "hyperx",
+      "domain": "hyperx.com"
+    },
+    {
+      "name": "fat brain toys",
+      "domain": "fatbraintoys.com"
+    },
+    {
+      "name": "mindware",
+      "domain": "mindware.orientaltrading.com"
+    },
+    {
+      "name": "melissa and doug",
+      "domain": "melissaanddoug.com"
+    },
+    {
+      "name": "secretlab",
+      "domain": "secretlab.co"
+    },
+    {
+      "name": "steelseries",
+      "domain": "steelseries.com"
+    },
+    {
+      "name": "corsair",
+      "domain": "corsair.com"
+    },
+    {
+      "name": "elgato",
+      "domain": "elgato.com"
+    },
+    {
+      "name": "tonies",
+      "domain": "tonies.com"
+    },
+    {
+      "name": "kiwico",
+      "domain": "kiwico.com"
+    },
+    {
+      "name": "connetix",
+      "domain": "connetixtiles.com"
+    },
+    {
+      "name": "magna tiles",
+      "domain": "magnatiles.com"
+    },
+    {
+      "name": "plan toys",
+      "domain": "plantoys.com"
+    },
+    {
+      "name": "hape toys",
+      "domain": "hapetoys.com"
+    },
+    {
+      "name": "brio",
+      "domain": "brio.us"
+    }
+  ],
+  "cycling_sports": [
+    {
+      "name": "specialized",
+      "domain": "specialized.com"
+    },
+    {
+      "name": "trek bikes",
+      "domain": "trekbikes.com"
+    },
+    {
+      "name": "canyon bikes",
+      "domain": "canyon.com"
+    },
+    {
+      "name": "muc off",
+      "domain": "muc-off.com"
+    },
+    {
+      "name": "blix bike",
+      "domain": "blixbike.com"
+    },
+    {
+      "name": "sigma sports",
+      "domain": "sigmasports.com"
+    },
+    {
+      "name": "under armour",
+      "domain": "underarmour.com"
+    },
+    {
+      "name": "decathlon",
+      "domain": "decathlon.com"
+    },
+    {
+      "name": "rad power bikes",
+      "domain": "radpowerbikes.com"
+    },
+    {
+      "name": "aventon",
+      "domain": "aventon.com"
+    },
+    {
+      "name": "wahoo fitness",
+      "domain": "wahoofitness.com"
+    },
+    {
+      "name": "zwift",
+      "domain": "zwift.com"
+    },
+    {
+      "name": "state bicycle",
+      "domain": "statebicycle.com"
+    },
+    {
+      "name": "priority bicycles",
+      "domain": "prioritybicycles.com"
+    },
+    {
+      "name": "ride1up",
+      "domain": "ride1up.com"
+    },
+    {
+      "name": "lectric ebikes",
+      "domain": "lectricebikes.com"
+    },
+    {
+      "name": "silca",
+      "domain": "silca.cc"
+    },
+    {
+      "name": "pnw components",
+      "domain": "pnwcomponents.com"
+    },
+    {
+      "name": "ornot",
+      "domain": "ornotbike.com"
+    }
+  ],
+  "smart_home": [
+    {
+      "name": "philips hue",
+      "domain": "philips-hue.com"
+    },
+    {
+      "name": "ecobee",
+      "domain": "ecobee.com"
+    },
+    {
+      "name": "irobot",
+      "domain": "irobot.com"
+    },
+    {
+      "name": "ring",
+      "domain": "ring.com"
+    },
+    {
+      "name": "arlo",
+      "domain": "arlo.com"
+    },
+    {
+      "name": "simplisafe",
+      "domain": "simplisafe.com"
+    },
+    {
+      "name": "vivint",
+      "domain": "vivint.com"
+    },
+    {
+      "name": "nest thermostat",
+      "domain": "store.google.com"
+    },
+    {
+      "name": "eufy",
+      "domain": "eufy.com"
+    },
+    {
+      "name": "wyze",
+      "domain": "wyze.com"
+    },
+    {
+      "name": "aqara",
+      "domain": "aqara.com"
+    },
+    {
+      "name": "govee",
+      "domain": "govee.com"
+    },
+    {
+      "name": "switchbot",
+      "domain": "switch-bot.com"
+    },
+    {
+      "name": "shelly",
+      "domain": "shelly.com"
+    },
+    {
+      "name": "reolink",
+      "domain": "reolink.com"
+    },
+    {
+      "name": "lutron",
+      "domain": "lutron.com"
+    },
+    {
+      "name": "meross",
+      "domain": "meross.com"
+    },
+    {
+      "name": "sensibo",
+      "domain": "sensibo.com"
+    },
+    {
+      "name": "nanoleaf",
+      "domain": "nanoleaf.me"
+    }
+  ],
+  "luggage_travel": [
+    {
+      "name": "travelpro",
+      "domain": "travelpro.com"
+    },
+    {
+      "name": "away luggage",
+      "domain": "awaytravel.com"
+    },
+    {
+      "name": "samsonite",
+      "domain": "samsonite.com"
+    },
+    {
+      "name": "tumi",
+      "domain": "tumi.com"
+    },
+    {
+      "name": "tortuga backpacks",
+      "domain": "tortugabackpacks.com"
+    },
+    {
+      "name": "osprey packs",
+      "domain": "osprey.com"
+    },
+    {
+      "name": "rimowa",
+      "domain": "rimowa.com"
+    },
+    {
+      "name": "monos luggage",
+      "domain": "monos.com"
+    },
+    {
+      "name": "bellroy",
+      "domain": "bellroy.com"
+    },
+    {
+      "name": "peak design",
+      "domain": "peakdesign.com"
+    },
+    {
+      "name": "nomatic",
+      "domain": "nomatic.com"
+    },
+    {
+      "name": "aer sf",
+      "domain": "aersf.com"
+    },
+    {
+      "name": "db journey",
+      "domain": "dbjourney.com"
+    },
+    {
+      "name": "calpak",
+      "domain": "calpaktravel.com"
+    },
+    {
+      "name": "july luggage",
+      "domain": "july.com"
+    },
+    {
+      "name": "cotopaxi",
+      "domain": "cotopaxi.com"
+    },
+    {
+      "name": "wandrd",
+      "domain": "wandrd.com"
+    }
+  ],
+  "furniture_office": [
+    {
+      "name": "herman miller",
+      "domain": "hermanmiller.com"
+    },
+    {
+      "name": "steelcase",
+      "domain": "steelcase.com"
+    },
+    {
+      "name": "autonomous desk",
+      "domain": "autonomous.ai"
+    },
+    {
+      "name": "flexispot",
+      "domain": "flexispot.com"
+    },
+    {
+      "name": "uplift desk",
+      "domain": "upliftdesk.com"
+    },
+    {
+      "name": "branch furniture",
+      "domain": "branchfurniture.com"
+    },
+    {
+      "name": "mount it",
+      "domain": "mount-it.com"
+    },
+    {
+      "name": "humanscale",
+      "domain": "humanscale.com"
+    },
+    {
+      "name": "x chair",
+      "domain": "xchair.com"
+    },
+    {
+      "name": "sihoo",
+      "domain": "sihoooffice.com"
+    },
+    {
+      "name": "vari desk",
+      "domain": "vari.com"
+    },
+    {
+      "name": "ergonofis",
+      "domain": "ergonofis.com"
+    },
+    {
+      "name": "haworth",
+      "domain": "haworth.com"
+    },
+    {
+      "name": "desky",
+      "domain": "deskyusa.com"
+    },
+    {
+      "name": "progressive desk",
+      "domain": "progressivedesk.com"
+    }
+  ],
+  "ai_agents": [
+    {
+      "name": "salesforce agentforce",
+      "domain": "salesforce.com"
+    },
+    {
+      "name": "microsoft copilot studio",
+      "domain": "microsoft.com"
+    },
+    {
+      "name": "kore ai",
+      "domain": "kore.ai"
+    },
+    {
+      "name": "glean",
+      "domain": "glean.com"
+    },
+    {
+      "name": "moveworks",
+      "domain": "moveworks.com"
+    },
+    {
+      "name": "aisera",
+      "domain": "aisera.com"
+    },
+    {
+      "name": "sierra ai",
+      "domain": "sierra.ai"
+    },
+    {
+      "name": "decagon",
+      "domain": "decagon.com"
+    },
+    {
+      "name": "cognigy",
+      "domain": "cognigy.com"
+    },
+    {
+      "name": "crewai",
+      "domain": "crewai.com"
+    },
+    {
+      "name": "langgraph",
+      "domain": "langchain.com"
+    },
+    {
+      "name": "n8n",
+      "domain": "n8n.io"
+    },
+    {
+      "name": "manus ai",
+      "domain": "manus.im"
+    },
+    {
+      "name": "devin ai",
+      "domain": "devin.ai"
+    },
+    {
+      "name": "relevance ai",
+      "domain": "relevanceai.com"
+    },
+    {
+      "name": "lindy ai",
+      "domain": "lindy.ai"
+    },
+    {
+      "name": "zapier agents",
+      "domain": "zapier.com"
+    },
+    {
+      "name": "make com",
+      "domain": "make.com"
+    },
+    {
+      "name": "beam ai",
+      "domain": "beam.ai"
+    },
+    {
+      "name": "stack ai",
+      "domain": "stack-ai.com"
+    }
+  ],
+  "ai_allinone": [
+    {
+      "name": "overchat ai",
+      "domain": "overchat.ai"
+    },
+    {
+      "name": "poe ai",
+      "domain": "poe.com"
+    },
+    {
+      "name": "merlin ai",
+      "domain": "getmerlin.in"
+    },
+    {
+      "name": "perplexity",
+      "domain": "perplexity.ai"
+    },
+    {
+      "name": "chatgpt",
+      "domain": "openai.com"
+    },
+    {
+      "name": "claude ai",
+      "domain": "claude.com"
+    },
+    {
+      "name": "gemini ai",
+      "domain": "gemini.google.com"
+    },
+    {
+      "name": "copilot ai",
+      "domain": "copilot.microsoft.com"
+    },
+    {
+      "name": "you com",
+      "domain": "you.com"
+    },
+    {
+      "name": "monica ai",
+      "domain": "monica.im"
+    },
+    {
+      "name": "oakgen",
+      "domain": "oakgen.ai"
+    },
+    {
+      "name": "chatllm",
+      "domain": "abacus.ai"
+    },
+    {
+      "name": "openrouter",
+      "domain": "openrouter.ai"
+    },
+    {
+      "name": "hix ai",
+      "domain": "hix.ai"
+    }
+  ],
+  "ai_video": [
+    {
+      "name": "pixverse",
+      "domain": "pixverse.ai"
+    },
+    {
+      "name": "heygen",
+      "domain": "heygen.com"
+    },
+    {
+      "name": "kling ai",
+      "domain": "klingai.com"
+    },
+    {
+      "name": "luma dream machine",
+      "domain": "lumalabs.ai"
+    },
+    {
+      "name": "hailuo ai",
+      "domain": "hailuoai.video"
+    },
+    {
+      "name": "veo 3",
+      "domain": "deepmind.google"
+    },
+    {
+      "name": "sora ai",
+      "domain": "sora.com"
+    },
+    {
+      "name": "opus clip",
+      "domain": "opus.pro"
+    },
+    {
+      "name": "captions ai",
+      "domain": "captions.ai"
+    },
+    {
+      "name": "vidnoz",
+      "domain": "vidnoz.com"
+    },
+    {
+      "name": "fliki",
+      "domain": "fliki.ai"
+    },
+    {
+      "name": "d id",
+      "domain": "d-id.com"
+    },
+    {
+      "name": "colossyan",
+      "domain": "colossyan.com"
+    }
+  ],
+  "ai_voice": [
+    {
+      "name": "murf ai",
+      "domain": "murf.ai"
+    },
+    {
+      "name": "play ht",
+      "domain": "play.ht"
+    },
+    {
+      "name": "resemble ai",
+      "domain": "resemble.ai"
+    },
+    {
+      "name": "speechify",
+      "domain": "speechify.com"
+    },
+    {
+      "name": "lovo ai",
+      "domain": "lovo.ai"
+    },
+    {
+      "name": "wellsaid labs",
+      "domain": "wellsaidlabs.com"
+    },
+    {
+      "name": "suno ai",
+      "domain": "suno.com"
+    },
+    {
+      "name": "udio",
+      "domain": "udio.com"
+    },
+    {
+      "name": "adobe podcast",
+      "domain": "podcast.adobe.com"
+    }
+  ],
+  "ai_coding": [
+    {
+      "name": "github copilot",
+      "domain": "github.com"
+    },
+    {
+      "name": "cursor ai",
+      "domain": "cursor.com"
+    },
+    {
+      "name": "tabnine",
+      "domain": "tabnine.com"
+    },
+    {
+      "name": "codeium",
+      "domain": "codeium.com"
+    },
+    {
+      "name": "windsurf ai",
+      "domain": "windsurf.com"
+    },
+    {
+      "name": "replit",
+      "domain": "replit.com"
+    },
+    {
+      "name": "lovable ai",
+      "domain": "lovable.dev"
+    },
+    {
+      "name": "bolt new",
+      "domain": "bolt.new"
+    },
+    {
+      "name": "v0 dev",
+      "domain": "v0.app"
+    },
+    {
+      "name": "codium ai",
+      "domain": "qodo.ai"
+    },
+    {
+      "name": "sourcegraph cody",
+      "domain": "sourcegraph.com"
+    },
+    {
+      "name": "amazon q developer",
+      "domain": "aws.amazon.com"
+    }
+  ],
+  "ai_seo": [
+    {
+      "name": "semrush",
+      "domain": "semrush.com"
+    },
+    {
+      "name": "surfer seo",
+      "domain": "surferseo.com"
+    },
+    {
+      "name": "frase io",
+      "domain": "frase.io"
+    },
+    {
+      "name": "marketmuse",
+      "domain": "marketmuse.com"
+    },
+    {
+      "name": "search atlas",
+      "domain": "searchatlas.com"
+    },
+    {
+      "name": "ahrefs",
+      "domain": "ahrefs.com"
+    },
+    {
+      "name": "clearscope",
+      "domain": "clearscope.io"
+    },
+    {
+      "name": "neuronwriter",
+      "domain": "neuronwriter.com"
+    },
+    {
+      "name": "seo ai",
+      "domain": "seo.ai"
+    },
+    {
+      "name": "outranking",
+      "domain": "outranking.io"
+    },
+    {
+      "name": "scalenut",
+      "domain": "scalenut.com"
+    },
+    {
+      "name": "koala ai",
+      "domain": "koala.sh"
+    }
+  ],
+  "ai_business": [
+    {
+      "name": "gamma app",
+      "domain": "gamma.app"
+    },
+    {
+      "name": "tome ai",
+      "domain": "tome.app"
+    },
+    {
+      "name": "beautiful ai",
+      "domain": "beautiful.ai"
+    },
+    {
+      "name": "otter ai",
+      "domain": "otter.ai"
+    },
+    {
+      "name": "fireflies ai",
+      "domain": "fireflies.ai"
+    },
+    {
+      "name": "fathom ai",
+      "domain": "fathom.video"
+    },
+    {
+      "name": "clickup ai",
+      "domain": "clickup.com"
+    },
+    {
+      "name": "taskade",
+      "domain": "taskade.com"
+    },
+    {
+      "name": "motion app",
+      "domain": "usemotion.com"
+    },
+    {
+      "name": "reclaim ai",
+      "domain": "reclaim.ai"
+    },
+    {
+      "name": "chatbase",
+      "domain": "chatbase.co"
+    },
+    {
+      "name": "intercom fin",
+      "domain": "intercom.com"
+    }
+  ]
+}
