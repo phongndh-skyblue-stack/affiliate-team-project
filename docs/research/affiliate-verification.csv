@@ -1,0 +1,658 @@
+﻿mảng,tên dự án,domain dự án,có affiliate,trang affiliate,mạng affiliate,ghi chú
+ai_agents,aisera,aisera.com,không thấy,,,
+ai_agents,beam ai,beam.ai,không thấy,,,
+ai_agents,cognigy,cognigy.com,không thấy,,,
+ai_agents,crewai,crewai.com,không thấy,,,
+ai_agents,decagon,decagon.com,không rõ,,,không tải được trang chủ
+ai_agents,devin ai,devin.ai,không rõ,,,không tải được trang chủ
+ai_agents,glean,glean.com,không thấy,,,
+ai_agents,kore ai,kore.ai,không thấy,,,
+ai_agents,langgraph,langchain.com,không thấy,,,
+ai_agents,lindy ai,lindy.ai,chỉ referral,https://www.lindy.ai/creators,,
+ai_agents,make com,make.com,không rõ,,,không tải được trang chủ
+ai_agents,manus ai,manus.im,không thấy,,,
+ai_agents,microsoft copilot studio,microsoft.com,không thấy,,,
+ai_agents,moveworks,moveworks.com,không thấy,,,
+ai_agents,n8n,n8n.io,có,https://n8n.io/affiliates/,PartnerStack,
+ai_agents,relevance ai,relevanceai.com,có,https://relevanceai.com/partners,,
+ai_agents,salesforce agentforce,salesforce.com,không thấy,,,
+ai_agents,sierra ai,sierra.ai,không thấy,,,
+ai_agents,stack ai,stack-ai.com,không thấy,,,
+ai_agents,zapier agents,zapier.com,chỉ referral,https://zapier.com/l/partners,,
+ai_allinone,chatgpt,openai.com,không thấy,,,
+ai_allinone,chatllm,abacus.ai,không thấy,,,
+ai_allinone,claude ai,claude.com,không thấy,,,
+ai_allinone,copilot ai,copilot.microsoft.com,không thấy,,,
+ai_allinone,gemini ai,gemini.google.com,không thấy,,,
+ai_allinone,hix ai,hix.ai,có,https://hix.ai/affiliate-program,Tapfiliate,
+ai_allinone,merlin ai,getmerlin.in,có,https://www.getmerlin.in/affiliate-program,Tapfiliate,
+ai_allinone,monica ai,monica.im,có,https://monica.im/affiliate,Tapfiliate,
+ai_allinone,oakgen,oakgen.ai,có,https://oakgen.ai/refer,,
+ai_allinone,openrouter,openrouter.ai,không thấy,,,
+ai_allinone,overchat ai,overchat.ai,không thấy,,,
+ai_allinone,perplexity,perplexity.ai,không thấy,,,
+ai_allinone,poe ai,poe.com,không rõ,,,không tải được trang chủ
+ai_allinone,you com,you.com,không thấy,,,
+ai_business,beautiful ai,beautiful.ai,không thấy,,,
+ai_business,chatbase,chatbase.co,có,https://partners.dub.co/chatbase,,
+ai_business,clickup ai,clickup.com,có,https://clickup.com/partners/affiliates,PartnerStack,
+ai_business,fathom ai,fathom.video,không thấy,,,
+ai_business,fireflies ai,fireflies.ai,có,https://fireflies.ai/partnership,FirstPromoter,
+ai_business,gamma app,gamma.app,không rõ,,,không tải được trang chủ
+ai_business,intercom fin,intercom.com,không thấy,,,
+ai_business,motion app,usemotion.com,không thấy,,,
+ai_business,otter ai,otter.ai,có,https://otter.ai/partner-program,,
+ai_business,reclaim ai,reclaim.ai,có,https://reclaim.ai/affiliate-program,PartnerStack,
+ai_business,taskade,taskade.com,không thấy,,,
+ai_business,tome ai,tome.app,không rõ,,,không tải được trang chủ
+ai_coding,amazon q developer,aws.amazon.com,không thấy,,,
+ai_coding,bolt new,bolt.new,không thấy,,,
+ai_coding,codeium,codeium.com,không rõ,,,không tải được trang chủ
+ai_coding,codium ai,qodo.ai,chỉ referral,https://www.qodo.ai/community/super-qodoer/,,
+ai_coding,cursor ai,cursor.com,không thấy,,,
+ai_coding,github copilot,github.com,không thấy,,,
+ai_coding,lovable ai,lovable.dev,có,https://lovable.dev/partners/affiliates,Impact,
+ai_coding,replit,replit.com,chỉ referral,https://replit.com/refer,,
+ai_coding,sourcegraph cody,sourcegraph.com,không thấy,,,
+ai_coding,tabnine,tabnine.com,không thấy,,,
+ai_coding,v0 dev,v0.app,không thấy,,,
+ai_coding,windsurf ai,windsurf.com,không rõ,,,không tải được trang chủ
+ai_seo,ahrefs,ahrefs.com,không thấy,,,
+ai_seo,clearscope,clearscope.io,có thể,,Rewardful,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+ai_seo,frase io,frase.io,có,https://www.frase.io/partners/affiliates,FirstPromoter,
+ai_seo,koala ai,koala.sh,có,https://koala.sh/pages/affiliate,,
+ai_seo,marketmuse,marketmuse.com,không thấy,,,
+ai_seo,neuronwriter,neuronwriter.com,có,https://neuronwriter.com/contact/affiliates/,,
+ai_seo,outranking,outranking.io,không thấy,,,
+ai_seo,scalenut,scalenut.com,có,https://www.scalenut.com/affiliate,FirstPromoter,
+ai_seo,search atlas,searchatlas.com,có,https://searchatlas.com/affiliate-program/,FirstPromoter,
+ai_seo,semrush,semrush.com,có,https://www.semrush.com/lp/affiliate-program/en/,Impact,
+ai_seo,seo ai,seo.ai,không thấy,,,
+ai_seo,surfer seo,surferseo.com,có,https://surferseo.com/affiliate-program/,PartnerStack,
+ai_tools,copy ai,copy.ai,không thấy,,,
+ai_tools,descript,descript.com,có,https://www.descript.com/affiliate,PartnerStack,
+ai_tools,elevenlabs,elevenlabs.io,có,https://elevenlabs.io/affiliates,PartnerStack,
+ai_tools,grammarly,grammarly.com,có,https://www.grammarly.com/affiliates,Impact,
+ai_tools,invideo,invideo.io,có,https://invideo.io/make/affiliate-program/,Impact,
+ai_tools,jasper ai,jasper.ai,có,https://www.jasper.ai/legal/affiliates,FirstPromoter,
+ai_tools,midjourney,midjourney.com,không rõ,,,không tải được trang chủ
+ai_tools,notion ai,notion.so,có,https://www.notion.com/partners,,
+ai_tools,pictory,pictory.ai,có,https://pictory.ai/press-and-partners?nav=mega,FirstPromoter,
+ai_tools,quillbot,quillbot.com,không rõ,,,không tải được trang chủ
+ai_tools,runway ml,runwayml.com,có,https://runway.com/affiliate-program,,
+ai_tools,sudowrite,sudowrite.com,có thể,,Rewardful,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+ai_tools,synthesia,synthesia.io,có,https://www.synthesia.io/partners/affiliates,Rewardful,
+ai_tools,writesonic,writesonic.com,có,https://writesonic.com/affiliate,FirstPromoter,
+ai_video,captions ai,captions.ai,không thấy,,,
+ai_video,colossyan,colossyan.com,có,https://www.colossyan.com/affiliate-program/,Rewardful,
+ai_video,d id,d-id.com,có,https://www.d-id.com/affiliate-terms/,,
+ai_video,fliki,fliki.ai,có,https://fliki.ai/affiliate-program,,
+ai_video,hailuo ai,hailuoai.video,có,https://hailuoai.video/affiliate,Impact,
+ai_video,heygen,heygen.com,có,https://www.heygen.com/geniverse/social-creator-program,Rewardful,
+ai_video,kling ai,klingai.com,không thấy,,,
+ai_video,luma dream machine,lumalabs.ai,không thấy,,,
+ai_video,opus clip,opus.pro,có,https://www.opus.pro/affiliate,Rewardful,
+ai_video,pixverse,pixverse.ai,có,https://pixverse.ai/en/affiliate,Impact,
+ai_video,sora ai,sora.com,không thấy,,,
+ai_video,veo 3,deepmind.google,không thấy,,,
+ai_video,vidnoz,vidnoz.com,không thấy,,,
+ai_voice,adobe podcast,podcast.adobe.com,không thấy,,,
+ai_voice,lovo ai,lovo.ai,không rõ,,,không tải được trang chủ
+ai_voice,murf ai,murf.ai,có,https://murf.ai/partner-with-us/affiliate,PartnerStack,
+ai_voice,play ht,play.ht,không rõ,,,trang chủ lỗi: ConnectionError
+ai_voice,resemble ai,resemble.ai,không thấy,,,
+ai_voice,speechify,speechify.com,không rõ,,,không tải được trang chủ
+ai_voice,suno ai,suno.com,không thấy,,,
+ai_voice,udio,udio.com,không thấy,,,
+ai_voice,wellsaid labs,wellsaidlabs.com,không thấy,,,
+auto,adams polishes,adamspolishes.com,không thấy,,,
+auto,advance auto parts,advanceautoparts.com,không rõ,,,không tải được trang chủ
+auto,autozone,autozone.com,không rõ,,,không tải được trang chủ
+auto,car supplies warehouse,carsupplieswarehouse.com,có,https://www.carsupplieswarehouse.com/pages/affiliate-program,UpPromote,
+auto,carparts.com,carparts.com,không rõ,,,trang chủ lỗi: ReadTimeout
+auto,chemical guys,chemicalguys.com,có,https://www.chemicalguys.com/pages/affiliate-program,CJ,
+auto,covercraft,covercraft.com,không rõ,,,không tải được trang chủ
+auto,discount tire,discounttire.com,không rõ,,,không tải được trang chủ
+auto,garmin dash cam,garmin.com,không thấy,,,
+auto,griots garage,griotsgarage.com,không thấy,,,
+auto,meguiars,meguiars.com,không rõ,,,trang chủ lỗi: ReadTimeout
+auto,michelin,michelin.com,không thấy,,,
+auto,nextbase,nextbase.com,không thấy,,,
+auto,noco,no.co,không thấy,,,
+auto,rockauto,rockauto.com,không thấy,,,
+auto,rough country,roughcountry.com,không rõ,,,không tải được trang chủ
+auto,shine armor,shinearmor.com,có thể,,UpPromote,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+auto,thule,thule.com,không thấy,,,
+auto,tire rack,tirerack.com,không rõ,,,không tải được trang chủ
+auto,viofo,viofo.com,có,https://www.viofo.com/pages/affiliate-program,ShareASale,
+auto,vivid racing,vividracing.com,không rõ,,,không tải được trang chủ
+auto,weathertech,weathertech.com,không thấy,,,
+auto,yakima,yakima.com,có thể,,AvantLink,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+auto,yitamotor,yitamotor.com,không rõ,,,không tải được trang chủ
+baby,babybjorn,babybjorn.com,có,https://www.babybjorn.com/about/become-an-affiliate/,CJ,
+baby,babylist,babylist.com,có thể,,Impact,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+baby,bugaboo,bugaboo.com,không thấy,,,
+baby,bumkins,bumkins.com,không thấy,,,
+baby,chicco,chiccousa.com,không thấy,,,
+baby,doona,doona.com,không thấy,,,
+baby,ergobaby,ergobaby.com,có,https://ergobaby.com/en-us/pages/affiliates,Awin,
+baby,esembly,esemblybaby.com,không thấy,,,
+baby,finn and emma,finnandemma.com,có,https://www.finnandemma.com/pages/affiliate-program,ShareASale,
+baby,graco,gracobaby.com,không rõ,,,không tải được trang chủ
+baby,hatch baby,hatch.co,có,https://www.hatch.co/affiliate,Impact,
+baby,honest company,honest.com,có,https://honest.com/pages/become-an-honest-brand-ambassador,,
+baby,huggies,huggies.com,không thấy,,,
+baby,lovevery,lovevery.com,có,https://lovevery.com/pages/affiliate-partnerships,,
+baby,newton baby,newtonbaby.com,có,https://www.newtonbaby.com/pages/affiliate-program,Awin,
+baby,owlet,owletcare.com,có,https://owletcare.com/pages/affiliate-program,Awin,
+baby,pampers,pampers.com,không thấy,,,
+baby,smiling tree toys,smilingtreetoys.com,có,https://smilingtreetoys.com/pages/join-our-affiliate-program,Awin,
+baby,uppababy,uppababy.com,không thấy,,,
+baby,wonderfold,wonderfoldwagon.com,chỉ referral,https://wonderfold.com/pages/creator-program,Rakuten,
+beauty,beauty bay,beautybay.com,không thấy,,,
+beauty,beauty of joseon,beautyofjoseon.com,không thấy,,,
+beauty,bubble skincare,hellobubble.com,không rõ,,,không tải được trang chủ
+beauty,cerave,cerave.com,không thấy,,,
+beauty,charlotte tilbury,charlottetilbury.com,không thấy,,,
+beauty,dieux skin,dieuxskin.com,không thấy,,,
+beauty,drunk elephant,drunkelephant.com,có thể,,Pepperjam,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,dyson airwrap,dyson.com,không thấy,,,
+beauty,elizabeth arden,elizabetharden.com,không thấy,,,
+beauty,glossier,glossier.com,không thấy,,,
+beauty,hum nutrition,humnutrition.com,không thấy,,,
+beauty,il makiage,ilmakiage.com,không rõ,,,không tải được trang chủ
+beauty,kiehls,kiehls.com,không rõ,,,không tải được trang chủ
+beauty,krave beauty,kravebeauty.com,không thấy,,,
+beauty,la roche posay,laroche-posay.us,không rõ,,,không tải được trang chủ
+beauty,naturium,naturium.com,có thể,,ShareASale,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,olaplex,olaplex.com,có thể,,Rakuten,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,paula's choice,paulaschoice.com,không thấy,,,
+beauty,rhode skin,rhodeskin.com,không thấy,,,
+beauty,sephora,sephora.com,có thể,,"Pepperjam, Rakuten, ShareASale","thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,sigma beauty,sigmabeauty.com,không rõ,,,không tải được trang chủ
+beauty,soft services,softservices.co,không thấy,,,
+beauty,tatcha,tatcha.com,có thể,,Rakuten,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,the inkey list,theinkeylist.com,không thấy,,,
+beauty,the ordinary,theordinary.com,không thấy,,,
+beauty,topicals,mytopicals.com,không thấy,,,
+beauty,ulta,ulta.com,không rõ,,,không tải được trang chủ
+beauty,versed skin,versedskin.com,không rõ,,,không tải được trang chủ
+beauty,wishtrend,wishtrend.com,không rõ,,,không tải được trang chủ
+beauty,youth to the people,youthtothepeople.com,không rõ,,,không tải được trang chủ
+camping_outdoor,big agnes,bigagnes.com,không rõ,,,không tải được trang chủ
+camping_outdoor,black diamond,blackdiamondequipment.com,không rõ,,,không tải được trang chủ
+camping_outdoor,coleman,coleman.com,không rõ,,,không tải được trang chủ
+camping_outdoor,durston gear,durstongear.com,không rõ,,,không tải được trang chủ
+camping_outdoor,garmin,garmin.com,không thấy,,,
+camping_outdoor,gci outdoor,gcioutdoor.com,không rõ,,,không tải được trang chủ
+camping_outdoor,gossamer gear,gossamergear.com,không rõ,,,không tải được trang chủ
+camping_outdoor,helinox,helinox.com,không rõ,,,không tải được trang chủ
+camping_outdoor,hydro flask,hydroflask.com,không rõ,,,không tải được trang chủ
+camping_outdoor,hyperlite mountain gear,hyperlitemountaingear.com,có,https://hyperlitemountaingear.com/pages/hyperlite-mountain-gear-affiliate-program,AvantLink,
+camping_outdoor,jetboil,jetboil.com,không thấy,,,
+camping_outdoor,kelty,kelty.com,không rõ,,,không tải được trang chủ
+camping_outdoor,life in tents,lifeintents.com,không rõ,,,không tải được trang chủ
+camping_outdoor,nemo equipment,nemoequipment.com,không rõ,,,không tải được trang chủ
+camping_outdoor,patagonia,patagonia.com,không rõ,,,không tải được trang chủ
+camping_outdoor,rei,rei.com,không rõ,,,trang chủ lỗi: ReadTimeout
+camping_outdoor,sea to summit,seatosummitusa.com,không rõ,,,không tải được trang chủ
+camping_outdoor,snow peak,snowpeak.com,không rõ,,,không tải được trang chủ
+camping_outdoor,tentsile,tentsile.com,không rõ,,,không tải được trang chủ
+camping_outdoor,the north face,thenorthface.com,không rõ,,,không tải được trang chủ
+camping_outdoor,vargo outdoors,vargooutdoors.com,không rõ,,,không tải được trang chủ
+camping_outdoor,yeti,yeti.com,không rõ,,,không tải được trang chủ
+camping_outdoor,zpacks,zpacks.com,không rõ,,,không tải được trang chủ
+crypto,binance,binance.com,không rõ,,,không tải được trang chủ
+crypto,bitget,bitget.com,có,https://www.bitget.com/affiliates,,
+crypto,bybit,bybit.com,chỉ referral,https://www.bybit.com/referral,,
+crypto,coinbase,coinbase.com,có,https://www.coinbase.com/affiliates,Impact,
+crypto,coindcx,coindcx.com,không rõ,,,không tải được trang chủ
+crypto,crypto.com,crypto.com,có,https://crypto.com/en/affiliate/,Impact,
+crypto,gate.io,gate.io,không rõ,,,không tải được trang chủ
+crypto,htx,htx.com,không thấy,,,
+crypto,kraken,kraken.com,có,https://www.kraken.com/affiliate,Impact,
+crypto,kucoin,kucoin.com,có,https://www.kucoin.com/affiliate,,
+crypto,ledger,ledger.com,chỉ referral,https://www.ledger.com/referral,,
+crypto,mexc,mexc.com,không rõ,,,trang chủ lỗi: ReadTimeout
+crypto,okx,okx.com,có,https://www.okx.com/affiliates,,
+crypto,trezor,trezor.io,có,https://trezor.io/affiliate,,
+cycling_sports,aventon,aventon.com,không rõ,,,không tải được trang chủ
+cycling_sports,blix bike,blixbike.com,không rõ,,,không tải được trang chủ
+cycling_sports,canyon bikes,canyon.com,không thấy,,,
+cycling_sports,decathlon,decathlon.com,không rõ,,,không tải được trang chủ
+cycling_sports,lectric ebikes,lectricebikes.com,không thấy,,,
+cycling_sports,muc off,muc-off.com,không rõ,,,không tải được trang chủ
+cycling_sports,ornot,ornotbike.com,không rõ,,,không tải được trang chủ
+cycling_sports,pnw components,pnwcomponents.com,không rõ,,,không tải được trang chủ
+cycling_sports,priority bicycles,prioritybicycles.com,không rõ,,,không tải được trang chủ
+cycling_sports,rad power bikes,radpowerbikes.com,không rõ,,,không tải được trang chủ
+cycling_sports,ride1up,ride1up.com,có,https://ride1up.com/affiliate-program/,AvantLink,
+cycling_sports,sigma sports,sigmasports.com,không thấy,,,
+cycling_sports,silca,silca.cc,không rõ,,,không tải được trang chủ
+cycling_sports,specialized,specialized.com,có,https://www.specialized.com/us/en/specialized-affiliate-program,Rakuten,
+cycling_sports,state bicycle,statebicycle.com,không rõ,,,không tải được trang chủ
+cycling_sports,trek bikes,trekbikes.com,không thấy,,,
+cycling_sports,under armour,underarmour.com,không rõ,,,không tải được trang chủ
+cycling_sports,wahoo fitness,wahoofitness.com,có,https://www.wahoofitness.com/affiliates,Refersion,
+cycling_sports,zwift,zwift.com,có,https://www.zwift.com/partner-with-zwift,Impact,
+diy_garden,ace hardware,acehardware.com,không rõ,,,không tải được trang chủ
+diy_garden,bosch tools,boschtools.com,không thấy,,,
+diy_garden,dewalt,dewalt.com,không thấy,,,
+diy_garden,festool,festool.com,không thấy,,,
+diy_garden,fireball tool,fireballtool.com,không rõ,,,không tải được trang chủ
+diy_garden,greenworks,greenworkstools.com,không rõ,,,không tải được trang chủ
+diy_garden,grizzly industrial,grizzly.com,không thấy,,,
+diy_garden,harbor freight,harborfreight.com,không rõ,,,không tải được trang chủ
+diy_garden,home depot,homedepot.com,không rõ,,,không tải được trang chủ
+diy_garden,husqvarna,husqvarna.com,không thấy,,,
+diy_garden,kreg tool,kregtool.com,không thấy,,,
+diy_garden,lowes,lowes.com,không thấy,,,
+diy_garden,makita,makita.com,không rõ,,,trang chủ lỗi: SSLError
+diy_garden,milwaukee tool,milwaukeetool.com,không thấy,,,
+diy_garden,rockler,rockler.com,không thấy,,,
+diy_garden,ryobi,ryobitools.com,không rõ,,,không tải được trang chủ
+diy_garden,stihl,stihlusa.com,không thấy,,,
+diy_garden,toro,toro.com,không thấy,,,
+diy_garden,wen products,wenproducts.com,không rõ,,,không tải được trang chủ
+diy_garden,woodcraft,woodcraft.com,không rõ,,,không tải được trang chủ
+diy_garden,worx,worx.com,không thấy,,,
+education,babbel,babbel.com,có,https://www.performcb.com/agency/clients/babbel-affiliate-program/,Impact,
+education,busuu,busuu.com,có,https://www.busuu.com/en/partners,CJ,
+education,coursera,coursera.org,có,https://www.coursera.org/about/affiliates,Impact,
+education,duolingo,duolingo.com,không thấy,,,
+education,italki,italki.com,có,https://www.italki.com:443/en/affiliates,,
+education,kajabi,kajabi.com,không thấy,,,
+education,masterclass,masterclass.com,không rõ,,,không tải được trang chủ
+education,pimsleur,pimsleur.com,có,https://www.pimsleur.com:443/business-inquiries/,Impact,
+education,preply,preply.com,không rõ,,,không tải được trang chủ
+education,rosetta stone,rosettastone.com,có thể,,Impact,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+education,skillshare,skillshare.com,có,https://www.skillshare.com/en/affiliates,Impact,
+education,teachable,teachable.com,có,https://www.teachable.com/partners,PartnerStack,
+education,thinkific,thinkific.com,không rõ,,,không tải được trang chủ
+education,udemy,udemy.com,có,https://www.udemy.com/affiliate/,Impact,
+electronics,8bitdo,8bitdo.com,không thấy,,,
+electronics,acer,acer.com,không rõ,,,trang chủ lỗi: ReadTimeout
+electronics,alienware,alienware.com,không thấy,,,
+electronics,anker,anker.com,có,https://www.anker.com/become-an-affiliate?ref=footer,"Affiliatly, Impact, Rakuten",
+electronics,asus,asus.com,không thấy,,,
+electronics,baseus,baseus.com,không rõ,,,không tải được trang chủ
+electronics,belkin,belkin.com,có,https://www.belkin.com/company/affiliates/,Impact,
+electronics,bose,bose.com,không thấy,,,
+electronics,dbrand,dbrand.com,không thấy,,,
+electronics,dell,dell.com,không thấy,,,
+electronics,dji,dji.com,không thấy,,,
+electronics,ecovacs,ecovacs.com,không thấy,,,
+electronics,gopro,gopro.com,không rõ,,,không tải được trang chủ
+electronics,grovemade,grovemade.com,có thể,,Refersion,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+electronics,hp,hp.com,không thấy,,,
+electronics,insta360,insta360.com,có,https://www.insta360.com/enterprise/industries/partnership,,
+electronics,jbl,jbl.com,không rõ,,,trang chủ lỗi: SSLError
+electronics,keychron,keychron.com,không rõ,,,không tải được trang chủ
+electronics,lenovo,lenovo.com,không thấy,,,
+electronics,lg electronics,lg.com,không rõ,,,không tải được trang chủ
+electronics,logitech,logitech.com,không thấy,,,
+electronics,msi,msi.com,không rõ,,,không tải được trang chủ
+electronics,nothing phone,nothing.tech,không thấy,,,
+electronics,nuphy,nuphy.com,không rõ,,,không tải được trang chủ
+electronics,razer,razer.com,có,https://www.razer.com/affiliate,Impact,
+electronics,roborock,roborock.com,không rõ,,,trang chủ lỗi: ConnectTimeout
+electronics,samsung,samsung.com,không thấy,,,
+electronics,sennheiser,sennheiser.com,không thấy,,,
+electronics,shark clean,sharkclean.com,có,https://www.sharkninja.com/affiliate.html,Impact,
+electronics,sonos,sonos.com,không rõ,,,không tải được trang chủ
+electronics,sony,sony.com,không rõ,,,không tải được trang chủ
+electronics,soundcore,soundcore.com,có,https://www.soundcore.com/referral,Rakuten,
+electronics,ugreen,ugreen.com,không rõ,,,không tải được trang chủ
+fashion,allbirds,allbirds.com,không rõ,,,không tải được trang chủ
+fashion,alo yoga,aloyoga.com,không rõ,,,không tải được trang chủ
+fashion,asos,asos.com,không rõ,,,trang chủ lỗi: ReadTimeout
+fashion,atoms shoes,atoms.com,không rõ,,,không tải được trang chủ
+fashion,bombas,bombas.com,không rõ,,,không tải được trang chủ
+fashion,buck mason,buckmason.com,có,https://www.buckmason.com/pages/affiliates,ShareASale,
+fashion,consuela,consuelastyle.com,không rõ,,,không tải được trang chủ
+fashion,daniel wellington,danielwellington.com,không rõ,,,không tải được trang chủ
+fashion,everlane,everlane.com,không rõ,,,không tải được trang chủ
+fashion,farfetch,farfetch.com,không rõ,,,không tải được trang chủ
+fashion,gymshark,gymshark.com,không rõ,,,không tải được trang chủ
+fashion,lululemon,lululemon.com,không rõ,,,không tải được trang chủ
+fashion,mejuri,mejuri.com,không thấy,,,
+fashion,mvmt watches,mvmt.com,không rõ,,,không tải được trang chủ
+fashion,nordstrom,nordstrom.com,không rõ,,,không tải được trang chủ
+fashion,olukai,olukai.com,không rõ,,,không tải được trang chủ
+fashion,quince,onequince.com,không thấy,,,
+fashion,ray ban,ray-ban.com,không rõ,,,không tải được trang chủ
+fashion,revolve,revolve.com,không rõ,,,trang chủ lỗi: ReadTimeout
+fashion,rhone,rhone.com,không thấy,,,
+fashion,shein,shein.com,không thấy,,,
+fashion,taylor stitch,taylorstitch.com,không rõ,,,không tải được trang chủ
+fashion,temu,temu.com,không thấy,,,
+fashion,ten thousand,tenthousand.cc,không rõ,,,không tải được trang chủ
+fashion,uniqlo,uniqlo.com,không thấy,,,
+fashion,vessi,vessi.com,không rõ,,,không tải được trang chủ
+fashion,vuori,vuori.com,không thấy,,,
+fashion,warby parker,warbyparker.com,không thấy,,,
+fashion,zara,zara.com,không thấy,,,
+finance,chime,chime.com,không rõ,,,không tải được trang chủ
+finance,credit karma,creditkarma.com,không thấy,,,
+finance,lendingclub,lendingclub.com,không rõ,,,không tải được trang chủ
+finance,nerdwallet,nerdwallet.com,không thấy,,,
+finance,payoneer,payoneer.com,có,https://www.payoneer.com/affiliate-program/,,
+finance,quickbooks,quickbooks.intuit.com,không rõ,,,trang chủ lỗi: ReadTimeout
+finance,revolut,revolut.com,không thấy,,,
+finance,robinhood,robinhood.com,không thấy,,,
+finance,sofi,sofi.com,không rõ,,,không tải được trang chủ
+finance,upstart,upstart.com,không rõ,,,không tải được trang chủ
+finance,webull,webull.com,không thấy,,,
+finance,wise,wise.com,có,https://wise.com/gb/partnerwise,,
+forex,avatrade,avatrade.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,cmc markets,cmcmarkets.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,etoro,etoro.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,exness,exness.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,forex.com,forex.com,không rõ,,,trang chủ lỗi: ConnectionError
+forex,fxpro,fxpro.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,fxtm,fxtm.com,không rõ,,,trang chủ lỗi: ConnectionError
+forex,hfm,hfm.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,ic markets,icmarkets.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,ig,ig.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,interactive brokers,interactivebrokers.com,không rõ,,,trang chủ lỗi: ConnectionError
+forex,oanda,oanda.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,octafx,octafx.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,pepperstone,pepperstone.com,không thấy,,,
+forex,plus500,plus500.com,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,roboforex,roboforex.com,không rõ,,,trang chủ lỗi: ConnectionError
+forex,saxo bank,home.saxo,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,tastyfx,tastyfx.com,không rõ,,,trang chủ lỗi: ConnectionError
+forex,trading.com,trading.com,không rõ,,,trang chủ lỗi: ConnectionError
+forex,xm,xm.com,không rõ,,,trang chủ lỗi: ConnectionError
+furniture_office,autonomous desk,autonomous.ai,không thấy,,,
+furniture_office,branch furniture,branchfurniture.com,không rõ,,,không tải được trang chủ
+furniture_office,desky,deskyusa.com,không rõ,,,trang chủ lỗi: ConnectionError
+furniture_office,ergonofis,ergonofis.com,không rõ,,,không tải được trang chủ
+furniture_office,flexispot,flexispot.com,có,https://www.flexispot.com/affiliate,,
+furniture_office,haworth,haworth.com,không thấy,,,
+furniture_office,herman miller,hermanmiller.com,không thấy,,,
+furniture_office,humanscale,humanscale.com,không thấy,,,
+furniture_office,mount it,mount-it.com,có thể,,Impact,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+furniture_office,progressive desk,progressivedesk.com,không rõ,,,không tải được trang chủ
+furniture_office,sihoo,sihoooffice.com,không rõ,,,không tải được trang chủ
+furniture_office,steelcase,steelcase.com,không thấy,,,
+furniture_office,uplift desk,upliftdesk.com,có,https://www.upliftdesk.com/affiliate/,Impact,
+furniture_office,vari desk,vari.com,không thấy,,,
+furniture_office,x chair,xchair.com,không rõ,,,không tải được trang chủ
+health_sports,adidas,adidas.com,không rõ,,,không tải được trang chủ
+health_sports,asics,asics.com,không rõ,,,không tải được trang chủ
+health_sports,athletic greens,drinkag1.com,không rõ,,,không tải được trang chủ
+health_sports,bells of steel,bellsofsteel.com,không rõ,,,không tải được trang chủ
+health_sports,bowflex,bowflex.com,không thấy,,,
+health_sports,brooks running,brooksrunning.com,không rõ,,,không tải được trang chủ
+health_sports,garmin fitness,garmin.com,không thấy,,,
+health_sports,heavy rep gear,heavyrepgear.com,không rõ,,,không tải được trang chủ
+health_sports,hoka,hoka.com,không rõ,,,không tải được trang chủ
+health_sports,hydrow,hydrow.com,không rõ,,,không tải được trang chủ
+health_sports,hyperice,hyperice.com,không thấy,,,
+health_sports,kachava,kachava.com,không thấy,,,
+health_sports,legion athletics,legionathletics.com,không rõ,,,không tải được trang chủ
+health_sports,momentous,livemomentous.com,không rõ,,,không tải được trang chủ
+health_sports,myprotein,myprotein.com,không thấy,,,
+health_sports,nike,nike.com,không thấy,,,
+health_sports,nordictrack,nordictrack.com,không thấy,,,
+health_sports,on running,on.com,không thấy,,,
+health_sports,onnit,onnit.com,có,https://www.onnit.com/pages/affiliate-program,Impact,
+health_sports,oura ring,ouraring.com,không thấy,,,
+health_sports,peloton,onepeloton.com,không thấy,,,
+health_sports,reebok,reebok.com,không rõ,,,không tải được trang chủ
+health_sports,repr fitness,reprfitness.com,không thấy,,,
+health_sports,ritual vitamins,ritual.com,không thấy,,,
+health_sports,road runner sports,roadrunnersports.com,không rõ,,,không tải được trang chủ
+health_sports,rogue fitness,roguefitness.com,không rõ,,,không tải được trang chủ
+health_sports,seed probiotic,seed.com,có thể,,Impact,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+health_sports,sixpad,sixpad.com,không rõ,,,trang chủ lỗi: ConnectionError
+health_sports,therabody,therabody.com,không thấy,,,
+health_sports,tonal,tonal.com,không rõ,,,không tải được trang chủ
+health_sports,transparent labs,transparentlabs.com,không thấy,,,
+health_sports,vitruvian,vitruvian.com,không rõ,,,trang chủ lỗi: ConnectionError
+health_sports,whoop,whoop.com,không rõ,,,không tải được trang chủ
+home_garden,article furniture,article.com,không thấy,,,
+home_garden,back to the roots,backtotheroots.com,không rõ,,,không tải được trang chủ
+home_garden,bloomscape,bloomscape.com,chỉ referral,https://bloomscape.com/refer-a-friend/,AvantLink,
+home_garden,burrow,burrow.com,không thấy,,,
+home_garden,epic gardening,epicgardening.com,không thấy,,,
+home_garden,floyd home,floyddetroit.com,không rõ,,,không tải được trang chủ
+home_garden,gardeners supply,gardeners.com,không thấy,,,
+home_garden,greenstalk garden,greenstalkgarden.com,không rõ,,,không tải được trang chủ
+home_garden,lovesac,lovesac.com,không thấy,,,
+home_garden,medley home,medleyhome.com,không thấy,,,
+home_garden,one kings lane,onekingslane.com,không thấy,,,
+home_garden,rst brands,rstbrands.com,có thể,,CJ,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+home_garden,rug source,rugsource.com,có,https://rugsource.com/affiliate-program,,
+home_garden,sabai design,sabai.design,không thấy,,,
+home_garden,seedsnow,seedsnow.com,không rõ,,,không tải được trang chủ
+home_garden,society6,society6.com,không rõ,,,không tải được trang chủ
+home_garden,the sill,thesill.com,có,https://www.thesill.com/pages/about-us,Impact,
+home_garden,vidaxl,vidaxl.com,không rõ,,,không tải được trang chủ
+home_garden,wayfair,wayfair.com,không rõ,,,không tải được trang chủ
+home_garden,west elm,westelm.com,không rõ,,,không tải được trang chủ
+home_kitchen,amerisleep,amerisleep.com,có,https://amerisleep.com/affiliates/,"Impact, ShareASale",
+home_kitchen,avocado mattress,avocadogreenmattress.com,có,https://www.avocadogreenmattress.com/pages/affiliate-program,Impact,
+home_kitchen,bear mattress,bearmattress.com,không thấy,,,
+home_kitchen,birch living,birchliving.com,không rõ,,,không tải được trang chủ
+home_kitchen,boll and branch,bollandbranch.com,không rõ,,,không tải được trang chủ
+home_kitchen,breville,breville.com,có,https://www.breville.com/en-us/learn-more/breville-affiliates-program,Impact,
+home_kitchen,brooklinen,brooklinen.com,không thấy,,,
+home_kitchen,buffy,buffy.co,không thấy,,,
+home_kitchen,casper,casper.com,không thấy,,,
+home_kitchen,coop sleep goods,coopsleepgoods.com,không rõ,,,không tải được trang chủ
+home_kitchen,cozy earth,cozyearth.com,có thể,,Affiliatly,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+home_kitchen,delonghi,delonghi.com,không thấy,,,
+home_kitchen,dreamcloud,dreamcloudsleep.com,có,https://www.dreamcloudsleep.com/p/affiliates,Impact,
+home_kitchen,dyson,dyson.com,không thấy,,,
+home_kitchen,helix sleep,helixsleep.com,không rõ,,,không tải được trang chủ
+home_kitchen,ikea,ikea.com,không thấy,,,
+home_kitchen,instant pot,instanthome.com,không rõ,,,trang chủ lỗi: ConnectTimeout
+home_kitchen,mattress firm,mattressfirm.com,không rõ,,,không tải được trang chủ
+home_kitchen,nectar sleep,nectarsleep.com,có,https://www.nectarsleep.com/p/affiliates,Impact,
+home_kitchen,ninja kitchen,ninjakitchen.com,có,https://www.sharkninja.com/affiliate.html,Impact,
+home_kitchen,parachute home,parachutehome.com,không thấy,,,
+home_kitchen,plushbeds,plushbeds.com,có,https://www.plushbeds.com/pages/partner-with-us,"Impact, ShareASale",
+home_kitchen,purple mattress,purple.com,có,https://purple.com/affiliate-program,Impact,
+home_kitchen,saatva,saatva.com,không rõ,,,không tải được trang chủ
+home_kitchen,sijo home,sijohome.com,có,https://sijohome.com/pages/get-100-referral-program,Impact,
+home_kitchen,simplihuman,simplehuman.com,có thể,,Impact,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+home_kitchen,tempur pedic,tempurpedic.com,không thấy,,,
+home_kitchen,tuft and needle,tuftandneedle.com,không thấy,,,
+home_kitchen,wayfair,wayfair.com,không rõ,,,không tải được trang chủ
+hosting,a2 hosting,a2hosting.com,không thấy,,,
+hosting,bluehost,bluehost.com,không rõ,,,không tải được trang chủ
+hosting,cloudways,cloudways.com,có,https://www.cloudways.com/en/web-hosting-affiliate-program.php,,
+hosting,contabo,contabo.com,có,https://contabo.com/en/affiliate-program/,CJ,
+hosting,digitalocean,digitalocean.com,có,https://www.digitalocean.com/affiliates,Awin,
+hosting,dreamhost,dreamhost.com,có,https://www.dreamhost.com/affiliates/,,
+hosting,godaddy,godaddy.com,không rõ,,,không tải được trang chủ
+hosting,hostgator,hostgator.com,không rõ,,,không tải được trang chủ
+hosting,hostinger,hostinger.com,có,https://www.hostinger.com/affiliates,,
+hosting,hostpapa,hostpapa.com,có,https://www.hostpapa.com/about-hostpapa/affiliates/,,
+hosting,ionos,ionos.com,chỉ referral,https://www.ionos.com/referral,,
+hosting,kinsta,kinsta.com,có,https://kinsta.com/affiliates/,,
+hosting,linode,linode.com,không rõ,,,không tải được trang chủ
+hosting,liquid web,liquidweb.com,có,https://www.liquidweb.com/partner-programs/hosting-affiliate-program/,Impact,
+hosting,namecheap,namecheap.com,không rõ,,,không tải được trang chủ
+hosting,ovh,ovhcloud.com,không thấy,,,
+hosting,scala hosting,scalahosting.com,có,https://www.scalahosting.com/affiliate.html,PostAffiliatePro,
+hosting,siteground,siteground.com,không rõ,,,không tải được trang chủ
+hosting,vultr,vultr.com,không rõ,,,không tải được trang chủ
+hosting,wp engine,wpengine.com,có,https://wpengine.com/affiliate-program/,Everflow,
+insurance,allianz travel insurance,allianztravelinsurance.com,không rõ,,,không tải được trang chủ
+insurance,etiqa,etiqa.com.my,không thấy,,,
+insurance,geico,geico.com,không thấy,,,
+insurance,lemonade insurance,lemonade.com,không thấy,,,
+insurance,progressive,progressive.com,không rõ,,,trang chủ lỗi: ConnectTimeout
+insurance,safetywing,safetywing.com,không thấy,,,
+insurance,state farm,statefarm.com,không thấy,,,
+insurance,world nomads,worldnomads.com,có,https://www.worldnomads.com/partnerships,,
+jewelry_watch,annie haak,anniehaakdesigns.com,không rõ,,,không tải được trang chủ
+jewelry_watch,ashford,ashford.com,không rõ,,,không tải được trang chủ
+jewelry_watch,aurate,auratenewyork.com,không rõ,,,không tải được trang chủ
+jewelry_watch,baltic watches,baltic-watches.com,không thấy,,,
+jewelry_watch,blue nile,bluenile.com,có,https://www.bluenile.com/affiliates,,
+jewelry_watch,brilliant earth,brilliantearth.com,không rõ,,,không tải được trang chủ
+jewelry_watch,christopher ward,christopherward.com,không rõ,,,không tải được trang chủ
+jewelry_watch,citizen watch,citizenwatch.com,không thấy,,,
+jewelry_watch,exquisite timepieces,exquisitetimepieces.com,không rõ,,,không tải được trang chủ
+jewelry_watch,farer,farer.com,không rõ,,,không tải được trang chủ
+jewelry_watch,gorjana,gorjana.com,không rõ,,,không tải được trang chủ
+jewelry_watch,james allen,jamesallen.com,không rõ,,,trang chủ lỗi: SSLError
+jewelry_watch,kay jewelers,kay.com,không rõ,,,không tải được trang chủ
+jewelry_watch,lorier,lorierwatches.com,không rõ,,,không tải được trang chủ
+jewelry_watch,monta watch,montawatch.com,không rõ,,,không tải được trang chủ
+jewelry_watch,nodus watches,noduswatches.com,không thấy,,,
+jewelry_watch,olive and piper,oliveandpiper.com,không rõ,,,không tải được trang chủ
+jewelry_watch,pandora jewelry,pandora.net,không thấy,,,
+jewelry_watch,qalo,qalo.com,không thấy,,,
+jewelry_watch,seiko,seikowatches.com,không thấy,,,
+jewelry_watch,swarovski,swarovski.com,không rõ,,,không tải được trang chủ
+jewelry_watch,tissot,tissotwatches.com,không thấy,,,
+jewelry_watch,vrai,vrai.com,có,https://www.vrai.com/affiliates,,
+jewelry_watch,zelos watches,zeloswatches.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,all clad,all-clad.com,có,https://www.all-clad.com/all-clad-affiliate-program,CJ,
+kitchen_gadgets,caraway,carawayhome.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,chefman,chefman.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,cuisinart,cuisinart.com,không thấy,,,
+kitchen_gadgets,farberware,farberware.com,không thấy,,,
+kitchen_gadgets,fellow products,fellowproducts.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,great jones,greatjonesgoods.com,có,https://greatjonesgoods.com/pages/affiliate,"Impact, ShareASale",
+kitchen_gadgets,hexclad,hexclad.com,có,https://hexclad.com/pages/affiliate,Awin,
+kitchen_gadgets,homary,homary.com,không thấy,,,
+kitchen_gadgets,keurig,keurig.com,không rõ,,,trang chủ lỗi: ConnectionError
+kitchen_gadgets,kitchenaid,kitchenaid.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,le creuset,lecreuset.com,không thấy,,,
+kitchen_gadgets,lodge cast iron,lodgecastiron.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,made in cookware,madeincookware.com,không thấy,,,
+kitchen_gadgets,material kitchen,materialkitchen.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,misen,misen.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,nespresso,nespresso.com,không thấy,,,
+kitchen_gadgets,nutribullet,nutribullet.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,our place,fromourplace.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,oxo,oxo.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,pampered chef,pamperedchef.com,không rõ,,,không tải được trang chủ
+kitchen_gadgets,vitamix,vitamix.com,không thấy,,,
+kitchen_gadgets,zwilling,zwilling.com,không thấy,,,
+luggage_travel,aer sf,aersf.com,không rõ,,,không tải được trang chủ
+luggage_travel,away luggage,awaytravel.com,không rõ,,,không tải được trang chủ
+luggage_travel,bellroy,bellroy.com,có,https://bellroy.com/affiliate-program,,
+luggage_travel,calpak,calpaktravel.com,không rõ,,,không tải được trang chủ
+luggage_travel,cotopaxi,cotopaxi.com,không rõ,,,không tải được trang chủ
+luggage_travel,db journey,dbjourney.com,không rõ,,,không tải được trang chủ
+luggage_travel,july luggage,july.com,có,https://july.com/us/affiliate-program/,Impact,
+luggage_travel,monos luggage,monos.com,không rõ,,,không tải được trang chủ
+luggage_travel,nomatic,nomatic.com,không rõ,,,không tải được trang chủ
+luggage_travel,osprey packs,osprey.com,không rõ,,,không tải được trang chủ
+luggage_travel,peak design,peakdesign.com,không rõ,,,không tải được trang chủ
+luggage_travel,rimowa,rimowa.com,không rõ,,,không tải được trang chủ
+luggage_travel,samsonite,samsonite.com,không thấy,,,
+luggage_travel,tortuga backpacks,tortugabackpacks.com,không rõ,,,không tải được trang chủ
+luggage_travel,travelpro,travelpro.com,không rõ,,,không tải được trang chủ
+luggage_travel,tumi,tumi.com,không thấy,,,
+luggage_travel,wandrd,wandrd.com,không rõ,,,không tải được trang chủ
+pets,bark,bark.co,không rõ,,,không tải được trang chủ
+pets,barkbox,barkbox.com,không rõ,,,không tải được trang chủ
+pets,cherrybrook,cherrybrook.com,không rõ,,,không tải được trang chủ
+pets,chewy,chewy.com,chỉ referral,https://www.chewy.com/g/shelter-partners,,
+pets,diggs,diggs.pet,không rõ,,,không tải được trang chủ
+pets,embark vet,embarkvet.com,có,https://embarkvet.com/about/affiliates/,Impact,
+pets,fi collar,tryfi.com,có,https://fitracking.com/ambassadors,,
+pets,furbo,furbo.com,không thấy,,,
+pets,halo collar,halocollar.com,có,https://www.halocollar.com/pet-affiliate-program/,Pepperjam,
+pets,holistapet,holistapet.com,không rõ,,,không tải được trang chủ
+pets,innovet pet,innovetpet.com,không rõ,,,không tải được trang chủ
+pets,just food for dogs,justfoodfordogs.com,có,https://www.justfoodfordogs.com/affiliates.html,CJ,
+pets,kong company,kongcompany.com,không thấy,,,
+pets,litter robot,litter-robot.com,có,https://www.whisker.com/partnerships,Impact,
+pets,nom nom now,nomnomnow.com,có thể,,Rakuten,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+pets,ollie dog food,myollie.com,có,https://www.ollie.com/affiliate/,Impact,
+pets,paw.com,paw.com,không rõ,,,không tải được trang chủ
+pets,pawp,pawp.com,không thấy,,,
+pets,petco,petco.com,không rõ,,,không tải được trang chủ
+pets,petplan,petplan.com,không rõ,,,trang chủ lỗi: ConnectTimeout
+pets,petsmart,petsmart.com,không rõ,,,trang chủ lỗi: ConnectionError
+pets,purina,purina.com,không rõ,,,không tải được trang chủ
+pets,royal canin,royalcanin.com,không rõ,,,không tải được trang chủ
+pets,sleepypod,sleepypod.com,không rõ,,,không tải được trang chủ
+pets,the farmers dog,thefarmersdog.com,không thấy,,,
+pets,tractive,tractive.com,có,https://tractive.com/landing/affiliate/,Impact,
+pets,west paw,westpaw.com,không rõ,,,không tải được trang chủ
+pets,wild earth,wildearth.com,không rõ,,,không tải được trang chủ
+pets,wisdom panel,wisdompanel.com,có,https://www.wisdompanel.com/en-us/affiliates-program,Impact,
+pets,yumwoof,yumwoof.com,không rõ,,,không tải được trang chủ
+pets,zooplus,zooplus.com,không rõ,,,không tải được trang chủ
+saas_crm,activecampaign,activecampaign.com,có,https://www.activecampaign.com/partners/affiliate,PartnerStack,
+saas_crm,aweber,aweber.com,chỉ referral,https://www.aweber.com/advocates.htm,,
+saas_crm,brevo,brevo.com,không rõ,,,không tải được trang chủ
+saas_crm,convertkit,kit.com,không rõ,,,không tải được trang chủ
+saas_crm,freshworks,freshworks.com,có,https://www.freshworks.com/partners/,,
+saas_crm,getresponse,getresponse.com,có,https://www.getresponse.com/affiliate-programs,PartnerStack,
+saas_crm,gohighlevel,gohighlevel.com,có,https://www.gohighlevel.com/joinaffiliate,FirstPromoter,
+saas_crm,hubspot,hubspot.com,có,https://www.hubspot.com/partners/affiliates,Impact,
+saas_crm,klaviyo,klaviyo.com,không thấy,,,
+saas_crm,mailchimp,mailchimp.com,không thấy,,,
+saas_crm,monday.com,monday.com,có,https://monday.com/affiliate-program/,PartnerStack,
+saas_crm,pipedrive,pipedrive.com,có,https://www.pipedrive.com/en/partner,PartnerStack,
+saas_crm,salesforce,salesforce.com,không thấy,,,
+saas_crm,zoho crm,zoho.com,có,https://www.zoho.com/affiliate/,,
+saas_design,adobe express,adobe.com,không rõ,,,trang chủ lỗi: ReadTimeout
+saas_design,bigcommerce,bigcommerce.com,có,https://partners.bigcommerce.com/directory/,,
+saas_design,canva,canva.com,có,https://www.canva.com/help/canva-affiliate-marketing-program/,,
+saas_design,elementor,elementor.com,có,https://elementor.com/affiliates/,,
+saas_design,figma,figma.com,có,https://www.figma.com/affiliate-program/,PartnerStack,
+saas_design,framer,framer.com,không thấy,,,
+saas_design,hostinger website builder,hostinger.com,có,https://www.hostinger.com/affiliates,,
+saas_design,shopify,shopify.com,có,https://www.shopify.com/affiliates,"Impact, Shopify",
+saas_design,squarespace,squarespace.com,có,https://www.squarespace.com/affiliates,Impact,
+saas_design,webflow,webflow.com,có,https://webflow.com/solutions/affiliates,PartnerStack,
+saas_design,weebly,weebly.com,không thấy,,,
+saas_design,wix,wix.com,có,https://www.wix.com/about/affiliates,Impact,
+smart_home,aqara,aqara.com,không thấy,,,
+smart_home,arlo,arlo.com,không thấy,,,
+smart_home,ecobee,ecobee.com,không thấy,,,
+smart_home,eufy,eufy.com,có,https://www.eufy.com/affiliate?ref=navMenu,Impact,
+smart_home,govee,govee.com,không thấy,,,
+smart_home,irobot,irobot.com,không thấy,,,
+smart_home,lutron,lutron.com,không rõ,,,không tải được trang chủ
+smart_home,meross,meross.com,có,https://www.meross.com/en-gc/support/business-partner,GoAffPro,
+smart_home,nanoleaf,nanoleaf.me,không rõ,,,không tải được trang chủ
+smart_home,nest thermostat,store.google.com,không thấy,,,
+smart_home,philips hue,philips-hue.com,có,https://www.philips-hue.com/affiliate,,
+smart_home,reolink,reolink.com,có,https://reolink.com/affiliate/,"Affiliatly, Awin",
+smart_home,ring,ring.com,không thấy,,,
+smart_home,sensibo,sensibo.com,không rõ,,,không tải được trang chủ
+smart_home,shelly,shelly.com,không rõ,,,không tải được trang chủ
+smart_home,simplisafe,simplisafe.com,không thấy,,,
+smart_home,switchbot,switch-bot.com,không rõ,,,không tải được trang chủ
+smart_home,vivint,vivint.com,không thấy,,,
+smart_home,wyze,wyze.com,không rõ,,,không tải được trang chủ
+toys_gaming,brio,brio.us,không rõ,,,không tải được trang chủ
+toys_gaming,connetix,connetixtiles.com,không thấy,,,
+toys_gaming,corsair,corsair.com,không thấy,,,
+toys_gaming,elgato,elgato.com,không thấy,,,
+toys_gaming,fat brain toys,fatbraintoys.com,không rõ,,,không tải được trang chủ
+toys_gaming,gamestop,gamestop.com,không rõ,,,không tải được trang chủ
+toys_gaming,hape toys,hapetoys.com,không rõ,,,trang chủ lỗi: SSLError
+toys_gaming,hyperx,hyperx.com,không rõ,,,không tải được trang chủ
+toys_gaming,kiwico,kiwico.com,có,https://www.kiwico.com/affiliate-program,CJ,
+toys_gaming,lego,lego.com,không rõ,,,không tải được trang chủ
+toys_gaming,magna tiles,magnatiles.com,không rõ,,,không tải được trang chủ
+toys_gaming,melissa and doug,melissaanddoug.com,không rõ,,,không tải được trang chủ
+toys_gaming,mindware,mindware.orientaltrading.com,không rõ,,,trang chủ lỗi: ConnectTimeout
+toys_gaming,plan toys,plantoys.com,không rõ,,,không tải được trang chủ
+toys_gaming,secretlab,secretlab.co,không rõ,,,không tải được trang chủ
+toys_gaming,steelseries,steelseries.com,có,https://steelseries.com/affiliate-program,,
+toys_gaming,tonies,tonies.com,không thấy,,,
+vpn,atlas vpn,atlasvpn.com,không rõ,,,không tải được trang chủ
+vpn,cyberghost,cyberghostvpn.com,có,https://www.cyberghostvpn.com/affiliate,,
+vpn,expressvpn,expressvpn.com,có,https://www.expressvpn.com/affiliates,Impact,
+vpn,hotspot shield,hotspotshield.com,có,https://www.hotspotshield.com/affiliates/,,
+vpn,ipvanish,ipvanish.com,có,https://www.ipvanish.com/partners/,,
+vpn,nordvpn,nordvpn.com,không rõ,,,không tải được trang chủ
+vpn,private internet access,privateinternetaccess.com,có,https://www.privateinternetaccess.com/affiliate-program,,
+vpn,proton vpn,protonvpn.com,chỉ referral,https://proton.me/partners?ref=pvpn_lp_b2c_vpn_footer,,
+vpn,surfshark,surfshark.com,có,https://surfshark.com/affiliate,,
+vpn,windscribe,windscribe.com,không thấy,,,

@@ -1,0 +1,389 @@
+﻿mảng,tên dự án,domain dự án,lượt tìm kiếm/tháng,chi phí đầu trang (USD),chi phí thấp nhất (USD),cạnh tranh,affiliate,trang affiliate,mạng affiliate,ghi chú
+ai_agents,n8n,n8n.io,1830000,2.82,0.04,Trung bình,có,https://n8n.io/affiliates/,PartnerStack,
+ai_agents,decagon,decagon.com,110000,168.16,11.55,Thấp,không rõ,,,không tải được trang chủ
+ai_agents,devin ai,devin.ai,49500,7.52,1.56,Thấp,không rõ,,,không tải được trang chủ
+ai_agents,make com,make.com,49500,6.06,0.10,Trung bình,không rõ,,,không tải được trang chủ
+ai_agents,relevance ai,relevanceai.com,33100,12.65,1.68,Trung bình,có,https://relevanceai.com/partners,,
+ai_agents,lindy ai,lindy.ai,33100,7.70,0.63,Trung bình,chỉ referral,https://www.lindy.ai/creators,,
+ai_agents,zapier agents,zapier.com,3600,10.25,0.92,Trung bình,chỉ referral,https://zapier.com/l/partners,,
+ai_allinone,poe ai,poe.com,301000,1.63,0.09,Thấp,không rõ,,,không tải được trang chủ
+ai_allinone,monica ai,monica.im,110000,0.41,0.07,Thấp,có,https://monica.im/affiliate,Tapfiliate,
+ai_allinone,hix ai,hix.ai,90500,1.58,0.09,Trung bình,có,https://hix.ai/affiliate-program,Tapfiliate,
+ai_allinone,merlin ai,getmerlin.in,74000,0.94,0.04,Thấp,có,https://www.getmerlin.in/affiliate-program,Tapfiliate,
+ai_allinone,oakgen,oakgen.ai,50,6.08,0.88,Thấp,có,https://oakgen.ai/refer,,
+ai_business,gamma app,gamma.app,1000000,0.87,0.03,Trung bình,không rõ,,,không tải được trang chủ
+ai_business,otter ai,otter.ai,450000,3.07,0.12,Trung bình,có,https://otter.ai/partner-program,,
+ai_business,fireflies ai,fireflies.ai,135000,38.21,1.49,Trung bình,có,https://fireflies.ai/partnership,FirstPromoter,
+ai_business,tome ai,tome.app,74000,0.84,0.02,Trung bình,không rõ,,,không tải được trang chủ
+ai_business,chatbase,chatbase.co,40500,7.26,0.11,Trung bình,có,https://partners.dub.co/chatbase,,
+ai_business,reclaim ai,reclaim.ai,18100,6.35,0.21,Trung bình,có,https://reclaim.ai/affiliate-program,PartnerStack,
+ai_business,clickup ai,clickup.com,9900,5.65,0.31,Trung bình,có,https://clickup.com/partners/affiliates,PartnerStack,
+ai_coding,replit,replit.com,1500000,4.88,0.39,Thấp,chỉ referral,https://replit.com/refer,,
+ai_coding,codeium,codeium.com,60500,5.40,0.52,Trung bình,không rõ,,,không tải được trang chủ
+ai_coding,windsurf ai,windsurf.com,49500,3.74,0.52,Trung bình,không rõ,,,không tải được trang chủ
+ai_coding,codium ai,qodo.ai,5400,3.46,0.29,Trung bình,chỉ referral,https://www.qodo.ai/community/super-qodoer/,,
+ai_seo,surfer seo,surferseo.com,40500,12.80,1.13,Thấp,có,https://surferseo.com/affiliate-program/,PartnerStack,
+ai_seo,search atlas,searchatlas.com,12100,13.34,2.08,Trung bình,có,https://searchatlas.com/affiliate-program/,FirstPromoter,
+ai_seo,neuronwriter,neuronwriter.com,8100,12.20,0.81,Thấp,có,https://neuronwriter.com/contact/affiliates/,,
+ai_seo,clearscope,clearscope.io,3600,15.65,1.54,Thấp,có thể,,Rewardful,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+ai_seo,koala ai,koala.sh,3600,13.45,1.03,Thấp,có,https://koala.sh/pages/affiliate,,
+ai_seo,scalenut,scalenut.com,2900,20.63,1.81,Thấp,có,https://www.scalenut.com/affiliate,FirstPromoter,
+ai_seo,frase io,frase.io,1300,10.65,0.37,Thấp,có,https://www.frase.io/partners/affiliates,FirstPromoter,
+ai_tools,quillbot,quillbot.com,7480000,1.44,0.04,Thấp,không rõ,,,không tải được trang chủ
+ai_tools,elevenlabs,elevenlabs.io,5000000,0.66,0.03,Trung bình,có,https://elevenlabs.io/affiliates,PartnerStack,
+ai_tools,midjourney,midjourney.com,2240000,2.10,0.15,Trung bình,không rõ,,,không tải được trang chủ
+ai_tools,synthesia,synthesia.io,368000,2.76,0.16,Trung bình,có,https://www.synthesia.io/partners/affiliates,Rewardful,
+ai_tools,runway ml,runwayml.com,368000,1.59,0.02,Trung bình,có,https://runway.com/affiliate-program,,
+ai_tools,descript,descript.com,368000,2.91,0.20,Trung bình,có,https://www.descript.com/affiliate,PartnerStack,
+ai_tools,notion ai,notion.so,246000,5.14,0.25,Thấp,có,https://www.notion.com/partners,,
+ai_tools,pictory,pictory.ai,135000,2.34,0.03,Trung bình,có,https://pictory.ai/press-and-partners?nav=mega,FirstPromoter,
+ai_tools,jasper ai,jasper.ai,110000,6.66,0.24,Trung bình,có,https://www.jasper.ai/legal/affiliates,FirstPromoter,
+ai_tools,sudowrite,sudowrite.com,74000,2.68,0.24,Trung bình,có thể,,Rewardful,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+ai_tools,writesonic,writesonic.com,49500,7.73,0.12,Thấp,có,https://writesonic.com/affiliate,FirstPromoter,
+ai_video,heygen,heygen.com,1500000,2.29,0.12,Trung bình,có,https://www.heygen.com/geniverse/social-creator-program,Rewardful,
+ai_video,d id,d-id.com,1000000,1.44,0.04,Thấp,có,https://www.d-id.com/affiliate-terms/,,
+ai_video,opus clip,opus.pro,673000,2.35,0.07,Thấp,có,https://www.opus.pro/affiliate,Rewardful,
+ai_video,fliki,fliki.ai,90500,1.05,0.01,Trung bình,có,https://fliki.ai/affiliate-program,,
+ai_video,colossyan,colossyan.com,14800,16.21,0.42,Trung bình,có,https://www.colossyan.com/affiliate-program/,Rewardful,
+ai_voice,speechify,speechify.com,368000,2.30,0.10,Trung bình,không rõ,,,không tải được trang chủ
+ai_voice,murf ai,murf.ai,90500,0.99,0.02,Trung bình,có,https://murf.ai/partner-with-us/affiliate,PartnerStack,
+ai_voice,play ht,play.ht,60500,0.96,0.02,Trung bình,không rõ,,,trang chủ lỗi: ConnectionError
+ai_voice,lovo ai,lovo.ai,27100,0.81,0.03,Thấp,không rõ,,,không tải được trang chủ
+auto,autozone,autozone.com,11100000,0.09,0.02,Thấp,không rõ,,,không tải được trang chủ
+auto,discount tire,discounttire.com,4090000,1.91,0.30,Thấp,không rõ,,,không tải được trang chủ
+auto,advance auto parts,advanceautoparts.com,3350000,0.36,0.36,Trung bình,không rõ,,,không tải được trang chủ
+auto,tire rack,tirerack.com,673000,2.83,0.67,Cao,không rõ,,,không tải được trang chủ
+auto,carparts.com,carparts.com,673000,2.20,0.42,Cao,không rõ,,,trang chủ lỗi: ReadTimeout
+auto,rough country,roughcountry.com,368000,1.06,0.21,Trung bình,không rõ,,,không tải được trang chủ
+auto,chemical guys,chemicalguys.com,135000,1.15,0.22,Cao,có,https://www.chemicalguys.com/pages/affiliate-program,CJ,
+auto,yakima,yakima.com,110000,0.82,0.03,Thấp,có thể,,AvantLink,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+auto,meguiars,meguiars.com,110000,0.72,0.08,Cao,không rõ,,,trang chủ lỗi: ReadTimeout
+auto,viofo,viofo.com,40500,0.99,0.10,Cao,có,https://www.viofo.com/pages/affiliate-program,ShareASale,
+auto,covercraft,covercraft.com,22200,7.00,1.38,Cao,không rõ,,,không tải được trang chủ
+auto,vivid racing,vividracing.com,14800,11.78,0.94,Cao,không rõ,,,không tải được trang chủ
+auto,shine armor,shinearmor.com,6600,0.42,0.04,Cao,có thể,,UpPromote,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+auto,car supplies warehouse,carsupplieswarehouse.com,4400,3.39,0.89,Cao,có,https://www.carsupplieswarehouse.com/pages/affiliate-program,UpPromote,
+auto,yitamotor,yitamotor.com,1600,0.93,0.25,Cao,không rõ,,,không tải được trang chủ
+baby,owlet,owletcare.com,246000,0.60,0.11,Cao,có,https://owletcare.com/pages/affiliate-program,Awin,
+baby,graco,gracobaby.com,135000,9.58,0.28,Cao,không rõ,,,không tải được trang chủ
+baby,lovevery,lovevery.com,135000,6.47,0.49,Cao,có,https://lovevery.com/pages/affiliate-partnerships,,
+baby,ergobaby,ergobaby.com,90500,0.96,0.09,Cao,có,https://ergobaby.com/en-us/pages/affiliates,Awin,
+baby,babybjorn,babybjorn.com,74000,0.91,0.11,Cao,có,https://www.babybjorn.com/about/become-an-affiliate/,CJ,
+baby,wonderfold,wonderfoldwagon.com,27100,0.88,0.17,Cao,chỉ referral,https://wonderfold.com/pages/creator-program,Rakuten,
+baby,honest company,honest.com,18100,2.70,0.16,Cao,có,https://honest.com/pages/become-an-honest-brand-ambassador,,
+baby,newton baby,newtonbaby.com,6600,7.01,1.04,Cao,có,https://www.newtonbaby.com/pages/affiliate-program,Awin,
+baby,finn and emma,finnandemma.com,1600,2.81,0.53,Cao,có,https://www.finnandemma.com/pages/affiliate-program,ShareASale,
+baby,smiling tree toys,smilingtreetoys.com,390,0.77,0.54,Trung bình,có,https://smilingtreetoys.com/pages/join-our-affiliate-program,Awin,
+beauty,sephora,sephora.com,16600000,0.70,0.12,Cao,có thể,,"Pepperjam, Rakuten, ShareASale","thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,ulta,ulta.com,5000000,0.50,0.50,Cao,không rõ,,,không tải được trang chủ
+beauty,la roche posay,laroche-posay.us,2240000,0.79,0.14,Cao,không rõ,,,không tải được trang chủ
+beauty,kiehls,kiehls.com,673000,11.52,0.34,Cao,không rõ,,,không tải được trang chủ
+beauty,olaplex,olaplex.com,673000,1.11,0.16,Cao,có thể,,Rakuten,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,il makiage,ilmakiage.com,301000,5.71,1.08,Cao,không rõ,,,không tải được trang chủ
+beauty,drunk elephant,drunkelephant.com,201000,7.00,0.28,Cao,có thể,,Pepperjam,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,tatcha,tatcha.com,165000,4.44,0.38,Cao,có thể,,Rakuten,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,bubble skincare,hellobubble.com,165000,0.71,0.08,Cao,không rõ,,,không tải được trang chủ
+beauty,naturium,naturium.com,135000,0.73,0.18,Cao,có thể,,ShareASale,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+beauty,youth to the people,youthtothepeople.com,49500,1.95,0.32,Cao,không rõ,,,không tải được trang chủ
+beauty,sigma beauty,sigmabeauty.com,8100,1.00,0.24,Cao,không rõ,,,không tải được trang chủ
+beauty,wishtrend,wishtrend.com,4400,1.00,0.15,Cao,không rõ,,,không tải được trang chủ
+beauty,versed skin,versedskin.com,1600,1.25,0.17,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,rei,rei.com,4090000,2.46,0.01,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+camping_outdoor,patagonia,patagonia.com,3350000,1.14,0.03,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,the north face,thenorthface.com,2740000,0.74,0.05,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,yeti,yeti.com,1830000,32.43,0.33,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,hydro flask,hydroflask.com,550000,0.62,0.10,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,black diamond,blackdiamondequipment.com,368000,1.13,0.12,Trung bình,không rõ,,,không tải được trang chủ
+camping_outdoor,coleman,coleman.com,246000,1.43,0.09,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,snow peak,snowpeak.com,201000,0.77,0.15,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,sea to summit,seatosummitusa.com,74000,0.77,0.15,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,hyperlite mountain gear,hyperlitemountaingear.com,74000,2.80,0.35,Trung bình,có,https://hyperlitemountaingear.com/pages/hyperlite-mountain-gear-affiliate-program,AvantLink,
+camping_outdoor,zpacks,zpacks.com,60500,1.90,0.01,Trung bình,không rõ,,,không tải được trang chủ
+camping_outdoor,big agnes,bigagnes.com,33100,0.85,0.01,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,helinox,helinox.com,33100,0.62,0.09,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,kelty,kelty.com,27100,1.26,0.27,Trung bình,không rõ,,,không tải được trang chủ
+camping_outdoor,gossamer gear,gossamergear.com,18100,1.09,0.18,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,nemo equipment,nemoequipment.com,8100,1.02,0.18,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,durston gear,durstongear.com,8100,6.88,1.04,Trung bình,không rõ,,,không tải được trang chủ
+camping_outdoor,gci outdoor,gcioutdoor.com,6600,0.47,0.11,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,tentsile,tentsile.com,4400,0.54,0.13,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,vargo outdoors,vargooutdoors.com,320,1.10,0.23,Cao,không rõ,,,không tải được trang chủ
+camping_outdoor,life in tents,lifeintents.com,260,4.83,0.67,Cao,không rõ,,,không tải được trang chủ
+crypto,binance,binance.com,4090000,2.15,0.04,Thấp,không rõ,,,không tải được trang chủ
+crypto,bybit,bybit.com,823000,2.26,0.01,Thấp,chỉ referral,https://www.bybit.com/referral,,
+crypto,okx,okx.com,550000,49.70,0.05,Thấp,có,https://www.okx.com/affiliates,,
+crypto,mexc,mexc.com,450000,7.23,0.20,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+crypto,ledger,ledger.com,450000,16.00,0.79,Cao,chỉ referral,https://www.ledger.com/referral,,
+crypto,bitget,bitget.com,368000,3.80,1.51,Thấp,có,https://www.bitget.com/affiliates,,
+crypto,coindcx,coindcx.com,246000,5.37,0.30,Thấp,không rõ,,,không tải được trang chủ
+crypto,kucoin,kucoin.com,165000,8.63,0.61,Thấp,có,https://www.kucoin.com/affiliate,,
+crypto,trezor,trezor.io,135000,1.94,0.25,Cao,có,https://trezor.io/affiliate,,
+crypto,gate.io,gate.io,90500,917.55,1.00,Thấp,không rõ,,,không tải được trang chủ
+cycling_sports,decathlon,decathlon.com,24900000,0.34,0.01,Trung bình,không rõ,,,không tải được trang chủ
+cycling_sports,under armour,underarmour.com,4090000,1.54,0.12,Cao,không rõ,,,không tải được trang chủ
+cycling_sports,specialized,specialized.com,823000,1.13,0.05,Cao,có,https://www.specialized.com/us/en/specialized-affiliate-program,Rakuten,
+cycling_sports,muc off,muc-off.com,74000,0.39,0.19,Cao,không rõ,,,không tải được trang chủ
+cycling_sports,rad power bikes,radpowerbikes.com,74000,3.78,0.04,Cao,không rõ,,,không tải được trang chủ
+cycling_sports,aventon,aventon.com,60500,26.07,1.59,Cao,không rõ,,,không tải được trang chủ
+cycling_sports,silca,silca.cc,33100,0.65,0.17,Trung bình,không rõ,,,không tải được trang chủ
+cycling_sports,ride1up,ride1up.com,22200,2.94,0.08,Cao,có,https://ride1up.com/affiliate-program/,AvantLink,
+cycling_sports,state bicycle,statebicycle.com,12100,6.45,0.45,Trung bình,không rõ,,,không tải được trang chủ
+cycling_sports,ornot,ornotbike.com,12100,1.06,0.10,Thấp,không rõ,,,không tải được trang chủ
+cycling_sports,wahoo fitness,wahoofitness.com,9900,2.52,0.35,Cao,có,https://www.wahoofitness.com/affiliates,Refersion,
+cycling_sports,pnw components,pnwcomponents.com,6600,0.35,0.05,Trung bình,không rõ,,,không tải được trang chủ
+cycling_sports,priority bicycles,prioritybicycles.com,5400,3.62,0.45,Cao,không rõ,,,không tải được trang chủ
+cycling_sports,blix bike,blixbike.com,1300,3.88,0.81,Cao,không rõ,,,không tải được trang chủ
+diy_garden,home depot,homedepot.com,37200000,0.06,0.04,Thấp,không rõ,,,không tải được trang chủ
+diy_garden,harbor freight,harborfreight.com,9140000,3.00,0.34,Thấp,không rõ,,,không tải được trang chủ
+diy_garden,ace hardware,acehardware.com,4090000,1.48,0.49,Trung bình,không rõ,,,không tải được trang chủ
+diy_garden,makita,makita.com,1000000,0.61,0.07,Cao,không rõ,,,trang chủ lỗi: SSLError
+diy_garden,ryobi,ryobitools.com,550000,1.25,0.15,Cao,không rõ,,,không tải được trang chủ
+diy_garden,greenworks,greenworkstools.com,90500,1.86,0.21,Cao,không rõ,,,không tải được trang chủ
+diy_garden,woodcraft,woodcraft.com,90500,1.13,0.14,Trung bình,không rõ,,,không tải được trang chủ
+diy_garden,fireball tool,fireballtool.com,22200,9.98,0.04,Thấp,không rõ,,,không tải được trang chủ
+diy_garden,wen products,wenproducts.com,1600,2.60,0.26,Cao,không rõ,,,không tải được trang chủ
+education,preply,preply.com,1220000,10.22,0.37,Trung bình,không rõ,,,không tải được trang chủ
+education,masterclass,masterclass.com,246000,5.44,0.77,Thấp,không rõ,,,không tải được trang chủ
+education,italki,italki.com,246000,13.57,0.16,Trung bình,có,https://www.italki.com:443/en/affiliates,,
+education,busuu,busuu.com,246000,2.33,0.18,Thấp,có,https://www.busuu.com/en/partners,CJ,
+education,teachable,teachable.com,90500,10.86,0.35,Trung bình,có,https://www.teachable.com/partners,PartnerStack,
+education,thinkific,thinkific.com,74000,22.51,0.75,Trung bình,không rõ,,,không tải được trang chủ
+electronics,jbl,jbl.com,2240000,0.37,0.06,Cao,không rõ,,,trang chủ lỗi: SSLError
+electronics,sony,sony.com,2240000,1.37,0.09,Thấp,không rõ,,,không tải được trang chủ
+electronics,insta360,insta360.com,1830000,0.45,0.04,Cao,có,https://www.insta360.com/enterprise/industries/partnership,,
+electronics,gopro,gopro.com,1830000,0.40,0.04,Cao,không rõ,,,không tải được trang chủ
+electronics,msi,msi.com,1220000,0.74,0.08,Thấp,không rõ,,,không tải được trang chủ
+electronics,roborock,roborock.com,1000000,1.08,0.15,Cao,không rõ,,,trang chủ lỗi: ConnectTimeout
+electronics,acer,acer.com,823000,1.79,0.10,Cao,không rõ,,,trang chủ lỗi: ReadTimeout
+electronics,sonos,sonos.com,673000,0.89,0.20,Cao,không rõ,,,không tải được trang chủ
+electronics,ugreen,ugreen.com,550000,1.10,0.07,Cao,không rõ,,,không tải được trang chủ
+electronics,soundcore,soundcore.com,450000,0.51,0.07,Cao,có,https://www.soundcore.com/referral,Rakuten,
+electronics,keychron,keychron.com,368000,0.51,0.04,Cao,không rõ,,,không tải được trang chủ
+electronics,baseus,baseus.com,246000,0.50,0.04,Cao,không rõ,,,không tải được trang chủ
+electronics,lg electronics,lg.com,90500,3.54,0.19,Thấp,không rõ,,,không tải được trang chủ
+electronics,nuphy,nuphy.com,74000,0.31,0.10,Cao,không rõ,,,không tải được trang chủ
+electronics,grovemade,grovemade.com,18100,3.93,0.13,Cao,có thể,,Refersion,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+fashion,lululemon,lululemon.com,13600000,10.40,0.30,Cao,không rõ,,,không tải được trang chủ
+fashion,asos,asos.com,6120000,1.11,0.30,Cao,không rõ,,,trang chủ lỗi: ReadTimeout
+fashion,nordstrom,nordstrom.com,6120000,2.29,0.04,Cao,không rõ,,,không tải được trang chủ
+fashion,gymshark,gymshark.com,4090000,0.81,0.06,Cao,không rõ,,,không tải được trang chủ
+fashion,ray ban,ray-ban.com,2740000,1.05,0.21,Cao,không rõ,,,không tải được trang chủ
+fashion,farfetch,farfetch.com,1500000,10.18,0.36,Cao,không rõ,,,không tải được trang chủ
+fashion,revolve,revolve.com,1220000,0.87,0.05,Cao,không rõ,,,trang chủ lỗi: ReadTimeout
+fashion,alo yoga,aloyoga.com,1000000,1.29,0.13,Cao,không rõ,,,không tải được trang chủ
+fashion,bombas,bombas.com,823000,2.00,0.49,Cao,không rõ,,,không tải được trang chủ
+fashion,daniel wellington,danielwellington.com,368000,2.39,0.09,Cao,không rõ,,,không tải được trang chủ
+fashion,everlane,everlane.com,368000,1.95,0.26,Cao,không rõ,,,không tải được trang chủ
+fashion,allbirds,allbirds.com,368000,2.50,0.04,Cao,không rõ,,,không tải được trang chủ
+fashion,buck mason,buckmason.com,301000,1.22,0.03,Cao,có,https://www.buckmason.com/pages/affiliates,ShareASale,
+fashion,olukai,olukai.com,201000,1.05,0.25,Cao,không rõ,,,không tải được trang chủ
+fashion,vessi,vessi.com,110000,2.27,0.20,Cao,không rõ,,,không tải được trang chủ
+fashion,ten thousand,tenthousand.cc,60500,2.98,0.63,Trung bình,không rõ,,,không tải được trang chủ
+fashion,taylor stitch,taylorstitch.com,60500,2.29,0.11,Cao,không rõ,,,không tải được trang chủ
+fashion,consuela,consuelastyle.com,49500,33.67,0.81,Cao,không rõ,,,không tải được trang chủ
+fashion,mvmt watches,mvmt.com,33100,1.83,0.12,Cao,không rõ,,,không tải được trang chủ
+fashion,atoms shoes,atoms.com,5400,4.35,0.76,Cao,không rõ,,,không tải được trang chủ
+finance,wise,wise.com,2240000,3.72,0.11,Thấp,có,https://wise.com/gb/partnerwise,,
+finance,quickbooks,quickbooks.intuit.com,1830000,21.74,3.06,Trung bình,không rõ,,,trang chủ lỗi: ReadTimeout
+finance,sofi,sofi.com,1220000,26.07,4.54,Trung bình,không rõ,,,không tải được trang chủ
+finance,chime,chime.com,1220000,7.56,3.57,Trung bình,không rõ,,,không tải được trang chủ
+finance,payoneer,payoneer.com,823000,8.13,0.51,Thấp,có,https://www.payoneer.com/affiliate-program/,,
+finance,upstart,upstart.com,450000,9.95,1.88,Trung bình,không rõ,,,không tải được trang chủ
+finance,lendingclub,lendingclub.com,246000,22.79,6.73,Trung bình,không rõ,,,không tải được trang chủ
+forex,exness,exness.com,1830000,7.09,0.63,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,xm,xm.com,1000000,20.95,0.38,Thấp,không rõ,,,trang chủ lỗi: ConnectionError
+forex,interactive brokers,interactivebrokers.com,673000,9.14,0.92,Thấp,không rõ,,,trang chủ lỗi: ConnectionError
+forex,etoro,etoro.com,673000,8.20,1.15,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,oanda,oanda.com,450000,10.88,2.67,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,hfm,hfm.com,450000,2.59,0.42,Trung bình,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,ic markets,icmarkets.com,246000,15.47,0.99,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,plus500,plus500.com,165000,25.23,1.60,Trung bình,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,roboforex,roboforex.com,135000,6.00,1.13,Thấp,không rõ,,,trang chủ lỗi: ConnectionError
+forex,octafx,octafx.com,110000,11.24,1.23,Trung bình,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,saxo bank,home.saxo,110000,6.22,0.57,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,fxpro,fxpro.com,90500,48.60,0.85,Trung bình,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,cmc markets,cmcmarkets.com,90500,50.36,3.58,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,avatrade,avatrade.com,74000,16.43,1.13,Trung bình,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,forex.com,forex.com,14800,26.09,0.65,Trung bình,không rõ,,,trang chủ lỗi: ConnectionError
+forex,fxtm,fxtm.com,14800,15.62,1.19,Trung bình,không rõ,,,trang chủ lỗi: ConnectionError
+forex,trading.com,trading.com,12100,6.51,0.21,Trung bình,không rõ,,,trang chủ lỗi: ConnectionError
+forex,ig,ig.com,8100,25.76,1.90,Trung bình,không rõ,,,trang chủ lỗi: ReadTimeout
+forex,tastyfx,tastyfx.com,4400,31.58,4.04,Thấp,không rõ,,,trang chủ lỗi: ConnectionError
+furniture_office,flexispot,flexispot.com,201000,8.22,0.54,Cao,có,https://www.flexispot.com/affiliate,,
+furniture_office,sihoo,sihoooffice.com,49500,12.88,0.40,Cao,không rõ,,,không tải được trang chủ
+furniture_office,desky,deskyusa.com,33100,4.39,0.82,Cao,không rõ,,,trang chủ lỗi: ConnectionError
+furniture_office,branch furniture,branchfurniture.com,9900,5.35,0.41,Cao,không rõ,,,không tải được trang chủ
+furniture_office,x chair,xchair.com,9900,89.14,1.04,Trung bình,không rõ,,,không tải được trang chủ
+furniture_office,ergonofis,ergonofis.com,5400,3.55,1.36,Cao,không rõ,,,không tải được trang chủ
+furniture_office,progressive desk,progressivedesk.com,1300,25.86,2.27,Cao,không rõ,,,không tải được trang chủ
+health_sports,adidas,adidas.com,20400000,0.54,0.05,Cao,không rõ,,,không tải được trang chủ
+health_sports,asics,asics.com,6120000,0.41,0.06,Cao,không rõ,,,không tải được trang chủ
+health_sports,hoka,hoka.com,2740000,1.40,0.24,Cao,không rõ,,,không tải được trang chủ
+health_sports,reebok,reebok.com,1830000,0.63,0.07,Cao,không rõ,,,không tải được trang chủ
+health_sports,whoop,whoop.com,1830000,0.64,0.03,Cao,không rõ,,,không tải được trang chủ
+health_sports,road runner sports,roadrunnersports.com,246000,1.17,0.25,Cao,không rõ,,,không tải được trang chủ
+health_sports,rogue fitness,roguefitness.com,135000,2.74,0.38,Cao,không rõ,,,không tải được trang chủ
+health_sports,tonal,tonal.com,110000,6.26,1.57,Trung bình,không rõ,,,không tải được trang chủ
+health_sports,momentous,livemomentous.com,74000,5.00,0.65,Cao,không rõ,,,không tải được trang chủ
+health_sports,brooks running,brooksrunning.com,49500,1.81,0.07,Cao,không rõ,,,không tải được trang chủ
+health_sports,bells of steel,bellsofsteel.com,40500,1.73,0.35,Cao,không rõ,,,không tải được trang chủ
+health_sports,athletic greens,drinkag1.com,27100,4.26,1.70,Cao,không rõ,,,không tải được trang chủ
+health_sports,vitruvian,vitruvian.com,22200,3.81,1.14,Thấp,không rõ,,,trang chủ lỗi: ConnectionError
+health_sports,sixpad,sixpad.com,18100,1.58,0.17,Cao,không rõ,,,trang chủ lỗi: ConnectionError
+health_sports,hydrow,hydrow.com,9900,5.54,0.39,Cao,không rõ,,,không tải được trang chủ
+health_sports,legion athletics,legionathletics.com,8100,2.45,0.39,Cao,không rõ,,,không tải được trang chủ
+health_sports,heavy rep gear,heavyrepgear.com,110,1.34,0.54,Cao,không rõ,,,không tải được trang chủ
+home_garden,wayfair,wayfair.com,6120000,1.30,0.10,Cao,không rõ,,,không tải được trang chủ
+home_garden,west elm,westelm.com,1220000,3.26,0.88,Cao,không rõ,,,không tải được trang chủ
+home_garden,vidaxl,vidaxl.com,823000,3.42,0.41,Cao,không rõ,,,không tải được trang chủ
+home_garden,society6,society6.com,74000,2.63,0.56,Cao,không rõ,,,không tải được trang chủ
+home_garden,back to the roots,backtotheroots.com,18100,0.49,0.10,Thấp,không rõ,,,không tải được trang chủ
+home_garden,rug source,rugsource.com,5400,4.67,1.23,Cao,có,https://rugsource.com/affiliate-program,,
+home_garden,bloomscape,bloomscape.com,4400,4.30,1.26,Cao,chỉ referral,https://bloomscape.com/refer-a-friend/,AvantLink,
+home_garden,greenstalk garden,greenstalkgarden.com,3600,0.99,0.24,Cao,không rõ,,,không tải được trang chủ
+home_garden,floyd home,floyddetroit.com,1600,3.51,0.15,Cao,không rõ,,,không tải được trang chủ
+home_garden,rst brands,rstbrands.com,1300,83.06,3.26,Cao,có thể,,CJ,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+home_garden,seedsnow,seedsnow.com,480,2.00,0.59,Trung bình,không rõ,,,không tải được trang chủ
+home_kitchen,wayfair,wayfair.com,6120000,1.30,0.10,Cao,không rõ,,,không tải được trang chủ
+home_kitchen,mattress firm,mattressfirm.com,673000,5.52,1.57,Cao,không rõ,,,không tải được trang chủ
+home_kitchen,instant pot,instanthome.com,550000,0.60,0.10,Cao,không rõ,,,trang chủ lỗi: ConnectTimeout
+home_kitchen,cozy earth,cozyearth.com,165000,2.53,0.02,Cao,có thể,,Affiliatly,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+home_kitchen,saatva,saatva.com,135000,10.10,4.10,Cao,không rõ,,,không tải được trang chủ
+home_kitchen,boll and branch,bollandbranch.com,110000,3.79,0.40,Cao,không rõ,,,không tải được trang chủ
+home_kitchen,helix sleep,helixsleep.com,18100,7.02,2.30,Cao,không rõ,,,không tải được trang chủ
+home_kitchen,coop sleep goods,coopsleepgoods.com,5400,1.54,0.51,Cao,không rõ,,,không tải được trang chủ
+home_kitchen,birch living,birchliving.com,1000,9.36,1.68,Cao,không rõ,,,không tải được trang chủ
+hosting,hostinger,hostinger.com,3350000,1.52,0.07,Trung bình,có,https://www.hostinger.com/affiliates,,
+hosting,godaddy,godaddy.com,3350000,3.35,0.34,Trung bình,không rõ,,,không tải được trang chủ
+hosting,namecheap,namecheap.com,1220000,5.05,0.50,Trung bình,không rõ,,,không tải được trang chủ
+hosting,ionos,ionos.com,1000000,3.07,0.18,Trung bình,chỉ referral,https://www.ionos.com/referral,,
+hosting,digitalocean,digitalocean.com,450000,8.88,0.55,Trung bình,có,https://www.digitalocean.com/affiliates,Awin,
+hosting,hostgator,hostgator.com,301000,5.54,0.93,Trung bình,không rõ,,,không tải được trang chủ
+hosting,siteground,siteground.com,246000,7.49,1.03,Trung bình,không rõ,,,không tải được trang chủ
+hosting,bluehost,bluehost.com,201000,113.39,1.34,Trung bình,không rõ,,,không tải được trang chủ
+hosting,contabo,contabo.com,165000,10.73,0.85,Trung bình,có,https://contabo.com/en/affiliate-program/,CJ,
+hosting,vultr,vultr.com,110000,4.97,0.20,Trung bình,không rõ,,,không tải được trang chủ
+hosting,cloudways,cloudways.com,74000,284.08,1.25,Trung bình,có,https://www.cloudways.com/en/web-hosting-affiliate-program.php,,
+hosting,linode,linode.com,74000,10.50,1.08,Thấp,không rõ,,,không tải được trang chủ
+hosting,dreamhost,dreamhost.com,60500,5.59,0.47,Trung bình,có,https://www.dreamhost.com/affiliates/,,
+hosting,wp engine,wpengine.com,33100,26.69,1.82,Trung bình,có,https://wpengine.com/affiliate-program/,Everflow,
+hosting,kinsta,kinsta.com,33100,20.00,2.66,Thấp,có,https://kinsta.com/affiliates/,,
+hosting,hostpapa,hostpapa.com,18100,3.89,0.20,Trung bình,có,https://www.hostpapa.com/about-hostpapa/affiliates/,,
+hosting,scala hosting,scalahosting.com,6600,5.72,0.55,Trung bình,có,https://www.scalahosting.com/affiliate.html,PostAffiliatePro,
+insurance,progressive,progressive.com,3350000,20.16,3.81,Trung bình,không rõ,,,trang chủ lỗi: ConnectTimeout
+insurance,allianz travel insurance,allianztravelinsurance.com,301000,11.19,2.01,Trung bình,không rõ,,,không tải được trang chủ
+insurance,world nomads,worldnomads.com,22200,9.79,2.08,Trung bình,có,https://www.worldnomads.com/partnerships,,
+jewelry_watch,swarovski,swarovski.com,5000000,0.30,0.05,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,kay jewelers,kay.com,1500000,2.27,0.32,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,brilliant earth,brilliantearth.com,368000,5.71,0.91,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,gorjana,gorjana.com,301000,0.98,0.73,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,blue nile,bluenile.com,246000,7.88,0.66,Cao,có,https://www.bluenile.com/affiliates,,
+jewelry_watch,ashford,ashford.com,201000,0.66,0.07,Thấp,không rõ,,,không tải được trang chủ
+jewelry_watch,christopher ward,christopherward.com,165000,2.38,0.31,Trung bình,không rõ,,,không tải được trang chủ
+jewelry_watch,james allen,jamesallen.com,90500,13.52,3.36,Cao,không rõ,,,trang chủ lỗi: SSLError
+jewelry_watch,vrai,vrai.com,49500,4.57,1.00,Trung bình,có,https://www.vrai.com/affiliates,,
+jewelry_watch,exquisite timepieces,exquisitetimepieces.com,22200,2.91,1.20,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,farer,farer.com,22200,0.22,0.20,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,zelos watches,zeloswatches.com,22200,2.84,0.40,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,olive and piper,oliveandpiper.com,18100,2.61,0.53,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,lorier,lorierwatches.com,14800,2.14,0.15,Trung bình,không rõ,,,không tải được trang chủ
+jewelry_watch,aurate,auratenewyork.com,14800,2.00,0.55,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,annie haak,anniehaakdesigns.com,5400,0.85,0.32,Cao,không rõ,,,không tải được trang chủ
+jewelry_watch,monta watch,montawatch.com,3600,0.84,0.05,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,kitchenaid,kitchenaid.com,1000000,2.73,0.19,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,nutribullet,nutribullet.com,450000,0.74,0.10,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,hexclad,hexclad.com,368000,0.90,0.05,Cao,có,https://hexclad.com/pages/affiliate,Awin,
+kitchen_gadgets,keurig,keurig.com,368000,15.67,0.46,Cao,không rõ,,,trang chủ lỗi: ConnectionError
+kitchen_gadgets,pampered chef,pamperedchef.com,301000,1.39,0.27,Trung bình,không rõ,,,không tải được trang chủ
+kitchen_gadgets,all clad,all-clad.com,165000,2.40,0.34,Cao,có,https://www.all-clad.com/all-clad-affiliate-program,CJ,
+kitchen_gadgets,caraway,carawayhome.com,165000,1.25,0.19,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,our place,fromourplace.com,165000,2.76,0.55,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,oxo,oxo.com,135000,0.79,0.15,Trung bình,không rõ,,,không tải được trang chủ
+kitchen_gadgets,lodge cast iron,lodgecastiron.com,90500,0.87,0.18,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,misen,misen.com,27100,2.00,1.00,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,chefman,chefman.com,18100,1.30,0.13,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,material kitchen,materialkitchen.com,6600,1.98,0.03,Cao,không rõ,,,không tải được trang chủ
+kitchen_gadgets,fellow products,fellowproducts.com,5400,0.61,0.13,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,rimowa,rimowa.com,1000000,1.04,0.21,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,cotopaxi,cotopaxi.com,368000,0.49,0.07,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,away luggage,awaytravel.com,201000,4.88,0.82,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,bellroy,bellroy.com,201000,0.85,0.11,Cao,có,https://bellroy.com/affiliate-program,,
+luggage_travel,peak design,peakdesign.com,201000,11.07,0.25,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,calpak,calpaktravel.com,110000,1.03,0.49,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,travelpro,travelpro.com,74000,3.43,0.46,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,monos luggage,monos.com,60500,2.99,0.48,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,nomatic,nomatic.com,22200,3.43,0.25,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,wandrd,wandrd.com,22200,1.04,0.04,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,db journey,dbjourney.com,14800,0.50,0.12,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,osprey packs,osprey.com,6600,0.60,0.06,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,aer sf,aersf.com,2400,3.07,0.03,Cao,không rõ,,,không tải được trang chủ
+luggage_travel,tortuga backpacks,tortugabackpacks.com,720,2.85,0.28,Cao,không rõ,,,không tải được trang chủ
+pets,petsmart,petsmart.com,7480000,1.13,0.08,Trung bình,không rõ,,,trang chủ lỗi: ConnectionError
+pets,petco,petco.com,5000000,0.51,0.12,Trung bình,không rõ,,,không tải được trang chủ
+pets,chewy,chewy.com,3350000,2.63,0.56,Cao,chỉ referral,https://www.chewy.com/g/shelter-partners,,
+pets,zooplus,zooplus.com,1830000,0.92,0.14,Trung bình,không rõ,,,không tải được trang chủ
+pets,royal canin,royalcanin.com,673000,1.42,0.20,Cao,không rõ,,,không tải được trang chủ
+pets,bark,bark.co,673000,3.66,0.76,Thấp,không rõ,,,không tải được trang chủ
+pets,purina,purina.com,165000,2.26,0.31,Cao,không rõ,,,không tải được trang chủ
+pets,barkbox,barkbox.com,90500,12.87,2.52,Cao,không rõ,,,không tải được trang chủ
+pets,petplan,petplan.com,74000,7.45,1.46,Trung bình,không rõ,,,trang chủ lỗi: ConnectTimeout
+pets,just food for dogs,justfoodfordogs.com,74000,12.85,0.81,Cao,có,https://www.justfoodfordogs.com/affiliates.html,CJ,
+pets,diggs,diggs.pet,74000,12.54,3.86,Thấp,không rõ,,,không tải được trang chủ
+pets,cherrybrook,cherrybrook.com,60500,2.20,0.63,Thấp,không rõ,,,không tải được trang chủ
+pets,halo collar,halocollar.com,49500,4.18,0.63,Cao,có,https://www.halocollar.com/pet-affiliate-program/,Pepperjam,
+pets,wild earth,wildearth.com,33100,2.61,2.56,Trung bình,không rõ,,,không tải được trang chủ
+pets,fi collar,tryfi.com,27100,4.31,0.45,Cao,có,https://fitracking.com/ambassadors,,
+pets,west paw,westpaw.com,6600,1.17,0.06,Cao,không rõ,,,không tải được trang chủ
+pets,sleepypod,sleepypod.com,5400,1.47,0.33,Cao,không rõ,,,không tải được trang chủ
+pets,yumwoof,yumwoof.com,4400,4.98,0.71,Cao,không rõ,,,không tải được trang chủ
+pets,holistapet,holistapet.com,2400,4.48,0.30,Cao,không rõ,,,không tải được trang chủ
+pets,paw.com,paw.com,1300,8.46,1.54,Cao,không rõ,,,không tải được trang chủ
+pets,nom nom now,nomnomnow.com,1000,15.00,3.05,Trung bình,có thể,,Rakuten,"thấy dấu vết mạng affiliate ở trang chủ, chưa mở được trang riêng"
+pets,innovet pet,innovetpet.com,720,5.09,0.37,Cao,không rõ,,,không tải được trang chủ
+saas_crm,brevo,brevo.com,550000,9.11,1.18,Trung bình,không rõ,,,không tải được trang chủ
+saas_crm,zoho crm,zoho.com,450000,16.23,0.98,Thấp,có,https://www.zoho.com/affiliate/,,
+saas_crm,gohighlevel,gohighlevel.com,450000,1000.00,990.47,Thấp,có,https://www.gohighlevel.com/joinaffiliate,FirstPromoter,
+saas_crm,pipedrive,pipedrive.com,301000,24.61,1.90,Trung bình,có,https://www.pipedrive.com/en/partner,PartnerStack,
+saas_crm,monday.com,monday.com,246000,17.61,1.36,Trung bình,có,https://monday.com/affiliate-program/,PartnerStack,
+saas_crm,activecampaign,activecampaign.com,90500,27.63,2.47,Trung bình,có,https://www.activecampaign.com/partners/affiliate,PartnerStack,
+saas_crm,freshworks,freshworks.com,74000,10.54,3.88,Thấp,có,https://www.freshworks.com/partners/,,
+saas_crm,getresponse,getresponse.com,74000,8.82,0.56,Trung bình,có,https://www.getresponse.com/affiliate-programs,PartnerStack,
+saas_crm,convertkit,kit.com,33100,15.20,1.25,Trung bình,không rõ,,,không tải được trang chủ
+saas_crm,aweber,aweber.com,12100,11.41,0.17,Trung bình,chỉ referral,https://www.aweber.com/advocates.htm,,
+saas_design,canva,canva.com,185000000,1.95,0.11,Thấp,có,https://www.canva.com/help/canva-affiliate-marketing-program/,,
+saas_design,figma,figma.com,5000000,2.79,0.21,Thấp,có,https://www.figma.com/affiliate-program/,PartnerStack,
+saas_design,adobe express,adobe.com,1830000,11.91,0.07,Thấp,không rõ,,,trang chủ lỗi: ReadTimeout
+saas_design,webflow,webflow.com,450000,7.47,0.77,Thấp,có,https://webflow.com/solutions/affiliates,PartnerStack,
+saas_design,elementor,elementor.com,165000,2.79,0.37,Trung bình,có,https://elementor.com/affiliates/,,
+saas_design,bigcommerce,bigcommerce.com,27100,21.76,2.27,Thấp,có,https://partners.bigcommerce.com/directory/,,
+saas_design,hostinger website builder,hostinger.com,22200,8.07,0.29,Trung bình,có,https://www.hostinger.com/affiliates,,
+smart_home,philips hue,philips-hue.com,450000,1.66,0.19,Cao,có,https://www.philips-hue.com/affiliate,,
+smart_home,shelly,shelly.com,450000,0.97,0.08,Cao,không rõ,,,không tải được trang chủ
+smart_home,reolink,reolink.com,368000,3.51,0.48,Cao,có,https://reolink.com/affiliate/,"Affiliatly, Awin",
+smart_home,wyze,wyze.com,165000,0.88,0.21,Trung bình,không rõ,,,không tải được trang chủ
+smart_home,switchbot,switch-bot.com,135000,0.70,0.17,Cao,không rõ,,,không tải được trang chủ
+smart_home,nanoleaf,nanoleaf.me,74000,0.64,0.12,Cao,không rõ,,,không tải được trang chủ
+smart_home,lutron,lutron.com,60500,4.42,0.66,Trung bình,không rõ,,,không tải được trang chủ
+smart_home,meross,meross.com,27100,0.25,0.06,Cao,có,https://www.meross.com/en-gc/support/business-partner,GoAffPro,
+smart_home,sensibo,sensibo.com,14800,12.36,0.39,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,lego,lego.com,13600000,0.97,0.07,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,gamestop,gamestop.com,6120000,0.06,0.05,Thấp,không rõ,,,không tải được trang chủ
+toys_gaming,steelseries,steelseries.com,550000,0.46,0.06,Trung bình,có,https://steelseries.com/affiliate-program,,
+toys_gaming,secretlab,secretlab.co,368000,1.86,0.21,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,magna tiles,magnatiles.com,301000,0.63,0.13,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,brio,brio.us,301000,0.84,0.11,Trung bình,không rõ,,,không tải được trang chủ
+toys_gaming,hyperx,hyperx.com,246000,0.80,0.08,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,melissa and doug,melissaanddoug.com,135000,0.90,0.10,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,kiwico,kiwico.com,110000,1.50,0.70,Cao,có,https://www.kiwico.com/affiliate-program,CJ,
+toys_gaming,fat brain toys,fatbraintoys.com,49500,1.60,0.15,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,plan toys,plantoys.com,18100,0.45,0.07,Cao,không rõ,,,không tải được trang chủ
+toys_gaming,mindware,mindware.orientaltrading.com,14800,0.83,0.05,Trung bình,không rõ,,,trang chủ lỗi: ConnectTimeout
+toys_gaming,hape toys,hapetoys.com,12100,0.66,0.10,Cao,không rõ,,,trang chủ lỗi: SSLError
+vpn,nordvpn,nordvpn.com,2240000,2.77,0.45,Trung bình,không rõ,,,không tải được trang chủ
+vpn,proton vpn,protonvpn.com,2240000,3.30,0.32,Thấp,chỉ referral,https://proton.me/partners?ref=pvpn_lp_b2c_vpn_footer,,
+vpn,private internet access,privateinternetaccess.com,823000,2.32,0.03,Thấp,có,https://www.privateinternetaccess.com/affiliate-program,,
+vpn,surfshark,surfshark.com,673000,999.99,0.90,Trung bình,có,https://surfshark.com/affiliate,,
+vpn,cyberghost,cyberghostvpn.com,135000,15.47,1.00,Trung bình,có,https://www.cyberghostvpn.com/affiliate,,
+vpn,hotspot shield,hotspotshield.com,135000,2.04,0.05,Thấp,có,https://www.hotspotshield.com/affiliates/,,
+vpn,ipvanish,ipvanish.com,74000,10.77,2.08,Trung bình,có,https://www.ipvanish.com/partners/,,
+vpn,atlas vpn,atlasvpn.com,12100,4.03,0.45,Thấp,không rõ,,,không tải được trang chủ
